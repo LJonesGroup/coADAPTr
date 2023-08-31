@@ -26,14 +26,15 @@ setwd(getwd())
 ###########################################################################
 #Homo sapien Reviewed 12062021
 # Read in required inputs
-FASTA <- read.fasta(file = ("./data/Homo sapien Reviewed 12062021.fasta"),
+FASTA <- read.fasta(file = ("./data/SWISSPROT Homo Sapian 9606 + cRAP Reviewed.fasta"),
                     clean_name = FALSE)
 #USER INDICATES FILE PATH
-file_path<- "C:/Users/Raqie/Desktop/UMBPSC/RCoding/JonesLabScripts/data/100 mM H2O2 1 Min BR1 Outer.xlsx"
+file_path<- "C:/Users/Raqie/Desktop/Data/JM_IC-FPOP_Training_PSMs.xlsx"
+#UMBPSC/RCoding/JonesLabScripts/data/100 mM H2O2 1 Min BR1 Core.xlsx"
 #"C:/Users/Raqie/Desktop/UMBPSC/RCoding/JonesLabScripts/data/100 mM H2O2 1 Min BR1 Outer.xlsx"
-#JM_IC-FPOP_Training_PSMs.xlsx
+
 # Set output directory
-file_output= "C:/Users/Raqie/Desktop/AutoDataAnalysis"
+file_output= "C:/Users/Raqie/Desktop/AutoDataAnalysis/Jalah2"
 
 
 
@@ -54,19 +55,6 @@ pd_data$SampleControl <- ifelse(pd_data$'Spectrum File' %like%
                                   "NL", "Control", "Sample")
 
 #####Run this if MS files were analyzed via PD
-#remove_dup <- function(df_in) {
-#  df_in$`Identifying Node` <- NULL
-
-#  subset_criteria <- df_in$SampleControl == "Control"
-#  subset_without_duplicates <- df_in[!subset_criteria | !duplicated(df_in[subset_criteria, ]), ]
-#  df_in[subset_criteria, ] <- subset_without_duplicates
-
-#  return(df_in)
-#}
-
-# Usage
-#modified_df <- remove_dup(pd_data_fasta_merged)
-
 
 remove_dup <- function(df) {
 
@@ -205,21 +193,12 @@ locate_startend_res <- function(raw_data){
 pd_data_fasta_merged <- locate_startend_res(pd_data_annotated)
 
 # garbage cleanup
-#rm(pd_data_annotated);gc()
+rm(pd_data_annotated);gc()
 #rm(FASTA);gc()
 
 
-# FPOP Calculations -----------------------------------------------------------
-#Calculating the total sample areas (Oxidized and unoxidized)
-#calculate_sampletotal_areas <- function(df_in) {
-# df_out <- df_in %>%
-# group_by(MasterProteinAccessions, Sequence, SampleControl) %>%
-#  reframe(TotalSampleArea = sum(`Precursor Abundance`)[SampleControl == "Sample"])%>%
-#na.omit()
-
-
-# return(df_out)
-#}
+# FPOP Calculations ---------------------------------------------------------------------------------------------
+#Calculating the total peptide areas (Oxidized and unoxidized)
 area_calculations_pep <- function(df_in) {
   df_out <- df_in %>%
     group_by(MasterProteinAccessions, Sequence, SampleControl, MOD) %>%
@@ -240,66 +219,52 @@ area_calculations_pep <- function(df_in) {
       Sample_UnoxidizedArea = Sample_Unoxidized     # Rename OldColumn3 to NewColumn3
     )
 
+  #create conditions so that the bare minimum criteria for FPOP can be calculated
+  #specifically cases where sample oxidized area is detected and control oxidized area re detected.
+  #Cases where that peptide was not detected in the sample unoxidized area and control oxidized are will be turned to 0
+  ###*****MAKE SURE THIS IS OK WITH LISA WANT TO AVOID IMPLICIT BIAS
+  #The peptide at least has to be detected by the mass spec in order to calculate control total area?
+  df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
+
+  df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
+
+  #Calculating the extent of modification (EOM) for the sample and control data for each peptide
+
   df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")])
   df_out$TotalControlArea <- rowSums(df_out[, c("Control_OxidizedArea", "Control_UnoxidizedArea")])
 
 
+  #Calculating the extent of modification (EOM) by subtracting background oxidation (control)
   df_out$EOMSample <- df_out$Sample_OxidizedArea / df_out$TotalSampleArea
   df_out$EOMControl <- df_out$Control_OxidizedArea / df_out$TotalControlArea
   df_out$EOM <- df_out$EOMSample - df_out$EOMControl
 
-  #Calculating standard deviation
-
+  #Calculating N or the number of times the petpdide was detected by the MS
   df_out$N <- df_in %>%
     group_by(MasterProteinAccessions, Sequence) %>%
     count()
 
   df_out$N$Sequence <- NULL
   df_out$N$MasterProteinAccessions <- NULL
+  colnames(df_out)[12] <- "N"
 
-  colnames(df_out)[12] <- "N"  # Renaming the 12th column to "N"
+  #Calcculating standard deviation
+  test <- pd_data_fasta_merged %>%
+    group_by(MasterProteinAccessions, Sequence) %>%
+    reframe(sdprep = sd(`Precursor Abundance`))
+  df_out$sdprep<- test$sdprep
+  df_out$SD<- df_out$SD <- df_out$sdprep/(df_out$TotalSampleArea+df_out$TotalControlArea)
+
+  # Renaming the 12th column to "N"
+
 
   return(df_out)
 }
 
-
+#Make sure that if the data detected at least and not modified calculations still occur or is it ok
 
 Areas_pep <- area_calculations_pep(pd_data_fasta_merged)
 
-###See if exceptions need to be made for total area calculations
-
-######Calculating standard deviation (SD)
-calculateSD <- function(df_in){
-
-  df_out <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD) %>%
-    reframe(SD = sd(`Precursor Abundance`) ) %>%
-    ungroup() %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence"),
-      names_from = c("SampleControl", "MOD"),
-      values_from = "SD",
-      values_fill = NA
-    )
-
-  df_out <- df_out %>%
-    rename(
-      ControlOxidized_SD = Control_Oxidized,    # Rename OldColumn1 to NewColumn1
-      SampleOxidized_SD = Sample_Oxidized,    # Rename OldColumn3 to NewColumn3
-      ControlUnoxidized_SD = Control_Unoxidized,    # Rename OldColumn1 to NewColumn1
-      SampleUnoxidized_SD = Sample_Unoxidized
-    )
-  return(df_out)
-}
-
-#By using scale(Precursor Abundance), you can standardize the values in the Precursor Abundance column to have zero mean and unit variance, which can help in obtaining standard deviation values in a more manageable range.
-
-SDcalc_pep <- calculateSD(pd_data_fasta_merged)
-
-Areas_pep <- Areas_pep %>%
-  left_join(SDcalc_pep)
-
-Areas_pep$SD<- abs(((Areas_pep$SampleOxidized_SD/(Areas_pep$TotalSampleArea+Areas_pep$TotalControlArea))-(Areas_pep$ControlOxidized_SD/(Areas_pep$TotalControlArea+Areas_pep$TotalSampleArea))))
 
 ##############################################################################
 # Data Grabbing ---------------------------------------------------------------
@@ -331,9 +296,11 @@ graphing_df_pep$MasterProteinAccessions <- gsub(".*\\|(.*?)\\|.*", "\\1", graphi
 filtered_graphing_df_pep <- function(df_in) {
   df_in <- df_in %>% filter(EOM > 0)
   df_in <- df_in %>% filter(EOM > SD)
+  df_in <- df_in %>% filter(df_in[[12]] > 4)  # Filter for the 12th column > 4
   df_in <- df_in %>% arrange(start)
   return(df_in)
 }
+
 
 
 quant_graph_df_pep <- filtered_graphing_df_pep(graphing_df_pep)
@@ -356,11 +323,22 @@ area_calculations_res <- function(df_in) {
       values_fill = NA
     )
 
+  #create conditions so that the bare minimum criteria for FPOP can be calculated
+  #specifically cases where sample oxidized area is detected and control oxidized area re detected.
+  #Cases where that peptide was not detected in the sample unoxidized area and control oxidized are will be turned to 0
+
+  #The peptide at least has to be detected by the mass spec in order to calculate control total area?
+  df_out$Control_Oxidized <- ifelse(df_out$Control_Unoxidized > 0 & df_out$Control_Oxidized == "NA", 0, df_out$Control_Oxidized)
+
+  #For extent of modification calculations the peptide needs to be modified
+  df_out$Sample_Unoxidized <- ifelse(df_out$Sample_Oxidized > 0 & df_out$Sample_Unoxidized == "NA", 0, df_out$Control_Oxidized)
+
+
+
   df_out<- df_out %>%
     mutate(SampleTotalArea = Sample_Oxidized + Sample_Unoxidized,
            ControlTotalArea = Control_Oxidized + Control_Unoxidized)
-  df_out <- df_out %>%
-    select(-c(Sample_Oxidized, Sample_Unoxidized, Control_Oxidized, Control_Unoxidized))
+
 
   df_out2 <- df_in %>%
     filter(mod_count == 0 & MOD == "Oxidized") %>%
@@ -382,62 +360,40 @@ area_calculations_res <- function(df_in) {
            ControlOxidizedArea = Control)
 
 
+
+
   df_out$EOMSample <- df_out$SampleOxidizedArea / df_out$SampleTotalArea
   df_out$EOMControl <- df_out$ControlOxidizedArea / df_out$ControlTotalArea
   df_out$EOM <- df_out$EOMSample - df_out$EOMControl
 
+  #FIX CALCULATE N FUNCTION FOR RESIDUE LEVEL N > $
+  # Calculate N values and store in a separate data frame
+  N_df <- df_in %>%
+    filter(mod_count == 0, !is.na(Res)) %>%
+    group_by(MasterProteinAccessions, Sequence, Res) %>%
+    summarize(N = n())  # Count the occurrences
 
-  #df_out$N <- df_in %>%
-  #  filter(mod_count == 0, Res != "NA NA")%>%
-  # group_by(MasterProteinAccessions, Sequence, Res) %>%
-  #   count()
-
-  #df_out$N$Sequence <- NULL
-  # df_out$N$MasterProteinAccessions <- NULL
-  # df_out$N$Res <- NULL
-
+  # Merge the N column into df_out
+  df_out$N <- df_out %>%
+    left_join(N_df, by = c("MasterProteinAccessions", "Sequence", "Res")) %>%
+    pull(N)  # Extract N column
   # colnames(df_out)[12] <- "N"  # Renaming the 12th column to "N"
+
+  # Calculate standard deviation and store in a separate data frame
+  sd_df <- df_in %>%
+    group_by(MasterProteinAccessions, Sequence, Res) %>%
+    summarize(sdprep = sd(`Precursor Abundance`))
+
+  # Join the calculated sdprep values to df_out
+  df_out <- df_out %>%
+    left_join(sd_df, by = c("MasterProteinAccessions", "Sequence"))
+  df_out$SD <- df_out$sdprep/(df_out$SampleTotalArea+df_out$ControlTotalArea)
 
   return(df_out)
 }
-
-
 
 Areas_res <- area_calculations_res(pd_data_fasta_merged)
 
-
-
-######Calculating standard deviation (SD)
-calculateSD_res <- function(df_in){
-
-  df_out <- df_in %>%
-    filter(mod_count == 0, Res != "NA NA")%>%
-    group_by(MasterProteinAccessions, Sequence, SampleControl, Res, MOD) %>%
-    reframe(SD = sd(`Precursor Abundance`)) %>%
-    ungroup() %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence", "Res"),
-      names_from = c("SampleControl", "MOD"),
-      values_from = "SD",
-      values_fill = NA
-    )
-
-  df_out <- df_out %>%
-    rename(
-      ControlOxidized_SD = Control_Oxidized,    # Rename OldColumn1 to NewColumn1
-      SampleOxidized_SD = Sample_Oxidized)    # Rename OldColumn3 to NewColumn3
-  #)
-  return(df_out)
-}
-
-#By using scale(Precursor Abundance), you can standardize the values in the Precursor Abundance column to have zero mean and unit variance, which can help in obtaining standard deviation values in a more manageable range.
-
-SDcalc_res <- calculateSD_res(pd_data_fasta_merged)
-
-Areas_res <- Areas_res %>%
-  left_join(SDcalc_res)
-
-Areas_res$SD<- abs(((Areas_res$SampleOxidized_SD/(Areas_res$SampleTotalArea+Areas_res$ControlTotalArea))-(Areas_res$ControlOxidized_SD/(Areas_res$ControlTotalArea+Areas_res$SampleTotalArea))))
 
 ##############################################################################
 # Data Grabbing ---------------------------------------------------------------
@@ -464,6 +420,8 @@ graphing_df_res$MasterProteinAccessions <- gsub(".*\\|(.*?)\\|.*", "\\1", graphi
 filtered_graphing_df_res <- function(df_in) {
   df_in <- df_in %>%filter(EOM >0)
   df_in <- df_in %>% filter(EOM > SD)
+  df_in <- df_in %>% filter(df_in[[12]] > 3)  # Filter for the 12th column > 4
+  df_in <- df_in %>% arrange(start)
   return(df_in)
 }
 quant_graph_df_res<-filtered_graphing_df_res(graphing_df_res)
@@ -619,15 +577,12 @@ for (protein in quant_graph_df_pep$MasterProteinAccessions) {
   generate_eom_plot_pep(temp, file_output, excel_filename)
 }
 
+####################################################################################################
 
 
-
-
-
-# function to generate extent of modification figure
 generate_eom_plot_res <- function(df_in, file_output, excel_filename) {
-  # Sort the data frame by the "start" column
-  df_in$Res <- factor(df_in$Res, levels = df_in$Res[order(df_in$start)])
+  df_in <- df_in %>%
+    arrange(start)
 
   # Grab the protein that is being plotted
   protein <- unique(df_in$MasterProteinAccessions)
