@@ -34,7 +34,7 @@ file_path<- "C:/Users/Raqie/Desktop/Data/JM_IC-FPOP_Training_PSMs.xlsx"
 #"C:/Users/Raqie/Desktop/UMBPSC/RCoding/JonesLabScripts/data/100 mM H2O2 1 Min BR1 Outer.xlsx"
 
 # Set output directory
-file_output= "C:/Users/Raqie/Desktop/AutoDataAnalysis/Jalah2"
+file_output= "C:/Users/Raqie/Desktop/AutoDataAnalysis/TMT"
 
 
 
