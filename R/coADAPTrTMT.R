@@ -27,7 +27,8 @@ setwd(getwd())
 FASTA <- read.fasta(file = ("./data/SWISSPROT Homo Sapian 9606 + cRAP Reviewed.fasta"),
                     clean_name = FALSE)
 #USER INDICATES FILE PATH
-file_path<- "C:/Users/Raqie/Desktop/Data/BR1_EEC_MTX_5th.xlsx"
+file_path<- "C:/Users/Raqie/Desktop/UMBPSC/RCoding/LJonesGroup/coADAPTr/coADAPTr/data/EECTMT.xlsx"
+
 #UMBPSC/RCoding/JonesLabScripts/data/100 mM H2O2 1 Min BR1 Core.xlsx"
 #"C:/Users/Raqie/Desktop/UMBPSC/RCoding/JonesLabScripts/data/100 mM H2O2 1 Min BR1 Outer.xlsx"
 
@@ -44,8 +45,53 @@ pd_data <- read_excel(file_path)
 #extracting proetin sequence
 #adding L or NL to files
 #extracting modification
+# Troubleshooting
+abundance_cols <- grep("Abundance", colnames(pd_data), value = TRUE)
 
-####TMT data
+# Convert abundance columns to numeric, handling NAs as 0
+pd_data[, abundance_cols] <- lapply(pd_data[, abundance_cols], function(x) as.numeric(ifelse(x == "NA", 0, x)))
+
+# Calculate the result for each column, handling NAs
+for (i in 1:length(abundance_cols)) {
+  pd_data[, i] <- ifelse(pd_data[, i] == 0, NA, (pd_data[, i] * pd_data$Intensity) / rowSums(pd_data[, abundance_cols]))
+}
+
+# Rename the columns
+new_colnames <- c("Vehicle L1", "Vehicle L2", "Vehicle L3", "Vehicle NL1", "Vehicle NL2",
+                  "Drug L1", "Drug L2", "Drug L3", "Drug NL1", "Drug NL2")
+colnames(pd_data)[1:length(abundance_cols)] <- new_colnames
+
+return(pd_data)
+
+
+
+
+
+
+calculate_tmt_fpop <- function(pd_data) {
+  # List of column names containing "Abundance"
+  abundance_cols <- grep("Abundance", colnames(pd_data), value = TRUE)
+
+  # Convert abundance columns to numeric, handling NAs as 0
+  pd_data[, abundance_cols] <- lapply(pd_data[, abundance_cols], function(x) as.numeric(ifelse(x == "NA", 0, x)))
+
+  # Calculate the result for each column, handling NAs
+  for (i in 1:length(abundance_cols)) {
+    pd_data[, i] <- ifelse(pd_data[, i] == 0, NA, (pd_data[, i] * pd_data$Intensity) / rowSums(pd_data[, abundance_cols]))
+  }
+
+  # Rename the columns
+  new_colnames <- c("Vehicle L1", "Vehicle L2", "Vehicle L3", "Vehicle NL1", "Vehicle NL2",
+                    "Drug L1", "Drug L2", "Drug L3", "Drug NL1", "Drug NL2")
+  colnames(pd_data)[1:length(abundance_cols)] <- new_colnames
+
+  return(pd_data)
+}
+
+# Call the function with your pd_data dataframe
+pd_data <- calculate_tmt_fpop(pd_data)
+
+
 
 #Does this need to have a separate function or can it be merged with Annotate Features.
 # Annotate Sample/Control based on MS acquisitoin filename convention
