@@ -6,14 +6,12 @@ required_packages <- c("ExcelFunctionsR", "remotes", "data.table", "stringr", "p
                        "tidyverse", "EnvStats", "dplyr", "writexl","stringr",
                        "phylotools", "parallel", "rlist","argparser", "Cairo")
 
-# load or install&load all packages
-# source:
-# https://vbaliga.github.io/verify-that-r-packages-are-installed-and-loaded/
+# load or install & load all packages
 package.check <- lapply(
   required_packages,
   FUN = function(x) {
     if (!require(x, character.only = TRUE)) {
-      install.packages(x, type= source, dependencies = TRUE)
+      install.packages(x, dependencies = TRUE)
       library(x, character.only = TRUE)
     }
   }
