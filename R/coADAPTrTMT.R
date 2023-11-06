@@ -46,18 +46,42 @@ pd_data <- read_excel(file_path)
 #adding L or NL to files
 #extracting modification
 # Troubleshooting
+# List of column names containing "Abundance"
 abundance_cols <- grep("Abundance", colnames(pd_data), value = TRUE)
 
-# Convert abundance columns to numeric, handling NAs as 0
-pd_data[, abundance_cols] <- lapply(pd_data[, abundance_cols], function(x) as.numeric(ifelse(x == "NA", 0, x)))
-
-# Calculate the result for each column, handling NAs
-for (i in 1:length(abundance_cols)) {
-  pd_data[, i] <- ifelse(pd_data[, i] == 0, NA, (pd_data[, i] * pd_data$Intensity) / rowSums(pd_data[, abundance_cols]))
+# Define a function to convert to numeric with NAs as 0
+convert_to_numeric <- function(x) {
+  ifelse(is.na(x), 0, as.numeric(x))
 }
 
+# Apply the function to abundance columns
+pd_data[, abundance_cols] <- lapply(pd_data[, abundance_cols], convert_to_numeric)
+
+# Now you can perform the calculations
+# Example: Sum of Abundance: 126 and Abundance: 127N columns
+pd_data$SumRow_Abundances <- rowSums(pd_data[, c("Abundance: 126", "Abundance: 127N", "Abundance: 127C", "Abundance: 128N", "Abundance: 128C", "Abundance: 129N", "Abundance: 129C", "Abundance: 130C", "Abundance: 131N", "Abundance: 131C")], na.rm = TRUE)
+#Assign new column names here.
+#Label which TMT channel corresponds to which sample by changing the column name (pd_data$*****)
+pd_data$VehicleL1 <- (pd_data$"Abundance: 126" * pd_data$Intensity )/ pd_data$SumRow_Abundances
+pd_data$VehicleL2 <- (pd_data$"Abundance: 127N" * pd_data$Intensity ) / pd_data$SumRow_Abundances
+pd_data$VehicleL3 <- (pd_data$"Abundance: 127C" * pd_data$Intensity ) / pd_data$SumRow_Abundances
+pd_data$VehicleNL1 <- (pd_data$"Abundance: 128N" * pd_data$Intensity ) / pd_data$SumRow_Abundances
+pd_data$VehicleNL1 <- (pd_data$"Abundance: 128C" * pd_data$Intensity ) / pd_data$SumRow_Abundances
+#pd_data$VehicleNL3 <- (pd_data$"Abundance: 129" * pd_data$Intensity ) / pd_data$SumRow_Abundances      #Not used in test data
+pd_data$DrugL1 <- (pd_data$"Abundance: 129N" * pd_data$Intensity ) / pd_data$SumRow_Abundances
+pd_data$DrugL2 <- (pd_data$"Abundance: 129C" * pd_data$Intensity ) / pd_data$SumRow_Abundances
+pd_data$DrugL3 <- (pd_data$"Abundance: 130C" * pd_data$Intensity ) / pd_data$SumRow_Abundances
+pd_data$DrugNL1 <- (pd_data$"Abundance: 131N" * pd_data$Intensity ) / pd_data$SumRow_Abundances
+pd_data$DrugNL2 <- (pd_data$"Abundance: 131C" * pd_data$Intensity ) / pd_data$SumRow_Abundances
+#pd_data$DrugnNL3 <- (pd_data$"Abundance: 130N" * pd_data$Intensity ) / pd_data$SumRow_Abundances
+
+#"Abundance: 126"  "Abundance: 127N" "Abundance: 127C" "Abundance: 128N" "Abundance: 128C" "Abundance: 129N" "Abundance: 129C" "Abundance: 130C" "Abundance: 131N" "Abundance: 131C"
+
+# Calculate the result for each column, handling NAs
+
+
 # Rename the columns
-new_colnames <- c("Vehicle L1", "Vehicle L2", "Vehicle L3", "Vehicle NL1", "Vehicle NL2",
+new_colnames <- c(  "Vehicle NL2",
                   "Drug L1", "Drug L2", "Drug L3", "Drug NL1", "Drug NL2")
 colnames(pd_data)[1:length(abundance_cols)] <- new_colnames
 
