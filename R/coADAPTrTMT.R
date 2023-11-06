@@ -6,6 +6,7 @@ required_packages <- c("ExcelFunctionsR", "remotes", "data.table", "stringr", "p
                        "tidyverse", "EnvStats", "dplyr", "writexl","stringr",
                        "phylotools", "parallel", "rlist","argparser", "Cairo")
 
+
 # load or install & load all packages
 package.check <- lapply(
   required_packages,
@@ -75,45 +76,33 @@ pd_data$DrugNL1 <- (pd_data$"Abundance: 131N" * pd_data$Intensity ) / pd_data$Su
 pd_data$DrugNL2 <- (pd_data$"Abundance: 131C" * pd_data$Intensity ) / pd_data$SumRow_Abundances
 #pd_data$DrugnNL3 <- (pd_data$"Abundance: 130N" * pd_data$Intensity ) / pd_data$SumRow_Abundances
 
-#"Abundance: 126"  "Abundance: 127N" "Abundance: 127C" "Abundance: 128N" "Abundance: 128C" "Abundance: 129N" "Abundance: 129C" "Abundance: 130C" "Abundance: 131N" "Abundance: 131C"
+#Remove Old Columns
+columns_to_remove <- c(
+  "Abundance: 126",
+  "Abundance: 127N",
+  "Abundance: 127C",
+  "Abundance: 128N",
+  "Abundance: 128C",
+  "Abundance: 129N",
+  "Abundance: 129C",
+  "Abundance: 130C",
+  "Abundance: 131N",
+  "Abundance: 131C",
+  "SumRow_Abundances"
+)
 
-# Calculate the result for each column, handling NAs
+# Remove the specified columns
+PD_data <- PD_data %>%
+  select(-one_of(columns_to_remove))%>%
+  gather(key = "Condition", value = "PrecursorAbundance", starts_with("VehicleL"), starts_with("DrugL"), starts_with("VehicleNL"), starts_with("DrugNL"))
 
 
-# Rename the columns
-new_colnames <- c(  "Vehicle NL2",
-                  "Drug L1", "Drug L2", "Drug L3", "Drug NL1", "Drug NL2")
-colnames(pd_data)[1:length(abundance_cols)] <- new_colnames
-
-return(pd_data)
+#Transform abundances to rows for further pre processing and then FPOP Calculations
+# Reshape the data # May Have to change gather condition
+PD_data <- pd_data %>%
+  gather(key = "Condition", value = "PrecursorAbundance", starts_with("VehicleL"), starts_with("DrugL"))
 
 
-
-
-
-
-calculate_tmt_fpop <- function(pd_data) {
-  # List of column names containing "Abundance"
-  abundance_cols <- grep("Abundance", colnames(pd_data), value = TRUE)
-
-  # Convert abundance columns to numeric, handling NAs as 0
-  pd_data[, abundance_cols] <- lapply(pd_data[, abundance_cols], function(x) as.numeric(ifelse(x == "NA", 0, x)))
-
-  # Calculate the result for each column, handling NAs
-  for (i in 1:length(abundance_cols)) {
-    pd_data[, i] <- ifelse(pd_data[, i] == 0, NA, (pd_data[, i] * pd_data$Intensity) / rowSums(pd_data[, abundance_cols]))
-  }
-
-  # Rename the columns
-  new_colnames <- c("Vehicle L1", "Vehicle L2", "Vehicle L3", "Vehicle NL1", "Vehicle NL2",
-                    "Drug L1", "Drug L2", "Drug L3", "Drug NL1", "Drug NL2")
-  colnames(pd_data)[1:length(abundance_cols)] <- new_colnames
-
-  return(pd_data)
-}
-
-# Call the function with your pd_data dataframe
-pd_data <- calculate_tmt_fpop(pd_data)
 
 
 
