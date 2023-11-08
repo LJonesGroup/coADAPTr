@@ -173,9 +173,8 @@ locate_startend_res <- function(raw_data){
   raw_data$peptide<- paste(raw_data$start,"-", raw_data$end)
 
   raw_data$mod_count <- str_count(raw_data$Modifications, "\\(.*?\\)")
-
-
   raw_data$mod_count <- ifelse(raw_data$MOD == "Unoxidized", 0, raw_data$mod_count)
+
   # get modified residue and number
   raw_data$mod_res <- ifelse(raw_data$ModPositionN>0, raw_data$start + raw_data$ModPositionN - 1, NA)
 
@@ -297,7 +296,7 @@ graphing_df_pep$MasterProteinAccessions <- gsub(".*\\|(.*?)\\|.*", "\\1", graphi
 filtered_graphing_df_pep <- function(df_in) {
   df_in <- df_in %>% filter(EOM > 0)
   df_in <- df_in %>% filter(EOM > SD)
-  df_in <- df_in %>% filter(df_in[[12]] > 4)  # Filter for the 12th column > 4
+  df_in <- df_in %>% filter(df_in$N >= 4)  # Filter for the 12th column > 4
   df_in <- df_in %>% arrange(start)
   return(df_in)
 }
@@ -313,7 +312,7 @@ quant_graph_df_pep <- filtered_graphing_df_pep(graphing_df_pep)
 #RefactoredCorrect
 area_calculations_res <- function(df_in) {
   df_out <- df_in %>%
-    filter(mod_count == 0)%>%
+    filter(mod_count == 0 | mod_count == 1) %>%
     group_by(MasterProteinAccessions, Sequence, SampleControl, MOD) %>%
     reframe(TotalArea = sum(`Precursor Abundance`)) %>%
     ungroup() %>%
@@ -342,7 +341,7 @@ area_calculations_res <- function(df_in) {
 
 
   df_out2 <- df_in %>%
-    filter(mod_count == 0 & MOD == "Oxidized") %>%
+    filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized")  %>%
     group_by(MasterProteinAccessions, Sequence, Res, SampleControl) %>%
     reframe(OxidizedArea = sum(`Precursor Abundance`)) %>%
     ungroup() %>%
@@ -370,7 +369,7 @@ area_calculations_res <- function(df_in) {
   #FIX CALCULATE N FUNCTION FOR RESIDUE LEVEL N > $
   # Calculate N values and store in a separate data frame
   N_df <- df_in %>%
-    filter(mod_count == 0, !is.na(Res)) %>%
+    filter(mod_count == 0| mod_count == 1, !is.na(Res)) %>%
     group_by(MasterProteinAccessions, Sequence, Res) %>%
     summarize(N = n())  # Count the occurrences
 
