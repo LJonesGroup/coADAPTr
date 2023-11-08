@@ -172,8 +172,9 @@ locate_startend_res <- function(raw_data){
   #annotate peptide
   raw_data$peptide<- paste(raw_data$start,"-", raw_data$end)
 
-  # get number of modified residues
-  raw_data$mod_count <- str_count(raw_data$Modifications, ";")
+  raw_data$mod_count <- str_count(raw_data$Modifications, "\\(.*?\\)")
+
+
   raw_data$mod_count <- ifelse(raw_data$MOD == "Unoxidized", 0, raw_data$mod_count)
   # get modified residue and number
   raw_data$mod_res <- ifelse(raw_data$ModPositionN>0, raw_data$start + raw_data$ModPositionN - 1, NA)
@@ -189,6 +190,8 @@ locate_startend_res <- function(raw_data){
 
 # annotate the PD output file with peptide and modification residue positions ERROR HERE. LOTS OF DATA LOST DURING MERGE
 pd_data_fasta_merged <- locate_startend_res(pd_data_annotated)
+# Assuming pd_data_fasta_merged is your data frame
+
 
 # garbage cleanup
 rm(pd_data_annotated);gc()
