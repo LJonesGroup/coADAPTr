@@ -88,7 +88,8 @@ columns_to_remove <- c(
   "Abundance: 130C",
   "Abundance: 131N",
   "Abundance: 131C",
-  "SumRow_Abundances"
+  "SumRow_Abundances",
+  "Intensity"
 )
 
 # Remove the specified columns
