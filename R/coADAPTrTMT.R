@@ -91,58 +91,20 @@ columns_to_remove <- c(
   "SumRow_Abundances",
   "Intensity"
 )
-
+#Transform abundances to rows for further pre processing and then FPOP Calculations
 # Remove the specified columns
-PD_data <- PD_data %>%
+PD_data <- pd_data %>%
   select(-one_of(columns_to_remove))%>%
   gather(key = "Condition", value = "PrecursorAbundance", starts_with("VehicleL"), starts_with("DrugL"), starts_with("VehicleNL"), starts_with("DrugNL"))
-
-
-#Transform abundances to rows for further pre processing and then FPOP Calculations
-# Reshape the data # May Have to change gather condition
-PD_data <- pd_data %>%
-  gather(key = "Condition", value = "PrecursorAbundance", starts_with("VehicleL"), starts_with("DrugL"))
-
 
 
 
 
 #Does this need to have a separate function or can it be merged with Annotate Features.
 # Annotate Sample/Control based on MS acquisitoin filename convention
-pd_data$SampleControl <- ifelse(pd_data$'Spectrum File' %like%
+PD_data$SampleControl <- ifelse(PD_data$'Condition' %like%
                                   "NL", "Control", "Sample")
 
-#####Run this if MS files were analyzed via PD
-
-remove_dup <- function(df) {
-
-  identical_cols <- setdiff(names(df), c("Identifying Node", "DeltaScore"))
-
-  df <- df %>%
-    group_by(across(all_of(identical_cols))) %>%
-    mutate(MultipleID = ifelse(n() > 1, "Yes", "No")) %>%
-    ungroup()
-
-  # Group the rows by the columns specified above and find the row with the highest DeltaScore in each group
-  df <- df %>%
-    group_by(across(all_of(identical_cols))) %>%
-    mutate(DMax = ifelse(MultipleID == "Yes" & DeltaScore == max(DeltaScore), "Max", NA_character_),
-           Multiple = ifelse(DMax == "Max", "Max", "Min")) %>%
-    ungroup()
-
-  # Filter the rows based on the specified criteria (MultipleID == "Yes" and DMax == "Max" or MultipleID == "No")
-  df <- df %>%
-    filter(MultipleID == "Yes" & DMax == "Max" | MultipleID == "No")
-
-  return(df)
-}
-
-
-
-OG_pd_data<-pd_data
-
-
-pd_data<- remove_dup(pd_data)
 
 
 #Map acquisition file names
@@ -171,6 +133,14 @@ annotate_features <- function(raw_data){
   raw_data$Modifications <- ifelse(grepl("^; [A-Z]", raw_data$Modifications),
                                    sub("^;\\s", "", raw_data$Modifications),
                                    raw_data$Modifications)
+
+
+  #remove TMT tag from modifications columnn
+#Separate TMT Modifications
+
+
+
+  #Create MODC olumn to distinguish Oxidized vs UnOxidized
   raw_data$MOD <- ifelse(is.na(raw_data$Modifications) | raw_data$Modifications == "", "Unoxidized",
                          ifelse(grepl("()", raw_data$Modifications), "Oxidized", "Unoxidized"))
   raw_data$MOD <- ifelse(is.na(raw_data$Modifications) | raw_data$Modifications == "" | grepl("^\\s*$", raw_data$Modifications) | !grepl("[A-Za-z]", raw_data$Modifications), "Unoxidized", raw_data$MOD)
@@ -192,4 +162,43 @@ annotate_features <- function(raw_data){
 }
 
 # parse the PD data
-pd_data_annotated <- annotate_features(pd_data)
+pd_data_annotated <- annotate_features(PD_data)
+
+
+#Test
+# Updated annotate_features function
+annotate_features <- function(raw_data){
+  # Changing column header to match FASTA file
+  raw_data <- raw_data %>%
+    rename('UniprotID' = 'Protein Accessions')
+
+  # Remove Conserved Proteins
+  raw_data <- raw_data %>%
+    filter(!grepl(";", raw_data$UniprotID))
+
+  # Remove TMT and Carbamidomethyl modifications and their parentheses and surrounding characters
+  raw_data$Modifications <- gsub("\\b(TMT\\w*|Carbamidomethyl\\w*);?\\s*|[(]\\w+\\([^)]*\\)[)];?\\s*", "", raw_data$Modifications)
+
+  # Remove any leading or trailing semicolons or spaces
+  raw_data$Modifications <- gsub("^;\\s*|\\s*;$", "", raw_data$Modifications)
+
+  # Create MOD column to distinguish Oxidized vs UnOxidized
+  raw_data$MOD <- ifelse(
+    is.na(raw_data$Modifications) | raw_data$Modifications == "", "Unoxidized",
+    ifelse(grepl("()", raw_data$Modifications), "Oxidized", "Unoxidized")
+  )
+  raw_data$MOD <- ifelse(
+    is.na(raw_data$Modifications) | raw_data$Modifications == "" | grepl("^\\s*$", raw_data$Modifications) | !grepl("[A-Za-z]", raw_data$Modifications), "Unoxidized", raw_data$MOD)
+
+  # Mod Position
+  raw_data$ModPositionL <- sub("^([[:alpha:]]*).*", "\\1", raw_data$Modifications)
+  raw_data$ModPositionN <- as.numeric(gsub(".*?([0-9]+).*", "\\1", raw_data$Modifications))
+  raw_data$ModPosition <- ifelse(raw_data$ModPositionL == "NA", "NA", paste(raw_data$ModPositionL, raw_data$ModPositionN))
+  raw_data$ModPosition <- gsub("^; ", "", raw_data$ModPosition)
+
+  return(raw_data)
+}
+
+# Parse the PD data
+pd_data_annotated <- annotate_features(PD_data)
+
