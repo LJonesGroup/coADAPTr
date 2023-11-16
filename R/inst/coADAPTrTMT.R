@@ -3,7 +3,7 @@ options(stringsAsFactors = FALSE)
 # list of required packages
 required_packages <- c("ExcelFunctionsR", "remotes", "data.table", "stringr", "protr",
                        "plyr", "extrafont", "readxl", "ggplot2", "eulerr",
-                       "tidyverse", "EnvStats", "dplyr", "writexl","stringr",
+                       "tidyverse", "EnvStats", "dplyr", "writexl",
                        "phylotools", "parallel", "rlist","argparser", "Cairo")
 
 
@@ -17,6 +17,37 @@ package.check <- lapply(
     }
   }
 )
+#To remediate conflicts
+
+library(conflicted)
+
+conflict_prefer("arrange", winner = "dplyr")
+conflict_prefer("between", winner = "dplyr")
+conflict_prefer("compact", winner = "purrr")
+conflict_prefer("count", winner = "dplyr")
+conflict_prefer("desc", winner = "dplyr")
+conflict_prefer("failwith", winner = "dplyr")
+conflict_prefer("filter", winner = "dplyr")
+conflict_prefer("first", winner = "dplyr")
+conflict_prefer("hour", winner = "lubridate")
+conflict_prefer("id", winner = "dplyr")
+conflict_prefer("isoweek", winner = "lubridate")
+conflict_prefer("lag", winner = "dplyr")
+conflict_prefer("last", winner = "dplyr")
+conflict_prefer("mday", winner = "lubridate")
+conflict_prefer("minute", winner = "lubridate")
+conflict_prefer("month", winner = "lubridate")
+conflict_prefer("mutate", winner = "dplyr")
+conflict_prefer("quarter", winner = "lubridate")
+conflict_prefer("rename", winner = "dplyr")
+conflict_prefer("second", winner = "lubridate")
+conflict_prefer("summarise", winner = "dplyr")
+conflict_prefer("summarize", winner = "dplyr")
+conflict_prefer("transpose", winner = "purrr")
+conflict_prefer("wday", winner = "lubridate")
+conflict_prefer("week", winner = "lubridate")
+conflict_prefer("yday", winner = "lubridate")
+conflict_prefer("year", winner = "lubridate")
 
 # set working directory to current directory
 setwd(getwd())
