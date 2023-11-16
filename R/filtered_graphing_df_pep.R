@@ -1,5 +1,3 @@
-###########################################################################
-#The function aims to filter data before graphing
 filtered_graphing_df_pep <- function(df_in) {
   df_in <- df_in %>% filter(EOM > 0)
   df_in <- df_in %>% filter(EOM > SD)

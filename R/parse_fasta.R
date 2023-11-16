@@ -1,5 +1,3 @@
-###########################################################################
-#The function aims to sort though the FASTA file entries and change the column names.
 parse_fasta <- function(fasta_in){
 
   # Rename Columns

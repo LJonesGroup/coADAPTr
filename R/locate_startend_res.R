@@ -1,5 +1,3 @@
-###########################################################################
-#The function aims to ocate the start and end position of the Modification on the protein sequence
 locate_startend_res <- function(raw_data){
 
   uniqueMPA <- unique(raw_data[, c("Master Protein Accessions",'Sequence')])

@@ -1,6 +1,3 @@
-###########################################################################
-#The function aims to preprocess and modify the input data set ('raw_data') by standardizing column names,
-#filtering out specific rows, and restructuring content within the 'Modifications' column based on defined patterns and rules.
 annotate_features <- function(raw_data){
 
   # Changing column header to match FASTA file

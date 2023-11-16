@@ -1,5 +1,3 @@
-###########################################################################
-#The function aims to prepares and refines the input data for the extent of modification calculations.
 area_calculations_pep <- function(df_in) {
   df_out <- df_in %>%
     group_by(MasterProteinAccessions, Sequence, SampleControl, MOD) %>%
