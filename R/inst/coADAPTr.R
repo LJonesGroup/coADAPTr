@@ -427,7 +427,7 @@ area_calculations_res <- function(df_in) {
 Areas_res <- area_calculations_res(pd_data_fasta_merged)
 
 
-#rebuilding areas_res function
+#rebuilding areas_res function##########################################################
 
   df_out <- pd_data_fasta_merged %>%
     filter(mod_count == 0 | mod_count == 1) %>%
