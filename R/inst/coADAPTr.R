@@ -21,57 +21,35 @@ package.check <- lapply(
 setwd(getwd())
 #Resolve library conflicts if necessary
 
-resolve_conflicts <- function() {
-  preferred_packages <- list(
-    arrange = "dplyr",
-    between = "dplyr",
-    compact = "purrr",
-    count = "dplyr",
-    desc = "dplyr",
-    failwith = "dplyr",
-    filter = "dplyr",
-    first = "dplyr",
-    hour = "lubridate",
-    id = "dplyr",
-    isoweek = "lubridate",
-    lag = "dplyr",
-    last = "dplyr",
-    mday = "lubridate",
-    minute = "lubridate",
-    month = "lubridate",
-    mutate = "dplyr",
-    quarter = "lubridate",
-    rename = "dplyr",
-    second = "lubridate",
-    summarise = "dplyr",
-    summarize = "dplyr",
-    transpose = "purrr",
-    wday = "lubridate",
-    week = "lubridate",
-    yday = "lubridate",
-    year = "lubridate",
-    read.fasta = "phylotools"
-  )
-
-  resolve <- function(conflict_list) {
-    resolved_conflicts <- list()
-
-    for (conflict in conflict_list) {
-      if (conflict %in% names(preferred_packages)) {
-        resolved_conflicts[[conflict]] <- preferred_packages[[conflict]]
-      } else {
-        resolved_conflicts[[conflict]] <- "No preference"
-      }
-    }
-
-    return(resolved_conflicts)
-  }
-
-  return(resolve)
-}
-
-# To use the function:
-resolve_conflicts()(c("arrange", "count", "failwith", "hour", "transpose", "read.fasta"))
+conflict_prefer("arrange", winner = "dplyr")
+conflict_prefer("between", winner = "dplyr")
+conflict_prefer("compact", winner = "purrr")
+conflict_prefer("count", winner = "dplyr")
+conflict_prefer("desc", winner = "dplyr")
+conflict_prefer("failwith", winner = "dplyr")
+conflict_prefer("filter", winner = "dplyr")
+conflict_prefer("first", winner = "dplyr")
+conflict_prefer("hour", winner = "lubridate")
+conflict_prefer("id", winner = "dplyr")
+conflict_prefer("isoweek", winner = "lubridate")
+conflict_prefer("lag", winner = "dplyr")
+conflict_prefer("last", winner = "dplyr")
+conflict_prefer("mday", winner = "lubridate")
+conflict_prefer("minute", winner = "lubridate")
+conflict_prefer("month", winner = "lubridate")
+conflict_prefer("mutate", winner = "dplyr")
+conflict_prefer("quarter", winner = "lubridate")
+conflict_prefer("rename", winner = "dplyr")
+conflict_prefer("second", winner = "lubridate")
+conflict_prefer("summarise", winner = "dplyr")
+conflict_prefer("summarize", winner = "dplyr")
+conflict_prefer("transpose", winner = "purrr")
+conflict_prefer("wday", winner = "lubridate")
+conflict_prefer("week", winner = "lubridate")
+conflict_prefer("yday", winner = "lubridate")
+conflict_prefer("year", winner = "lubridate")
+conflict_prefer("read.fasta", winner = "phylotools")
+conflict_prefer("rename", winner = "dplyr")
 
 ###########################################################################
 #Homo sapien Reviewed 12062021
@@ -365,6 +343,7 @@ quant_graph_df_pep <- filtered_graphing_df_pep(graphing_df_pep)
 #RefactoredCorrect
 
 area_calculations_res <- function(df_in) {
+
   df_out <- df_in %>%
     filter(mod_count == 0 | mod_count == 1) %>%
     group_by(MasterProteinAccessions, Sequence, SampleControl, MOD) %>%
@@ -377,21 +356,13 @@ area_calculations_res <- function(df_in) {
       values_fill = NA
     )
 
-  #create conditions so that the bare minimum criteria for FPOP can be calculated
-  #specifically cases where sample oxidized area is detected and control oxidized area re detected.
-  #Cases where that peptide was not detected in the sample unoxidized area and control oxidized are will be turned to 0
-
-  #The peptide at least has to be detected by the mass spec in order to calculate control total area?
-  df_out$Control_Oxidized <- ifelse(df_out$Control_Unoxidized > 0 & df_out$Control_Oxidized == "NA", 0, df_out$Control_Oxidized)
-
-  #For extent of modification calculations the peptide needs to be modified
-  df_out$Sample_Unoxidized <- ifelse(df_out$Sample_Oxidized > 0 & df_out$Sample_Unoxidized == "NA", 0, df_out$Control_Oxidized)
-
-
 
   df_out<- df_out %>%
     mutate(SampleTotalArea = Sample_Oxidized + Sample_Unoxidized,
            ControlTotalArea = Control_Oxidized + Control_Unoxidized)
+
+  df_out <- df_out %>%
+    select(-Sample_Oxidized, -Sample_Unoxidized, -Control_Unoxidized, -Control_Oxidized)
 
 
   df_out2 <- df_in %>%
@@ -420,8 +391,9 @@ area_calculations_res <- function(df_in) {
   df_out$EOMControl <- df_out$ControlOxidizedArea / df_out$ControlTotalArea
   df_out$EOM <- df_out$EOMSample - df_out$EOMControl
 
-  #FIX CALCULATE N FUNCTION FOR RESIDUE LEVEL N > $
-  # Calculate N values and store in a separate data frame
+  ##################
+  #########################
+
   N_df <- df_in %>%
     filter(mod_count == 0| mod_count == 1, !is.na(Res)) %>%
     group_by(MasterProteinAccessions, Sequence, Res) %>%
@@ -440,8 +412,10 @@ area_calculations_res <- function(df_in) {
 
   # Join the calculated sdprep values to df_out
   df_out <- df_out %>%
-    left_join(sd_df, by = c("MasterProteinAccessions", "Sequence"))
+    left_join(sd_df, by = c("MasterProteinAccessions", "Sequence", "Res"))
   df_out$SD <- df_out$sdprep/(df_out$SampleTotalArea+df_out$ControlTotalArea)
+
+  df_out<- df_out[complete.cases(df_out[c("Res", "EOM")]), ]
 
   return(df_out)
 }
@@ -450,91 +424,6 @@ Areas_res <- area_calculations_res(pd_data_fasta_merged)
 
 
 #rebuilding areas_res function##########################################################
-
-  df_out <- pd_data_fasta_merged %>%
-    filter(mod_count == 0 | mod_count == 1) %>%
-    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD) %>%
-    reframe(TotalArea = sum(`Precursor Abundance`)) %>%
-    ungroup() %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence"),
-      names_from = c("SampleControl", "MOD"),
-      values_from = "TotalArea",
-      values_fill = NA
-    )
-
-  #create conditions so that the bare minimum criteria for FPOP can be calculated
-  #specifically cases where sample oxidized area is detected and control oxidized area re detected.
-  #Cases where that peptide was not detected in the sample unoxidized area and control oxidized are will be turned to 0
-
-  #The peptide at least has to be detected by the mass spec in order to calculate control total area?
-  ##CHECK IF THIS IS NECESSARY
-  df_out$Control_Oxidized <- ifelse(df_out$Control_Unoxidized > 0 & df_out$Control_Oxidized == "NA", 0, df_out$Control_Oxidized)
-
-  #For extent of modification calculations the peptide needs to be modified
-  df_out$Sample_Unoxidized <- ifelse(df_out$Sample_Oxidized > 0 & df_out$Sample_Unoxidized == "NA", 0, df_out$Control_Oxidized)
-
-
-
-  df_out<- df_out %>%
-    mutate(SampleTotalArea = Sample_Oxidized + Sample_Unoxidized,
-           ControlTotalArea = Control_Oxidized + Control_Unoxidized)
-
-  df_out <- df_out %>%
-    select(-Sample_Oxidized, -Sample_Unoxidized, -Control_Unoxidized, -Control_Oxidized)
-
-
-  df_out2 <- pd_data_fasta_merged %>%
-    filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized")  %>%
-    group_by(MasterProteinAccessions, Sequence, Res, SampleControl) %>%
-    reframe(OxidizedArea = sum(`Precursor Abundance`)) %>%
-    ungroup() %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence", "Res"),
-      names_from = c("SampleControl"),
-      values_from = "OxidizedArea",
-      values_fill = NA
-    )
-
-  df_out<- full_join(df_out, df_out2, by = c("MasterProteinAccessions", "Sequence"))
-
-
-  df_out <- df_out %>%
-    rename(SampleOxidizedArea = Sample,
-           ControlOxidizedArea = Control)
-
-
-
-
-  df_out$EOMSample <- df_out$SampleOxidizedArea / df_out$SampleTotalArea
-  df_out$EOMControl <- df_out$ControlOxidizedArea / df_out$ControlTotalArea
-  df_out$EOM <- df_out$EOMSample - df_out$EOMControl
-
-  ##################
-  #########################
-  #########################start here### finish building residue level function and make documenatino for this function
-  ##########################FIX CALCULATE N FUNCTION FOR RESIDUE LEVEL N > $
-  # Calculate N values and store in a separate data frame
-  N_df <- df_in %>%
-    filter(mod_count == 0| mod_count == 1, !is.na(Res)) %>%
-    group_by(MasterProteinAccessions, Sequence, Res) %>%
-    summarize(N = n())  # Count the occurrences
-
-  # Merge the N column into df_out
-  df_out$N <- df_out %>%
-    left_join(N_df, by = c("MasterProteinAccessions", "Sequence", "Res")) %>%
-    pull(N)  # Extract N column
-  # colnames(df_out)[12] <- "N"  # Renaming the 12th column to "N"
-
-  # Calculate standard deviation and store in a separate data frame
-  sd_df <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, Res) %>%
-    summarize(sdprep = sd(`Precursor Abundance`))
-
-  # Join the calculated sdprep values to df_out
-  df_out <- df_out %>%
-    left_join(sd_df, by = c("MasterProteinAccessions", "Sequence"))
-  df_out$SD <- df_out$sdprep/(df_out$SampleTotalArea+df_out$ControlTotalArea)
 
 
 
@@ -551,15 +440,17 @@ grab_seq_metadata_res <- function(df_in){
   return(df_out)
 }
 # merge metadata with numeric graphing data
-graphing_df_res <- Areas_res%>%
-  left_join(grab_seq_metadata_res(pd_data_fasta_merged))
+graphing_data_res <- function(df_in) {
+  df_out <- df_in %>%
+    left_join(grab_seq_metadata_res(pd_data_fasta_merged)) %>%
+    filter(!(is.na(Res) | Res == "")) %>%
+    arrange(start) %>%
+    mutate(MasterProteinAccessions = gsub(".*\\|(.*?)\\|.*", "\\1", MasterProteinAccessions))
 
-graphing_df_res <- graphing_df_res[!(is.na(graphing_df_res$Res) | graphing_df_res$Res == ""), ]
+  return(df_out)
+}
 
-# Ascending order
-graphing_df_res <- graphing_df_res[order(graphing_df_res$start), ]
-graphing_df_res$MasterProteinAccessions <- gsub(".*\\|(.*?)\\|.*", "\\1", graphing_df_res$MasterProteinAccessions)
-
+graphing_df_res<- graphing_data_res(Areas_res)
 #Add filters for residue level graphing. Similar to above.
 #filter for graphing data
 filtered_graphing_df_res <- function(df_in) {
