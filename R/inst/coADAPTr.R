@@ -81,6 +81,7 @@ FASTA <- read.fasta(file = ("./data/Homo sapien Reviewed 12062021.fasta"),
 #USER INDICATES FILE PATH
 file_path<- "C:/Users/Raqie/Desktop/UMBPSC/RCoding/LJonesGroup/coADAPTr/coADAPTr/data/TestData.xlsx"
 
+
 #UMBPSC/RCoding/JonesLabScripts/data/100 mM H2O2 1 Min BR1 Core.xlsx"
 #"C:/Users/Raqie/Desktop/UMBPSC/RCoding/JonesLabScripts/data/100 mM H2O2 1 Min BR1 Outer.xlsx"
 
