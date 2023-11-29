@@ -21,35 +21,57 @@ package.check <- lapply(
 setwd(getwd())
 #Resolve library conflicts if necessary
 
-conflict_prefer("arrange", winner = "dplyr")
-conflict_prefer("between", winner = "dplyr")
-conflict_prefer("compact", winner = "purrr")
-conflict_prefer("count", winner = "dplyr")
-conflict_prefer("desc", winner = "dplyr")
-conflict_prefer("failwith", winner = "dplyr")
-conflict_prefer("filter", winner = "dplyr")
-conflict_prefer("first", winner = "dplyr")
-conflict_prefer("hour", winner = "lubridate")
-conflict_prefer("id", winner = "dplyr")
-conflict_prefer("isoweek", winner = "lubridate")
-conflict_prefer("lag", winner = "dplyr")
-conflict_prefer("last", winner = "dplyr")
-conflict_prefer("mday", winner = "lubridate")
-conflict_prefer("minute", winner = "lubridate")
-conflict_prefer("month", winner = "lubridate")
-conflict_prefer("mutate", winner = "dplyr")
-conflict_prefer("quarter", winner = "lubridate")
-conflict_prefer("rename", winner = "dplyr")
-conflict_prefer("second", winner = "lubridate")
-conflict_prefer("summarise", winner = "dplyr")
-conflict_prefer("summarize", winner = "dplyr")
-conflict_prefer("transpose", winner = "purrr")
-conflict_prefer("wday", winner = "lubridate")
-conflict_prefer("week", winner = "lubridate")
-conflict_prefer("yday", winner = "lubridate")
-conflict_prefer("year", winner = "lubridate")
-conflict_prefer("read.fasta", winner = "phylotools")
-conflict_prefer("rename", winner = "dplyr")
+resolve_conflicts <- function() {
+  preferred_packages <- list(
+    arrange = "dplyr",
+    between = "dplyr",
+    compact = "purrr",
+    count = "dplyr",
+    desc = "dplyr",
+    failwith = "dplyr",
+    filter = "dplyr",
+    first = "dplyr",
+    hour = "lubridate",
+    id = "dplyr",
+    isoweek = "lubridate",
+    lag = "dplyr",
+    last = "dplyr",
+    mday = "lubridate",
+    minute = "lubridate",
+    month = "lubridate",
+    mutate = "dplyr",
+    quarter = "lubridate",
+    rename = "dplyr",
+    second = "lubridate",
+    summarise = "dplyr",
+    summarize = "dplyr",
+    transpose = "purrr",
+    wday = "lubridate",
+    week = "lubridate",
+    yday = "lubridate",
+    year = "lubridate",
+    read.fasta = "phylotools"
+  )
+
+  resolve <- function(conflict_list) {
+    resolved_conflicts <- list()
+
+    for (conflict in conflict_list) {
+      if (conflict %in% names(preferred_packages)) {
+        resolved_conflicts[[conflict]] <- preferred_packages[[conflict]]
+      } else {
+        resolved_conflicts[[conflict]] <- "No preference"
+      }
+    }
+
+    return(resolved_conflicts)
+  }
+
+  return(resolve)
+}
+
+# To use the function:
+resolve_conflicts()(c("arrange", "count", "failwith", "hour", "transpose", "read.fasta"))
 
 ###########################################################################
 #Homo sapien Reviewed 12062021
@@ -320,8 +342,7 @@ graphing_df_pep <- graphing_df_pep[order(graphing_df_pep$start), ]
 graphing_df_pep$MasterProteinAccessions <- gsub(".*\\|(.*?)\\|.*", "\\1", graphing_df_pep$MasterProteinAccessions)
 
 
-#Create function for filtering graphical data
-#The above data is complete but, not all of the data meets standards for graphic. ie error bars greater than EOM
+###########################################################################################################
 
 # Filter Graphical Data to include data that is acceptable.
 filtered_graphing_df_pep <- function(df_in) {
@@ -446,6 +467,7 @@ Areas_res <- area_calculations_res(pd_data_fasta_merged)
   #Cases where that peptide was not detected in the sample unoxidized area and control oxidized are will be turned to 0
 
   #The peptide at least has to be detected by the mass spec in order to calculate control total area?
+  ##CHECK IF THIS IS NECESSARY
   df_out$Control_Oxidized <- ifelse(df_out$Control_Unoxidized > 0 & df_out$Control_Oxidized == "NA", 0, df_out$Control_Oxidized)
 
   #For extent of modification calculations the peptide needs to be modified
@@ -457,8 +479,11 @@ Areas_res <- area_calculations_res(pd_data_fasta_merged)
     mutate(SampleTotalArea = Sample_Oxidized + Sample_Unoxidized,
            ControlTotalArea = Control_Oxidized + Control_Unoxidized)
 
+  df_out <- df_out %>%
+    select(-Sample_Oxidized, -Sample_Unoxidized, -Control_Unoxidized, -Control_Oxidized)
 
-  df_out2 <- df_in %>%
+
+  df_out2 <- pd_data_fasta_merged %>%
     filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized")  %>%
     group_by(MasterProteinAccessions, Sequence, Res, SampleControl) %>%
     reframe(OxidizedArea = sum(`Precursor Abundance`)) %>%
@@ -484,7 +509,10 @@ Areas_res <- area_calculations_res(pd_data_fasta_merged)
   df_out$EOMControl <- df_out$ControlOxidizedArea / df_out$ControlTotalArea
   df_out$EOM <- df_out$EOMSample - df_out$EOMControl
 
-  #FIX CALCULATE N FUNCTION FOR RESIDUE LEVEL N > $
+  ##################
+  #########################
+  #########################start here### finish building residue level function and make documenatino for this function
+  ##########################FIX CALCULATE N FUNCTION FOR RESIDUE LEVEL N > $
   # Calculate N values and store in a separate data frame
   N_df <- df_in %>%
     filter(mod_count == 0| mod_count == 1, !is.na(Res)) %>%
