@@ -1,3 +1,4 @@
+####add functions for grouped bar grpah and venn diagrams
 options(stringsAsFactors = FALSE)
 
 # list of required packages
