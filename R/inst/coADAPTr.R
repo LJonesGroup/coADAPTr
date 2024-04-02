@@ -65,10 +65,11 @@ file_path<- "C:/Users/rasho/Desktop/coADAPTR/TestData.xlsx"
 #"C:/Users/Raqie/Desktop/UMBPSC/RCoding/JonesLabScripts/data/100 mM H2O2 1 Min BR1 Outer.xlsx"
 
 # Set output directory
-file_output= "C:/Users/Raqie/Desktop/AutoDataAnalysis/Building"
+file_output= "C:/Users/rasho/Desktop/AutoDataAnalysis"
 
 #Read in data from Proteome Discoverer
 pd_data <- read_excel(file_path)
+fragpipedata<- read.table("C:/Users/rasho/Desktop/coADAPTR/MTXfpop_psm.tsv", header = TRUE, sep = "\t", check.names = FALSE)
 
 ##If your file input is from fragpipe start here
 
