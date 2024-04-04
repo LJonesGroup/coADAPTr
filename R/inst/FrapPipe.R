@@ -106,17 +106,17 @@ fpdata <- remove_columns(fragpipedata, columns_to_remove)
 #parse_fasta <- function(fasta_in){
 
   # Rename Columns
-  fasta_in <- fasta_in %>%
-    rename(protein_sequence = seq.text)
-  fasta_in<- fasta_in %>%
-    rename(MasterProteinAccessions = seq.name)
+  #fasta_in <- fasta_in %>%
+  #  rename(protein_sequence = seq.text)
+  #fasta_in<- fasta_in %>%
+  #  rename(MasterProteinAccessions = seq.name)
 
   # Isolate MPA
-  fasta_in$UniprotID <- gsub("^.+\\|(\\w+)\\|.*$", "\\1", fasta_in$MasterProteinAccessions)
+ # fasta_in$UniprotID <- gsub("^.+\\|(\\w+)\\|.*$", "\\1", fasta_in$MasterProteinAccessions)
 
-  return(fasta_in)
+ # return(fasta_in)
 
-}
+#}
 
 # rename columns of the FASTA file for merging dataframes later
 #FASTA <- parse_fasta(FASTA)
@@ -126,7 +126,8 @@ fpdata <- remove_columns(fragpipedata, columns_to_remove)
 # function to locate the residue number for the peptide termini and residues
 fpannotate <- function(raw_data) {
   # Extract everything before the first parenthesis in the "FPOP Modifications" column
-  raw_data$Residue <- gsub("\\(.*", "", raw_data$FPOP.Modifications)
+  #USE THIS FOR RESIDUE LEVEL CALCULATIONS!!!!!!!!!!!
+  #raw_data$Residue <- gsub("\\(.*", "", raw_data$FPOP.Modifications)
 
   # Create a new column to store the modified peptide
   raw_data$peptidelocation <- paste(raw_data$Protein.Start, "-", raw_data$Protein.End)
@@ -144,23 +145,40 @@ fpdata <- fpannotate(fpdata)
 
 # FPOP Calculations ---------------------------------------------------------------------------------------------
 #Summing multiple occurances
-sum_rows <- function(data) {
-  # Step 1: Auto-detect columns containing VL, VC, DL, and DC
+summarize_duplicates <- function(data) {
+  # Step 1: Remove the FPOP.Modifications column
+  data <- select(data, -FPOP.Modifications)
+
+  # Step 2: Auto-detect columns containing VL, VC, DL, and DC
   cols_to_sum <- grep("(VL|VC|DL|DC)\\d*$", names(data), value = TRUE)
 
-  # Step 2: Group by Protein.ID, Peptide, MOD, peptidelocation, and FPOP.Modifications, then summarize the values
+  # Step 3: Group the data by specified columns and calculate the sum of detected columns
   summarized_data <- data %>%
-    group_by(Protein.ID, Peptide, MOD, peptidelocation) %>%
+    group_by(Peptide, Protein.Start, Protein.End, Protein, Protein.ID, Entry.Name, MOD, peptidelocation) %>%
     summarize(across(all_of(cols_to_sum), sum, na.rm = TRUE), .groups = "drop")
 
-  # Step 3: Merge the summarized data back to the original data frame
-  merged_data <- left_join(data, summarized_data, by = c("Protein.ID", "Peptide", "MOD", "peptidelocation", "FPOP.Modifications"))
+  summarized_data<- summarized_data %>%
+    group_by(Peptide, Protein.Start, Protein.End, Protein, Protein.ID, Entry.Name, peptidelocation) %>%
+    filter(all(c("Oxidized", "Unoxidized") %in% MOD))
 
-  return(merged_data)
+  return(summarized_data)
 }
 
+
 # Usage example:
-modified_fpdata <- sum_rows(fpdata)
+fpdata_sums <- summarize_duplicates(fpdata)
+
+# Filter rows containing VL, VC, DL, or DC
+filtered_data <- data %>%
+  filter(across(matches("(VL|VC|DL|DC)\\d*$")) != 0)
+
+# Mutate the rows where MOD is "Unoxidized" into the rows where MOD is "Oxidized"
+mutated_data <- filtered_data %>%
+  group_by(Peptide, Protein.Start, Protein.End, Protein, Protein.ID, Entry.Name, peptidelocation) %>%
+  mutate(across(matches("(VL|VC|DL|DC)\\d*$"), ~ ifelse(MOD == "Oxidized", ., get(paste0(cur_column(), "_UNOX"))))) %>%
+  ungroup() %>%
+  select(-ends_with("_UNOX"))  # Remove the original columns
+
 
 
 
