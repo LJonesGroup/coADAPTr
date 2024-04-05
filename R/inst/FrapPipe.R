@@ -98,30 +98,6 @@ remove_columns <- function(raw_data, columns_to_remove) {
 fpdata <- remove_columns(fragpipedata, columns_to_remove)
 
 
-
-#Map acquisition file names
-###########################################################################
-# function to parse the FASTA file for later manipulations
-
-#parse_fasta <- function(fasta_in){
-
-  # Rename Columns
-  #fasta_in <- fasta_in %>%
-  #  rename(protein_sequence = seq.text)
-  #fasta_in<- fasta_in %>%
-  #  rename(MasterProteinAccessions = seq.name)
-
-  # Isolate MPA
- # fasta_in$UniprotID <- gsub("^.+\\|(\\w+)\\|.*$", "\\1", fasta_in$MasterProteinAccessions)
-
- # return(fasta_in)
-
-#}
-
-# rename columns of the FASTA file for merging dataframes later
-#FASTA <- parse_fasta(FASTA)
-
-
 #####################################################################
 # function to locate the residue number for the peptide termini and residues
 fpannotate <- function(raw_data) {
@@ -143,8 +119,8 @@ fpdata <- fpannotate(fpdata)
 
 
 
-# FPOP Calculations ---------------------------------------------------------------------------------------------
-#Summing multiple occurances
+# Data Cleaning Calculations ---------------------------------------------------------------------------------------------
+#Summing multiple occurrences
 summarize_duplicates <- function(data) {
   # Step 1: Remove the FPOP.Modifications column
   data <- select(data, -FPOP.Modifications)
@@ -168,110 +144,54 @@ summarize_duplicates <- function(data) {
 # Usage example:
 fpdata_sums <- summarize_duplicates(fpdata)
 
-# Filter rows containing VL, VC, DL, or DC
-filtered_data <- data %>%
-  filter(across(matches("(VL|VC|DL|DC)\\d*$")) != 0)
+#Spread the data out before math
+spread_unoxidized_data <- function(data) {
+  spread_data <- data %>%
+    mutate(across(starts_with(c("VL", "VC", "DL", "DC")), ~if_else(MOD == "Unoxidized", as.numeric(.), .))) %>%
+    pivot_wider(names_from = MOD, values_from = starts_with(c("VL", "VC", "DL", "DC")), names_sep = "_")
 
-# Mutate the rows where MOD is "Unoxidized" into the rows where MOD is "Oxidized"
-mutated_data <- filtered_data %>%
-  group_by(Peptide, Protein.Start, Protein.End, Protein, Protein.ID, Entry.Name, peptidelocation) %>%
-  mutate(across(matches("(VL|VC|DL|DC)\\d*$"), ~ ifelse(MOD == "Oxidized", ., get(paste0(cur_column(), "_UNOX"))))) %>%
-  ungroup() %>%
-  select(-ends_with("_UNOX"))  # Remove the original columns
-
-
-
+  return(spread_data)
+}
+spreadfpdata<- spread_unoxidized_data(fpdata_sums)
 
 ####FPOP Calculations (Peptide Level)---------------------------------------------------------------------------------------------
-area_calculations_pep <- function(df_in) {
-  df_out <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, peptide.location) %>%
-    reframe(TotalArea = sum(`Precursor Abundance`) ) %>%
-    ungroup() %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence"),
-      names_from = c("SampleControl", "MOD"),
-      values_from = "TotalArea",
-      values_fill = NA
-    )
-
-  df_out <- df_out %>%
-    rename(
-      Control_OxidizedArea = Control_Oxidized,    # Rename OldColumn1 to NewColumn1
-      Control_UnoxidizedArea = Control_Unoxidized,    # Rename OldColumn2 to NewColumn2
-      Sample_OxidizedArea = Sample_Oxidized,     # Rename OldColumn3 to NewColumn3
-      Sample_UnoxidizedArea = Sample_Unoxidized     # Rename OldColumn3 to NewColumn3
-    )
-
-  #create conditions so that the bare minimum criteria for FPOP can be calculated
-  #specifically cases where sample oxidized area is detected and control oxidized area re detected.
-  #Cases where that peptide was not detected in the sample unoxidized area and control oxidized are will be turned to 0
-  ###*****MAKE SURE THIS IS OK WITH LISA WANT TO AVOID IMPLICIT BIAS
-  #The peptide at least has to be detected by the mass spec in order to calculate control total area?
-  df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
-
-  df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
-
-  #Calculating the extent of modification (EOM) for the sample and control data for each peptide
-
-  df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")])
-  df_out$TotalControlArea <- rowSums(df_out[, c("Control_OxidizedArea", "Control_UnoxidizedArea")])
-
-
-  #Calculating the extent of modification (EOM) by subtracting background oxidation (control)
-  df_out$EOMSample <- df_out$Sample_OxidizedArea / df_out$TotalSampleArea
-  df_out$EOMControl <- df_out$Control_OxidizedArea / df_out$TotalControlArea
-  df_out$EOM <- df_out$EOMSample - df_out$EOMControl
-
-  #Calculating N or the number of times the petpdide was detected by the MS
-  df_out$N <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence) %>%
-    count()
-
-  df_out$N$Sequence <- NULL
-  df_out$N$MasterProteinAccessions <- NULL
-  colnames(df_out)[12] <- "N"
-
-  #Calcculating standard deviation
-  test <- pd_data_fasta_merged %>%
-    group_by(MasterProteinAccessions, Sequence) %>%
-    reframe(sdprep = sd(`Precursor Abundance`))
-  df_out$sdprep<- test$sdprep
-  df_out$SD<- df_out$SD <- df_out$sdprep/(df_out$TotalSampleArea+df_out$TotalControlArea)
-
-  # Renaming the 12th column to "N"
-
-
-  return(df_out)
-}
-
-#Make sure that if the data detected at least and not modified calculations still occur or is it ok
-
-Areas_pep <- area_calculations_pep(pd_data_fasta_merged)
-
-
-
 ##############################################################################
-# Data Grabbing ---------------------------------------------------------------
-###############################################################################
 
-# function to subset sequence metadata like residue start/stop
-grab_seq_metadata_pep <- function(df_in){
+EOM_pep <- function(df_in) {
+  df_in$VCOxidized<- df_in$VC1_Unoxidized + df_in$VC2_Oxidized #+ df_in$VC3_Unoxidized
+  df_in$DCOxidized<- df_in$DC1_Unoxidized + df_in$DC2_Oxidized #+ df_in$DC3_Unoxidized
+  df_in$VLUnOxidized<- df_in$VL1_Unoxidized + df_in$VL2_Oxidized + df_in$VL3_Unoxidized
+  df_in$DLUnOxidized<- df_in$DL1_Unoxidized + df_in$DL2_Oxidized + df_in$DL3_Unoxidized
 
-  df_out <- subset(df_in, select = c("MasterProteinAccessions", "Sequence",
-                                     "peptide", "start"))
-  df_out <- df_out[!duplicated(df_out), ]
+  df_in$VLEOM <- (df_in$VLOxidized - df_in$VCOxidized) / (df_in$VCOxidized + df_in$VLOxidized + df_in$VLUnOxidized + df_in$VCUnOxidized)
+  df_in$VCEOM <- (df_in$VLOxidized - df_in$VCOxidized) / (df_in$VCOxidized + df_in$VLOxidized + df_in$VLUnOxidized + df_in$VCUnOxidized)
 
-  return(df_out)
+  df_in$DEOM <- (df_in$DLOxidized - df_in$DCOxidized) / (df_in$DCOxidized + df_in$DLOxidized + df_in$DLUnOxidized + df_in$DCUnOxidized)
+
+
+  return(df_in)
 }
-#####Merge these variable with a function
-# merge metadata with numeric graphing data
-graphing_df_pep <- Areas_pep %>%
-  left_join(grab_seq_metadata_pep(pd_data_fasta_merged))
 
 
-graphing_df_pep <- graphing_df_pep[order(graphing_df_pep$start), ]
-graphing_df_pep$MasterProteinAccessions <- gsub(".*\\|(.*?)\\|.*", "\\1", graphing_df_pep$MasterProteinAccessions)
+
+# Test the function
+test2 <- EOM_pep(spreadfpdata)
+
+
+# Identify the columns containing "VC" and "Oxidized"
+vc_oxidized_cols <- grep("VC\\d+_Oxidized", names(spreadfpdata), value = TRUE)
+
+# Check for non-numeric values in the selected columns
+non_numeric_values <- lapply(spreadfpdata[vc_oxidized_cols], function(x) unique(x[!is.na(as.numeric(x))]))
+
+# Print unique non-numeric values in each column
+for (i in seq_along(non_numeric_values)) {
+  if (length(non_numeric_values[[i]]) > 0) {
+    cat("Non-numeric values found in column:", vc_oxidized_cols[i], "\n")
+    print(non_numeric_values[[i]])
+  }
+}
+
 
 
 ###########################################################################################################
