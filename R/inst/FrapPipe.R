@@ -158,39 +158,39 @@ spreadfpdata<- spread_unoxidized_data(fpdata_sums)
 ##############################################################################
 
 EOM_pep <- function(df_in) {
-  df_in$VCOxidized<- df_in$VC1_Unoxidized + df_in$VC2_Oxidized #+ df_in$VC3_Unoxidized
-  df_in$DCOxidized<- df_in$DC1_Unoxidized + df_in$DC2_Oxidized #+ df_in$DC3_Unoxidized
-  df_in$VLUnOxidized<- df_in$VL1_Unoxidized + df_in$VL2_Oxidized + df_in$VL3_Unoxidized
-  df_in$DLUnOxidized<- df_in$DL1_Unoxidized + df_in$DL2_Oxidized + df_in$DL3_Unoxidized
+  df_in$VCOxidized<- df_in$VC1_Oxidized + df_in$VC2_Oxidized #+ df_in$VC3_Oxidized
+  df_in$DCOxidized<- df_in$DC1_Oxidized + df_in$DC2_Oxidized #+ df_in$DC3_Oxidized
+  df_in$VLOxidized<- df_in$VL1_Oxidized + df_in$VL2_Oxidized + df_in$VL3_Oxidized
+  df_in$DLOxidized<- df_in$DL1_Oxidized + df_in$DL2_Oxidized + df_in$DL3_Oxidized
 
-  df_in$VLEOM <- (df_in$VLOxidized - df_in$VCOxidized) / (df_in$VCOxidized + df_in$VLOxidized + df_in$VLUnOxidized + df_in$VCUnOxidized)
-  df_in$VCEOM <- (df_in$VLOxidized - df_in$VCOxidized) / (df_in$VCOxidized + df_in$VLOxidized + df_in$VLUnOxidized + df_in$VCUnOxidized)
+  df_in$VCSD<- sd(df_in$VC1_Oxidized + df_in$VC2_Oxidized) #+ df_in$VC3_Oxidized)
+  df_in$DCSD<- sd(df_in$DC1_Oxidized + df_in$DC2_Oxidized) #+ df_in$DC3_Oxidized)
+  df_in$VLSD<- sd(df_in$VL1_Oxidized + df_in$VL2_Oxidized + df_in$VL3_Oxidized)
+  df_in$DLSD<- sd(df_in$DL1_Oxidized + df_in$DL2_Oxidized + df_in$DL3_Oxidized)
 
-  df_in$DEOM <- (df_in$DLOxidized - df_in$DCOxidized) / (df_in$DCOxidized + df_in$DLOxidized + df_in$DLUnOxidized + df_in$DCUnOxidized)
+  df_in$VCUnoxidized<- df_in$VC1_Unoxidized + df_in$VC2_Unoxidized #+ df_in$VC3_Unoxidized
+  df_in$DCUnoxidized<- df_in$DC1_Unoxidized + df_in$DC2_Unoxidized #+ df_in$DC3_Unoxidized
+  df_in$VLUnoxidized<- df_in$VL1_Unoxidized + df_in$VL2_Unoxidized + df_in$VL3_Unoxidized
+  df_in$DLUnoxidized<- df_in$DL1_Unoxidized + df_in$DL2_Unoxidized + df_in$DL3_Unoxidized
 
+  df_in$VLEOM <- (df_in$VLOxidized) / (df_in$VLOxidized + df_in$VLUnoxidized)
+  df_in$VCEOM <- (df_in$VCOxidized) / (df_in$VCOxidized + df_in$VCUnoxidized)
 
-  return(df_in)
+  df_in$DLEOM <- (df_in$DLOxidized) / (df_in$DLOxidized + df_in$DLUnoxidized)
+  df_in$DCEOM <- (df_in$DCOxidized) / (df_in$DCOxidized + df_in$DCUnoxidized)
+
+  df_in$VEOM <- df_in$VLEOM - df_in$VCEOM
+  df_in$DEOM <- df_in$DLEOM - df_in$DCEOM
+
+  df_out<- df_in%>%
+    subset(select = c("Protein", "Protein.ID", "Peptide", "peptidelocation", "VLEOM", "VCEOM", "DLEOM", "DCEOM", "VEOM", "DEOM", "VLSD", "VCSD", "DLSD", "DCSD"))
+
+  return(df_out)
 }
 
 
+EOM <- EOM_pep(spreadfpdata)
 
-# Test the function
-test2 <- EOM_pep(spreadfpdata)
-
-
-# Identify the columns containing "VC" and "Oxidized"
-vc_oxidized_cols <- grep("VC\\d+_Oxidized", names(spreadfpdata), value = TRUE)
-
-# Check for non-numeric values in the selected columns
-non_numeric_values <- lapply(spreadfpdata[vc_oxidized_cols], function(x) unique(x[!is.na(as.numeric(x))]))
-
-# Print unique non-numeric values in each column
-for (i in seq_along(non_numeric_values)) {
-  if (length(non_numeric_values[[i]]) > 0) {
-    cat("Non-numeric values found in column:", vc_oxidized_cols[i], "\n")
-    print(non_numeric_values[[i]])
-  }
-}
 
 
 
