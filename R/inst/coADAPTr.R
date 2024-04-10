@@ -71,11 +71,9 @@ file_output= "C:/Users/rasho/Desktop/AutoDataAnalysis"
 pd_data <- read_excel(file_path)
 fragpipedata<- read.table("C:/Users/rasho/Desktop/coADAPTR/MTXfpop_psm.tsv", header = TRUE, sep = "\t", check.names = FALSE)
 
-##If your file input is from fragpipe start here
 
-#extracting proetin sequence
-#adding L or NL to files
-#extracting modification
+#add back remove dup code from git
+
 
 ####TMT data
 
@@ -115,6 +113,8 @@ OG_pd_data<-pd_data
 
 
 pd_data<- remove_dup(pd_data)
+
+
 
 
 #Map acquisition file names
