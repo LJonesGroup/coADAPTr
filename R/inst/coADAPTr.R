@@ -72,10 +72,7 @@ pd_data <- read_excel(file_path)
 fragpipedata<- read.table("C:/Users/rasho/Desktop/coADAPTR/MTXfpop_psm.tsv", header = TRUE, sep = "\t", check.names = FALSE)
 
 
-#add back remove dup code from git
-
-
-####TMT data
+###TMT data
 
 #Does this need to have a separate function or can it be merged with Annotate Features.
 # Annotate Sample/Control based on MS acquisitoin filename convention

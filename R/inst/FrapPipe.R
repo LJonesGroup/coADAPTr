@@ -163,11 +163,6 @@ EOM_pep <- function(df_in) {
   df_in$VLOxidized<- df_in$VL1_Oxidized + df_in$VL2_Oxidized + df_in$VL3_Oxidized
   df_in$DLOxidized<- df_in$DL1_Oxidized + df_in$DL2_Oxidized + df_in$DL3_Oxidized
 
-  df_in$VCSD<- sd(df_in$VC1_Oxidized + df_in$VC2_Oxidized) #+ df_in$VC3_Oxidized)
-  df_in$DCSD<- sd(df_in$DC1_Oxidized + df_in$DC2_Oxidized) #+ df_in$DC3_Oxidized)
-  df_in$VLSD<- sd(df_in$VL1_Oxidized + df_in$VL2_Oxidized + df_in$VL3_Oxidized)
-  df_in$DLSD<- sd(df_in$DL1_Oxidized + df_in$DL2_Oxidized + df_in$DL3_Oxidized)
-
   df_in$VCUnoxidized<- df_in$VC1_Unoxidized + df_in$VC2_Unoxidized #+ df_in$VC3_Unoxidized
   df_in$DCUnoxidized<- df_in$DC1_Unoxidized + df_in$DC2_Unoxidized #+ df_in$DC3_Unoxidized
   df_in$VLUnoxidized<- df_in$VL1_Unoxidized + df_in$VL2_Unoxidized + df_in$VL3_Unoxidized
@@ -181,9 +176,19 @@ EOM_pep <- function(df_in) {
 
   df_in$VEOM <- df_in$VLEOM - df_in$VCEOM
   df_in$DEOM <- df_in$DLEOM - df_in$DCEOM
+#add back for full dat set #2nd ine "+ df_in$DC3_Oxidized)"
+  #first line "+ df_in$VC3_Oxidized)"
+  df_in$VCSD<- sd(df_in$VC1_Oxidized + df_in$VC2_Oxidized) /(df_in$VCOxidized + df_in$VCUnoxidized)
+  df_in$DCSD<- sd(df_in$DC1_Oxidized + df_in$DC2_Oxidized) / (df_in$DCOxidized + df_in$DCUnoxidized)
+  df_in$VLSD<- sd(df_in$VL1_Oxidized + df_in$VL2_Oxidized + df_in$VL3_Oxidized)/ (df_in$VLOxidized + df_in$VLUnoxidized)
+  df_in$DLSD<- sd(df_in$DL1_Oxidized + df_in$DL2_Oxidized + df_in$DL3_Oxidized)/ (df_in$DLOxidized + df_in$DLUnoxidized)
+  df_in$VSD<- df_in$VLSD - df_in$VCSD
+  df_in$DSD<- df_in$DLSD - df_in$DCSD
+
 
   df_out<- df_in%>%
-    subset(select = c("Protein", "Protein.ID", "Peptide", "peptidelocation", "VLEOM", "VCEOM", "DLEOM", "DCEOM", "VEOM", "DEOM", "VLSD", "VCSD", "DLSD", "DCSD"))
+    subset(select = c("Protein", "Protein.ID", "Peptide", "peptidelocation", "VLEOM", "VCEOM", "DLEOM", "DCEOM", "VEOM", "DEOM", "VLSD", "VCSD", "DLSD", "DCSD",
+                      "VSD", "DSD"))
 
   return(df_out)
 }
@@ -198,16 +203,17 @@ EOM <- EOM_pep(spreadfpdata)
 
 # Filter Graphical Data to include data that is acceptable.
 filtered_graphing_df_pep <- function(df_in) {
-  df_in <- df_in %>% filter(EOM > 0)
-  df_in <- df_in %>% filter(EOM > SD)
-  df_in <- df_in %>% filter(df_in$N >= 4)  # Filter for the 12th column > 4
-  df_in <- df_in %>% arrange(start)
+  df_in <- df_in %>% filter(VEOM > 0)
+  df_in <- df_in %>% filter(DEOM > 0)
+  df_in <- df_in %>% filter(VEOM > SD)
+  df_in <- df_in %>% filter(DEOM > SD)
+  df_in <- df_in %>% arrange(Protein)
   return(df_in)
 }
 
 
 
-quant_graph_df_pep <- filtered_graphing_df_pep(graphing_df_pep)
+quant_graph_df_pep <- filtered_graphing_df_pep(EOM)
 
 
 ##
