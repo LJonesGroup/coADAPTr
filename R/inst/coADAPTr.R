@@ -278,7 +278,7 @@ area_calculations_pep <- function(df_in) {
   df_out$N$MasterProteinAccessions <- NULL
   colnames(df_out)[12] <- "N"
 
-  #Calcculating standard deviation
+  #Calculating standard deviation
   test <- pd_data_fasta_merged %>%
     group_by(MasterProteinAccessions, Sequence) %>%
     reframe(sdprep = sd(`Precursor Abundance`))
