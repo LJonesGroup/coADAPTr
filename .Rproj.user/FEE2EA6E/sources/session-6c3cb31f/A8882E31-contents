@@ -1,0 +1,16 @@
+Package: coADAPTr
+Type: Package
+Title: Covalent Labeling Automated Data Analysis Platform for High Throughput in R
+Version: 0.1.0
+Author: Dr. Raquel L. Shortt and Dr. Lindsay K. Pino
+Maintainer: Dr. Raquel L. Shortt <thejoneslab2015@gmail.com>
+Description: The package will process sequence searched data from covalently labeled proteins from bottom up proteomics studies.
+    Specifically, oxidative covalent labeling eperiments where the proteins have been subject to alkylation, reduction and digestion then, 
+    the peptides were analysized by liquid chromatography and tandem mass spectrometry in data dependent acquisition mode. 
+License: MIT License
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.1
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
