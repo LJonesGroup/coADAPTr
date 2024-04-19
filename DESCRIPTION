@@ -7,7 +7,7 @@ Maintainer: Dr. Raquel L. Shortt <thejoneslab2015@gmail.com>
 Description: The package will process sequence searched data from covalently labeled proteins from bottom up proteomics studies.
     Specifically, oxidative covalent labeling eperiments where the proteins have been subject to alkylation, reduction and digestion then, 
     the peptides were analysized by liquid chromatography and tandem mass spectrometry in data dependent acquisition mode. 
-License: MIT License
+License: GNU General Public License v3.0
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.1
