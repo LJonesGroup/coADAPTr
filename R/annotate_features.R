@@ -1,3 +1,11 @@
+#' Title
+#'
+#' @param raw_data
+#'
+#' @return raw_data with modifications
+#' @export
+#'
+#' @examples newdf<- annotate_features(raw_data)
 annotate_features <- function(raw_data){
 
   # Changing column header to match FASTA file
