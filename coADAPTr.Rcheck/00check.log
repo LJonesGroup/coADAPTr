@@ -1,0 +1,99 @@
+* using log directory 'C:/Users/rasho/Documents/GitHub/coADAPTr/coADAPTr.Rcheck'
+* using R version 4.3.3 (2024-02-29 ucrt)
+* using platform: x86_64-w64-mingw32 (64-bit)
+* R was compiled by
+    gcc.exe (GCC) 12.3.0
+    GNU Fortran (GCC) 12.3.0
+* running under: Windows 10 x64 (build 19045)
+* using session charset: UTF-8
+* using options '--no-manual --as-cran'
+* checking for file 'coADAPTr/DESCRIPTION' ... OK
+* checking extension type ... Package
+* this is package 'coADAPTr' version '0.1.0'
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... OK
+* checking for portable file names ... OK
+* checking serialization versions ... OK
+* checking whether package 'coADAPTr' can be installed ... OK
+* checking installed package size ... OK
+* checking package directory ... OK
+* checking for future file timestamps ... OK
+* checking DESCRIPTION meta-information ... NOTE
+License components which are templates and need '+ file LICENSE':
+  MIT License
+* checking top-level files ... NOTE
+Non-standard files/directories found at top level:
+  'FASTA_file.R' 'annotate_features.R' 'area_calculations_pep.R'
+  'area_calculations_res.R' 'filtered_graphing_df_pep.R'
+  'filtered_graphing_df_res.R' 'generate_eom_plot_pep.R'
+  'generate_eom_plot_res.R' 'grab_seq_metadata_pep.R'
+  'grab_seq_metadata_res.R' 'graphing_data_res.R'
+  'locate_startend_res.R' 'output_folder.R' 'parse_fasta.R'
+  'process_data.R' 'remove_dup.R' 'save_data_frames.R'
+  'save_graphs_pep.R' 'save_graphs_res.R' 'test.R'
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking loading without being on the library search path ... OK
+* checking Rd files ... OK
+* checking Rd metadata ... WARNING
+Rd files with duplicated name 'generate_protein_eom_plots':
+  'generate_eom_plot_res.Rd' 'save_graphs_pep.Rd'
+Rd files with duplicated alias 'generate_protein_eom_plots':
+  'generate_eom_plot_res.Rd' 'save_graphs_pep.Rd'
+* checking Rd line widths ... NOTE
+Rd file 'grab_seq_metadata_pep.Rd':
+  \examples lines wider than 100 characters:
+     graphing_df_pep$MasterProteinAccessions <- gsub(".*\|(.*?)\|.*", "\1", graphing_df_pep$MasterProteinAccessions)
+
+Rd file 'save_data_frames.Rd':
+  \examples lines wider than 100 characters:
+       save_data_frames(file_path, file_output, TotalsTable = TotalsTable, quant_graph_df_pep = quant_graph_df_pep, quant_graph_df_res = qua ... [TRUNCATED]
+
+These lines will be truncated in the PDF manual.
+* checking Rd cross-references ... OK
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... WARNING
+Objects in \usage without \alias in documentation object 'annotate_features':
+  'annotate_features'
+
+Objects in \usage without \alias in documentation object 'area_calculations_pep':
+  'area_calculations_pep'
+
+Objects in \usage without \alias in documentation object 'filtered_graphing_df_pep':
+  'filtered_graphing_df_pep'
+
+Objects in \usage without \alias in documentation object 'grab_seq_metadata_pep':
+  'grab_seq_metadata_pep'
+
+Objects in \usage without \alias in documentation object 'locate_startend_res':
+  'locate_startend_res'
+
+Objects in \usage without \alias in documentation object 'parse_fasta':
+  'parse_fasta'
+
+Functions with \usage entries need to have the appropriate \alias
+entries, and all their arguments documented.
+The \usage entries must correspond to syntactically valid R code.
+See chapter 'Writing R documentation files' in the 'Writing R
+Extensions' manual.
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... ERROR
+Warning: parse error in file 'lines':
+164:53)
+** will not attempt to run examples
+* checking examples ... SKIPPED
+* checking for non-standard things in the check directory ... OK
+* checking for detritus in the temp directory ... OK
+* DONE
+Status: 1 ERROR, 2 WARNINGs, 3 NOTEs
