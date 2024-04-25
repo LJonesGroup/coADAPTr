@@ -1,13 +1,22 @@
+#' generate_eom_plot_pep
+#'
+#' @param df_in
+#' @param file_output
+#' @param excel_filename
+#'
+#' @return Bar graphs corresponding to each quantifiable peptide in the input data frame. Must Run save_graphs_pep() to save the graphs in the desired location.
+#' @export
+#'
+#' @examples plot_pep <- generate_eom_plot_pep(graphing_data = df_in, file_output = file_output, excel_filename = excel_filename)
 generate_eom_plot_pep <- function(df_in, file_output, excel_filename) {
   df_in <- df_in %>%
     arrange(start)
 
-  # Create a factor variable to represent the sorted order
+
   df_in$peptide <- factor(df_in$peptide, levels = df_in$peptide)
-  # Grab the protein that is being plotted
+
   protein <- unique(df_in$MasterProteinAccessions)
-  # Generate a bargraph of the extent of modification for each peptide
-  # that maps to this protein
+
   fig <- ggplot(df_in, aes(x = peptide, y = EOM)) +
     geom_bar(position = "dodge", stat = "identity") +
     geom_errorbar(aes(ymin = EOM - SD, ymax = EOM + SD), width= .5, linewidth= 1) +
@@ -22,14 +31,14 @@ generate_eom_plot_pep <- function(df_in, file_output, excel_filename) {
                                     face = "bold")) +
     scale_fill_manual(values = c("grey42"))
 
-  # Create the output directory for bar graphs based on the file output and excel filename
+
   graph_output_directory <- file.path(file_output, paste0(excel_filename, "_PeptideLevelBarGraphs"))
   dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
 
-  # Generate the full file path for this protein and save the figure
+
   file_out <- file.path(graph_output_directory, paste0(protein, ".png"))
   ggsave(filename = file_out, plot = fig, device = "png")
 
-  # Print a message to indicate successful saving
+
   cat("Bar graph for", protein, "saved as", file_out, "\n")
 }

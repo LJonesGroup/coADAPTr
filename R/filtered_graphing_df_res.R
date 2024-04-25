@@ -1,3 +1,11 @@
+#' filtered_graphing_df_res
+#'
+#' @param df_in
+#'
+#' @return A data frame containing the filtered data
+#' @export
+#'
+#' @examples graphing_df_res <- filtered_graphing_df_res(graphing_df)
 filtered_graphing_df_res <- function(df_in) {
   df_in <- df_in %>%filter(EOM >0)
   df_in <- df_in %>% filter(EOM > SD)

@@ -1,3 +1,11 @@
+#' area_calculations_res
+#'
+#' @param df_in
+#'
+#' @return a dataframe containing the extent of modification calculations at the residue level
+#' @export
+#'
+#' @examples EOM<- area_calculations_res(pd_data)
 area_calculations_res <- function(df_in) {
 
   df_out <- df_in %>%
@@ -55,18 +63,16 @@ area_calculations_res <- function(df_in) {
     group_by(MasterProteinAccessions, Sequence, Res) %>%
     summarize(N = n())  # Count the occurrences
 
-  # Merge the N column into df_out
+
   df_out$N <- df_out %>%
     left_join(N_df, by = c("MasterProteinAccessions", "Sequence", "Res")) %>%
     pull(N)  # Extract N column
-  # colnames(df_out)[12] <- "N"  # Renaming the 12th column to "N"
+   #colnames(df_out)[12] <- "N"  # Renaming the 12th column to "N"
 
-  # Calculate standard deviation and store in a separate data frame
   sd_df <- df_in %>%
     group_by(MasterProteinAccessions, Sequence, Res) %>%
     summarize(sdprep = sd(`Precursor Abundance`))
 
-  # Join the calculated sdprep values to df_out
   df_out <- df_out %>%
     left_join(sd_df, by = c("MasterProteinAccessions", "Sequence", "Res"))
   df_out$SD <- df_out$sdprep/(df_out$SampleTotalArea+df_out$ControlTotalArea)
