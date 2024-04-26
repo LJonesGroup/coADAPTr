@@ -1,7 +1,7 @@
 \name{locate_startend_res}
 \alias{locate}
 \title{
-  locate start and end residues
+  Locate start and end residues
 }
 \description{
   The function aims to enrich the 'raw_data' by merging with external data, annotating peptides, and providing details about modifications within the protein sequences.
