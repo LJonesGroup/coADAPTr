@@ -1,5 +1,5 @@
 \name{FASTA_file}
-\alias{FASTA_file}
+\alias{FASTA}
 \title{Import FASTA File}
 \description{
   This function prompts the user to select a FASTA file and reads its content.

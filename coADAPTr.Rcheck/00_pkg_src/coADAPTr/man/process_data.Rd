@@ -1,6 +1,6 @@
 \name{process_data}
 \alias{file_path}
-\title{select the file location of sequence searched MS sata}
+\title{Select the file location of sequence searched MS sata}
 \description{
   This function prompts the user to define the file path where an Excel file containing sequence searched MS data is located, reads the data, and performs necessary processing steps.
 }

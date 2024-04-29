@@ -1,7 +1,5 @@
 #' filtered_graphing_df_pep
-#'
 #' @param df_in
-#'
 #' @return a data frame containing the filtered FPOP data
 #' @export
 #'

@@ -1,7 +1,7 @@
 \name{parse_fasta}
 \alias{parse}
 \title{
-  parse fasta files
+  Parse fasta files
 }
 \description{
   The function aims to take the input from a FASTA file and modify the column names for storage and usage to map the peptide to the entire protein sequence. Specifically this function performs the following:

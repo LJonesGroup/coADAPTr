@@ -1,5 +1,5 @@
 \name{graphing_data_res}
-\alias{graphing_data_res}
+\alias{graphing_df_res}
 \title{Prepare Data for Graphing}
 \description{
   This function prepares data for graphing by performing various operations, including merging metadata, filtering, sorting, and modifying column values.
