@@ -1,5 +1,5 @@
 \name{save_graphs_res}
-\alias{save_graphs_res}
+\alias{save_res_graphs}
 \title{
   Save Graphs for Each Protein in Data Frame
 }
