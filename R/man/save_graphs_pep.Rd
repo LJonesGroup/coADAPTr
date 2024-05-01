@@ -6,12 +6,13 @@
   in the input data frame. The plots are saved as PNG files.
 }
 \usage{
-  save_graphs_pep <- function(df_in_pep) {
-  for (protein in df_in_pep$MasterProteinAccessions) {
+save_graphs_pep <- function(df, file_output, excel_filename) {
+  for (protein in unique(df$MasterProteinAccessions)) {
     # subset the dataframe for this protein
-    temp <- subset(df_in_pep, MasterProteinAccessions == protein)
+    temp <- subset(df, MasterProteinAccessions == protein)
     generate_eom_plot_pep(temp, file_output, excel_filename)
   }
+}
 }
 \arguments{
   \item{df_in_pep}{A data frame containing peptide information for
@@ -29,6 +30,5 @@
   input data frame. Saves the graphs as PNG files.
 }
 \examples{
-  excel_filename <- tools::file_path_sans_ext(basename(file_path))
-  generate_protein_eom_plots_pep(quant_graph_df_pep, file_output, excel_filename)
+ save_graphs_pep(df_in_pep, file_output, excel_filename)
 }
