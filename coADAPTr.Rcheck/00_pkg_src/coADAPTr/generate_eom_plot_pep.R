@@ -1,5 +1,4 @@
 #' generate_eom_plot_pep
-#'
 #' @param df_in
 #' @param file_output
 #' @param excel_filename
@@ -11,7 +10,6 @@
 generate_eom_plot_pep <- function(df_in, file_output, excel_filename) {
   df_in <- df_in %>%
     arrange(start)
-
 
   df_in$peptide <- factor(df_in$peptide, levels = df_in$peptide)
 
@@ -31,14 +29,11 @@ generate_eom_plot_pep <- function(df_in, file_output, excel_filename) {
                                     face = "bold")) +
     scale_fill_manual(values = c("grey42"))
 
-
   graph_output_directory <- file.path(file_output, paste0(excel_filename, "_PeptideLevelBarGraphs"))
   dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
 
-
   file_out <- file.path(graph_output_directory, paste0(protein, ".png"))
   ggsave(filename = file_out, plot = fig, device = "png")
-
 
   cat("Bar graph for", protein, "saved as", file_out, "\n")
 }

@@ -23,9 +23,10 @@
 * checking installed package size ... OK
 * checking package directory ... OK
 * checking for future file timestamps ... OK
-* checking DESCRIPTION meta-information ... NOTE
-License components which are templates and need '+ file LICENSE':
-  MIT License
+* checking DESCRIPTION meta-information ... WARNING
+Non-standard license specification:
+  GNU General Public License v3.0
+Standardizable: FALSE
 * checking top-level files ... NOTE
 Non-standard files/directories found at top level:
   'FASTA_file.R' 'annotate_features.R' 'area_calculations_pep.R'
@@ -60,11 +61,11 @@ These lines will be truncated in the PDF manual.
 * checking Rd cross-references ... OK
 * checking for code/documentation mismatches ... OK
 * checking Rd \usage sections ... WARNING
-Objects in \usage without \alias in documentation object 'annotate_features':
-  'annotate_features'
-
 Objects in \usage without \alias in documentation object 'area_calculations_pep':
   'area_calculations_pep'
+
+Objects in \usage without \alias in documentation object 'area_calculations_res':
+  'area_calculations_res'
 
 Objects in \usage without \alias in documentation object 'filtered_graphing_df_pep':
   'filtered_graphing_df_pep'
@@ -72,11 +73,33 @@ Objects in \usage without \alias in documentation object 'filtered_graphing_df_p
 Objects in \usage without \alias in documentation object 'grab_seq_metadata_pep':
   'grab_seq_metadata_pep'
 
+Objects in \usage without \alias in documentation object 'grab_seq_metadata_res':
+  'grab_seq_metadata_pep'
+
+Objects in \usage without \alias in documentation object 'graphing_data_res':
+  'graphing_data_res'
+
 Objects in \usage without \alias in documentation object 'locate_startend_res':
   'locate_startend_res'
 
 Objects in \usage without \alias in documentation object 'parse_fasta':
   'parse_fasta'
+
+Objects in \usage without \alias in documentation object 'save_data_frames':
+  'save_data_frames'
+
+Documented arguments not in \usage in documentation object 'save_graphs_pep':
+  'df_in_pep'
+Assignments in \usage in documentation object 'save_graphs_pep':
+  save_graphs_pep <- function(df, file_output, excel_filename) {
+      for (protein in unique(df$MasterProteinAccessions)) {
+          temp <- subset(df, MasterProteinAccessions == protein)
+          generate_eom_plot_pep(temp, file_output, excel_filename)
+      }
+  }
+
+Objects in \usage without \alias in documentation object 'save_graphs_res':
+  'save_graphs_res'
 
 Functions with \usage entries need to have the appropriate \alias
 entries, and all their arguments documented.
@@ -92,4 +115,4 @@ Warning: parse error in file 'lines':
 * checking for non-standard things in the check directory ... OK
 * checking for detritus in the temp directory ... OK
 * DONE
-Status: 1 ERROR, 1 WARNING, 3 NOTEs
+Status: 1 ERROR, 2 WARNINGs, 2 NOTEs

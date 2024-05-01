@@ -11,7 +11,7 @@
   Creates new columns ('MOD' and 'ModPosition') based on the modified 'Modifications' column, classifying and formatting data related to protein modifications.
 }
 \usage{
-  annotate_features(df)
+  annotate(df)
 }
 \arguments{
   \item{df}{A dataframe containing sequence search covalent labeling mass spectrometry data that contains the minimum columns Master Protein Accessions, Protein Accession, Sequence, Precursor Abundance, Spectrum File, and Modifications.}

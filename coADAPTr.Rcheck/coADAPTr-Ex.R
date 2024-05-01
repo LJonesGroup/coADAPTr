@@ -14,7 +14,7 @@ flush(stderr()); flush(stdout())
 
 ### Name: FASTA_file
 ### Title: Import FASTA File
-### Aliases: FASTA_file
+### Aliases: FASTA
 
 ### ** Examples
 
@@ -64,7 +64,7 @@ flush(stderr()); flush(stdout())
 
 ### Name: area_calculations_res
 ### Title: Calculate Area and Associated Metrics
-### Aliases: area_calculations_res
+### Aliases: area_res
 
 ### ** Examples
 
@@ -166,6 +166,28 @@ graphing_df_pep$MasterProteinAccessions <- gsub(".*\|(.*?)\|.*", "\1", graphing_
 
 
 cleanEx()
+nameEx("grab_seq_metadata_res")
+### * grab_seq_metadata_res
+
+flush(stderr()); flush(stdout())
+
+### Name: grab_seq_metadata_res
+### Title: Grab the quantifiable residue extent of modifications
+### Aliases: grab_res
+
+### ** Examples
+
+  graphing_df_pep <- Areas_pep 
+  left_join(grab_seq_metadata_pep(pd_data_fasta_merged))
+
+
+graphing_df_pep <- graphing_df_pep[order(graphing_df_pep$start), ]
+graphing_df_pep$MasterProteinAccessions <- gsub(".*\|(.*?)\|.*", "\1",
+graphing_df_pep$MasterProteinAccessions)
+
+
+
+cleanEx()
 nameEx("graphing_data_res")
 ### * graphing_data_res
 
@@ -173,7 +195,7 @@ flush(stderr()); flush(stdout())
 
 ### Name: graphing_data_res
 ### Title: Prepare Data for Graphing
-### Aliases: graphing_data_res
+### Aliases: graphing_df_res
 
 ### ** Examples
 
@@ -207,7 +229,7 @@ flush(stderr()); flush(stdout())
 
 ### Name: output_folder
 ### Title: Select a folder for your tables and figures to be saved
-### Aliases: output_folder
+### Aliases: output
 
 ### ** Examples
 
@@ -259,7 +281,7 @@ flush(stderr()); flush(stdout())
 
 ### Name: save_data_frames
 ### Title: Save Data Frames as Separate Excel Files
-### Aliases: save_data_frames
+### Aliases: save_df
 
 ### ** Examples
 
@@ -282,15 +304,13 @@ nameEx("save_graphs_pep")
 
 flush(stderr()); flush(stdout())
 
-### Name: generate_protein_eom_plots_pep
-### Title: Generate Extent of Modification (EOM) Plots for modified
-###   residues
-### Aliases: generate_protein_eom_plots_pep
+### Name: save_graphs_pep
+### Title: Save Extent of Modification (EOM) Plots for modified residues
+### Aliases: save_pep_graphs
 
 ### ** Examples
 
-  excel_filename <- tools::file_path_sans_ext(basename(file_path))
-  generate_protein_eom_plots_pep(quant_graph_df_pep, file_output, excel_filename)
+ save_graphs_pep(df_in_pep, file_output, excel_filename)
 
 
 
@@ -300,17 +320,17 @@ nameEx("save_graphs_res")
 
 flush(stderr()); flush(stdout())
 
-### Name: generate_protein_eom_plots_res
-### Title: Generate Extent of Modification (EOM) Plots for Residues
-### Aliases: generate_protein_eom_plots_res
+### Name: save_graphs_res
+### Title: Save Graphs for Each Protein in Data Frame
+### Aliases: save_res_graphs
 
 ### ** Examples
 
-  # Define the excel_filename variable
-  excel_filename <- tools::file_path_sans_ext(basename(file_path))
-
-  # Call the function to generate EOM plots for residues
-  generate_protein_eom_plots_res(quant_graph_df_res, file_output, excel_filename)
+  ## Not run: 
+##D     # Example usage
+##D     save_graphs_res(my_data, "plots/", "protein_data.xlsx")
+##D   
+## End(Not run)
 
 
 

@@ -1,5 +1,5 @@
 \name{area_calculations_res}
-\alias{area_calculations_res}
+\alias{area_res}
 \title{Calculate Area and Associated Metrics}
 \description{
   This function performs calculations on a data frame, specifically focusing on area calculations and associated metrics.

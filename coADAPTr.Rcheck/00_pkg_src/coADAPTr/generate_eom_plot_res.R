@@ -1,5 +1,4 @@
 #' generate_eom_plot_res
-#'
 #' @param df_in a data frame containing the EOM and SD values for each residue
 #' @param file_output the directory where the output files will be saved
 #' @param excel_filename the name of the excel file that the data was read from

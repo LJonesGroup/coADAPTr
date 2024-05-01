@@ -1,11 +1,11 @@
 #' area_calculations_res
-#'
 #' @param df_in
-#'
-#' @return a dataframe containing the extent of modification calculations at the residue level
+#' @return a dataframe containing the extent of modification calculations
+#' at the residue level
 #' @export
 #'
 #' @examples EOM<- area_calculations_res(pd_data)
+#' @aliases area_res
 area_calculations_res <- function(df_in) {
 
   df_out <- df_in %>%

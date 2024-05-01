@@ -1,27 +1,31 @@
-\name{generate_protein_eom_plots_res}
-\alias{generate_protein_eom_plots_res}
-\title{Generate Extent of Modification (EOM) Plots for Residues}
-\description{
-  This function generates extent of modification (EOM) plots for each residue in the input data frame.
+\name{save_graphs_res}
+\alias{save_res_graphs}
+\title{
+  Save Graphs for Each Protein in Data Frame
 }
 \usage{
-  generate_protein_eom_plots_res(quant_graph_df_res, file_output, excel_filename)
+  save_graphs_res(df, file_output, excel_filename)
 }
 \arguments{
-  \item{quant_graph_df_res}{A data frame containing residue information for plotting.}
-  \item{file_output}{The directory path where the graphs will be saved.}
-  \item{excel_filename}{The name of the Excel file used to create directories for bar graphs.}
+  \item{df}{
+    A data frame containing protein information.
+  }
+  \item{file_output}{
+    Character string specifying the directory to save the graphs.
+  }
+  \item{excel_filename}{
+    Character string specifying the Excel filename to save the data.
+  }
+}
+\description{
+  This function saves graphs for each unique protein in the provided data frame.
 }
 \details{
-  Ensure \code{excel_filename} is defined before using this function. It should be generated using \code{tools::file_path_sans_ext(basename(file_path))}.
-}
-\value{
-  Generates extent of modification (EOM) plots for each residue in the input data frame. Saves the graphs as PNG files.
+  The function loops through each unique protein in the \code{MasterProteinAccessions} column of the data frame \code{df}, subsets the data frame for each protein, and generates a plot using the \code{generate_eom_plot_res} function. The plots are saved in the specified directory (\code{file_output}) and the data is saved in the specified Excel file (\code{excel_filename}).
 }
 \examples{
-  # Define the excel_filename variable
-  excel_filename <- tools::file_path_sans_ext(basename(file_path))
-
-  # Call the function to generate EOM plots for residues
-  generate_protein_eom_plots_res(quant_graph_df_res, file_output, excel_filename)
+  \dontrun{
+    # Example usage
+    save_graphs_res(my_data, "plots/", "protein_data.xlsx")
+  }
 }

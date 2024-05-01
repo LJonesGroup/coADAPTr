@@ -1,5 +1,5 @@
 \name{output_folder}
-\alias{output_folder}
+\alias{output}
 \title{Select a folder for your tables and figures to be saved}
 \description{
   This function prompts the user to select a folder on their computer using a dialog box.

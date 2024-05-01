@@ -1,7 +1,5 @@
 #' filtered_graphing_df_res
-#'
 #' @param df_in
-#'
 #' @return A data frame containing the filtered data
 #' @export
 #'
