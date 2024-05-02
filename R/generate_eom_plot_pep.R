@@ -1,12 +1,16 @@
 #' generate_eom_plot_pep
-#' @param df_in
-#' @param file_output
-#' @param excel_filename
+#' @param df_in a data frame with quantifiable peptide modifications
+#' @param file_output The file path to save the graphs
+#' @param excel_filename The file name to save the excel file
 #'
-#' @return Bar graphs corresponding to each quantifiable peptide in the input data frame. Must Run save_graphs_pep() to save the graphs in the desired location.
+#' @return Bar graphs corresponding to each quantifiable peptide in the input
+#' data frame. Must Run save_graphs_pep() to save the graphs in the desired
+#' location.
 #' @export
 #'
-#' @examples plot_pep <- generate_eom_plot_pep(graphing_data = df_in, file_output = file_output, excel_filename = excel_filename)
+#' @examples plot_pep <- generate_eom_plot_pep(graphing_data = df_in,
+#' file_output = file_output, excel_filename = excel_filename)
+#' @aliases generate_eom_plot_pep
 generate_eom_plot_pep <- function(df_in, file_output, excel_filename) {
   df_in <- df_in %>%
     arrange(start)

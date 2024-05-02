@@ -1,9 +1,11 @@
 #' filtered_graphing_df_res
-#' @param df_in
+#' @param df_in a data frame with EOM data to filter for quantifiable residue
+#' level modifications
 #' @return A data frame containing the filtered data
 #' @export
 #'
 #' @examples graphing_df_res <- filtered_graphing_df_res(graphing_df)
+#' @aliases filtered_graphing_df_res
 filtered_graphing_df_res <- function(df_in) {
   df_in <- df_in %>%filter(EOM >0)
   df_in <- df_in %>% filter(EOM > SD)

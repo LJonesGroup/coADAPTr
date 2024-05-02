@@ -4,7 +4,7 @@
 #' @export
 #'
 #' @examples HumanFASTA <- FASTA_file(file.fasta)
-#' @aliases FASTA
+#' @aliases FASTA_file
 FASTA_file <- function() {
   FASTA_path <- file.choose()
   FASTA <- read.fasta(FASTA_path)

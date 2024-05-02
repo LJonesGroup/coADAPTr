@@ -1,15 +1,14 @@
 #'save_graphs_res
-#'
-#' @param df
-#' @param file_output
-#' @param excel_filename
+#' @param df A data frame that contains the data to be plotted
+#' @param file_output The file path to save the graphs
+#' @param excel_filename The file name to save the graphs
 #'
 #' @return A series of bar graphs that correspond to the residues with
 #' quantifiable modifications
 #' @export
 #'
 #' @examples save_graphs_res(df_in_pep, file_output, excel_filename)
-#' @aliases save_res_graphs
+#' @aliases save_graphs_res
 save_graphs_res<- function(df, file_output, excel_filename) {
   for (protein in unique(df$MasterProteinAccessions)) {
     temp <- subset(df, MasterProteinAccessions == protein)

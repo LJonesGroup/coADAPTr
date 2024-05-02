@@ -1,12 +1,12 @@
-#' parse fasta
+#' parse_fasta
 #'
-#' @param fasta_in
+#' @param fasta_in FASTA file in the form of a dataframe
 #'
 #' @return a condensed dataframe with the protein sequence and the uniprot ID
 #' @export
 #'
 #' @examples filtered_FASTA <- parse_fasta(FASTA)
-#' @aliases parse
+#' @aliases parse_fasta
 parse_fasta <- function(fasta_in){
   fasta_in <- fasta_in %>%
     rename(protein_sequence = seq.text)

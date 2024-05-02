@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples save_graphs_pep(df_in_pep, file_output, excel_filename)
-#' @aliases save_pep_graphs
+#' @aliases save_graphs_pep
 save_graphs_pep <- function(df, file_output, excel_filename) {
   for (protein in unique(df$MasterProteinAccessions)) {
     temp <- subset(df, MasterProteinAccessions == protein)

@@ -3,10 +3,12 @@
 #' @param file_output the directory where the output files will be saved
 #' @param excel_filename the name of the excel file that the data was read from
 #'
-#' @return a bar graph for each protein with quantifiable residue level modification
+#' @return a bar graph for each protein with quantifiable residue level
+#'  modifications
 #' @export
 #'
-#' @exampleS Bar graphs for each protein with quantifiable residue level modification are generated and saved in a new directory. Must run save_graphs_df_res after to save teh data in a desired location.
+#' @examples  generate_eom_plot_res(df_in, file_output, excel_filename)
+#' @aliases generate_eom_plot_res
 generate_eom_plot_res <- function(df_in, file_output, excel_filename) {
   df_in <- df_in %>%
     arrange(start)

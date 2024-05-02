@@ -1,12 +1,12 @@
 #'area_calculations_pep
-#' @param df_in A dataframe with the following columns: MasterProteinAccessions,
+#' @param df_in A data frame with the following columns: MasterProteinAccessions,
 #' Sequence, SampleControl, MOD, Precursor Abundance
-#' @return a dataframe containing the values for the extent of modification
+#' @return a data frame containing the values for the extent of modification
 #' calculation
 #' @export
 #'
 #' @examples EOM<- area_calculations_pep(pd_data_annotated)
-#' @aliases area_pep
+#' @aliases area_calculations_pep
 area_calculations_pep <- function(df_in) {
   df_out <- df_in %>%
     group_by(MasterProteinAccessions, Sequence, SampleControl, MOD) %>%

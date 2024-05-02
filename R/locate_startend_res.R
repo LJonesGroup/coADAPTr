@@ -1,12 +1,13 @@
 #' locate_startend_res
 #'
-#' @param raw_data
+#' @param raw_data data frame with original data to map peptide locations on
+#' protein sequences
 #'
 #' @return A data frame with with the start and ending peptide location
 #' @export
 #'
 #' @examples new_df <- locate_startend_res(raw_data)
-#' @aliases locate
+#' @aliases locate_startend_res
 locate_startend_res <- function(raw_data){
 
   uniqueMPA <- unique(raw_data[, c("Master Protein Accessions",'Sequence')])

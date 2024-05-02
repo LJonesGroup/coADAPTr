@@ -1,8 +1,8 @@
 #' save_data_frames
 #'
-#' @param file_path
-#' @param output_directory
-#' @param ...
+#' @param file_path the file path to save the data frames
+#' @param output_directory the directory to save the data frames
+#' @param ... data frames to save
 #'
 #' @return data frames saved in the desired file path
 #' @export
@@ -10,6 +10,7 @@
 #' @examples save_data_frames(file_path, file_output,
 #' TotalsTable = TotalsTable, quant_graph_df_pep = quant_graph_df_pep,
 #' quant_graph_df_res = quant_graph_df_res)
+#' @aliases save_data_frames
 save_data_frames <- function(file_path, output_directory, ...) {
   file_name <- basename(file_path)
 
