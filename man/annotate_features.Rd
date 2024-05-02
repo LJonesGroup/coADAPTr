@@ -1,7 +1,7 @@
 \name{annotate_features}
-\alias{annotate}
+\alias{annotate_features}
 \title{
-  Annnotate
+  Annnotate Features
 }
 \description{
   The function aims to preprocess and modify the input dataset ('raw_data') by standardizing column names, filtering out specific rows, and restructuring content within the 'Modifications' column based on defined patterns and rules. Specifically it does the following:

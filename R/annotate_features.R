@@ -5,7 +5,7 @@
 #' @export
 #'
 #' @examples newdf<- annotate_features(raw_data)
-#' @aliases annotate
+#' @aliases annotate_features
 annotate_features <- function(raw_data){
   raw_data <- raw_data %>%
     rename('UniprotID' = 'Protein Accessions')
