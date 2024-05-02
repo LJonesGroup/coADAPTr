@@ -25,7 +25,7 @@
 * checking for future file timestamps ... OK
 * checking DESCRIPTION meta-information ... WARNING
 Non-standard license specification:
-  GNU General Public License v3.0
+  GPL-3.0
 Standardizable: FALSE
 * checking top-level files ... NOTE
 Non-standard files/directories found at top level:
