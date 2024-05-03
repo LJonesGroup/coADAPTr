@@ -1,0 +1,7 @@
+INFO [2024-05-02 21:22:00] $x
+INFO [2024-05-02 21:22:00] list(Condition1 = data$Condition1, Condition2 = data$Condition2, 
+INFO [2024-05-02 21:22:00]     Condition3 = data$Condition3)
+INFO [2024-05-02 21:22:00] 
+INFO [2024-05-02 21:22:00] $filename
+INFO [2024-05-02 21:22:00] NULL
+INFO [2024-05-02 21:22:00] 
