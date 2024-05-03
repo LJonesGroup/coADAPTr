@@ -2,7 +2,7 @@
 % Please edit documentation in R/parse_fasta.R
 \name{parse_fasta}
 \alias{parse_fasta}
-\title{parse_fasta}
+\title{Parse through the FASTA File to Extract Relevant Data (Step 7)}
 \usage{
 parse_fasta(fasta_in)
 }
@@ -13,7 +13,7 @@ parse_fasta(fasta_in)
 a condensed dataframe with the protein sequence and the uniprot ID
 }
 \description{
-parse_fasta
+Parse through the FASTA File to Extract Relevant Data (Step 7)
 }
 \examples{
 filtered_FASTA <- parse_fasta(FASTA)

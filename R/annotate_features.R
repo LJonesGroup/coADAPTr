@@ -1,4 +1,4 @@
-#'annotate_features
+#'Perform Annotation of Raw Data (Step 6)
 #' @param raw_data raw data from proteome discoverer with modifications that
 #' annotate specific features
 #' @return a modified data frame with appropriate modification to the raw data

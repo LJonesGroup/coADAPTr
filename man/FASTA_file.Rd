@@ -2,7 +2,7 @@
 % Please edit documentation in R/FASTA_file.R
 \name{FASTA_file}
 \alias{FASTA_file}
-\title{FASTA_file}
+\title{Import the Corresponding FASTA File (Step 1)}
 \usage{
 FASTA_file()
 }
@@ -13,7 +13,7 @@ FASTA_file()
 FASTA file saved as a data frame
 }
 \description{
-FASTA_file
+Import the Corresponding FASTA File (Step 1)
 }
 \examples{
 HumanFASTA <- FASTA_file(file.fasta)

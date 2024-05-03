@@ -2,7 +2,7 @@
 % Please edit documentation in R/filtered_graphing_df_res.R
 \name{filtered_graphing_df_res}
 \alias{filtered_graphing_df_res}
-\title{filtered_graphing_df_res}
+\title{Filter Data for Graphing the Extent of Modification at the Residue Level (Step 16)}
 \usage{
 filtered_graphing_df_res(df_in)
 }
@@ -14,7 +14,7 @@ level modifications}
 A data frame containing the filtered data
 }
 \description{
-filtered_graphing_df_res
+Filter Data for Graphing the Extent of Modification at the Residue Level (Step 16)
 }
 \examples{
 graphing_df_res <- filtered_graphing_df_res(graphing_df)

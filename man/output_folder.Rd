@@ -2,7 +2,7 @@
 % Please edit documentation in R/output_folder.R
 \name{output_folder}
 \alias{output_folder}
-\title{output_folder}
+\title{Select the Output Directory for the Data (Step2)}
 \usage{
 output_folder()
 }
@@ -13,7 +13,7 @@ output_folder()
 The path to the folder where the output will be saved.
 }
 \description{
-output_folder
+Select the Output Directory for the Data (Step2)
 }
 \examples{
 output_folder()

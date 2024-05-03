@@ -2,16 +2,16 @@
 % Please edit documentation in R/generate_eom_plot_pep.R
 \name{generate_eom_plot_pep}
 \alias{generate_eom_plot_pep}
-\title{generate_eom_plot_pep}
+\title{Create a Plot for the Extent of Modification at the Peptide Level (Step 19)}
 \usage{
-generate_eom_plot_pep(df_in, file_output, excel_filename)
+generate_eom_plot_pep(df_in, file_output, filename)
 }
 \arguments{
 \item{df_in}{a data frame with quantifiable peptide modifications}
 
 \item{file_output}{The file path to save the graphs}
 
-\item{excel_filename}{The file name to save the excel file}
+\item{filename}{User defined file name for the saved file}
 }
 \value{
 Bar graphs corresponding to each quantifiable peptide in the input
@@ -19,9 +19,8 @@ data frame. Must Run save_graphs_pep() to save the graphs in the desired
 location.
 }
 \description{
-generate_eom_plot_pep
+Create a Plot for the Extent of Modification at the Peptide Level (Step 19)
 }
 \examples{
-plot_pep <- generate_eom_plot_pep(graphing_data = df_in,
-file_output = file_output, excel_filename = excel_filename)
+plot_pep <- generate_eom_plot_pep(df_in = my_data_frame, file_output = "/path/to/output")
 }

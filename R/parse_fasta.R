@@ -1,4 +1,4 @@
-#' parse_fasta
+#' Parse through the FASTA File to Extract Relevant Data (Step 7)
 #'
 #' @param fasta_in FASTA file in the form of a dataframe
 #'

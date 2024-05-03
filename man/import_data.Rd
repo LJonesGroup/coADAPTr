@@ -2,7 +2,7 @@
 % Please edit documentation in R/import_data.R
 \name{import_data}
 \alias{import_data}
-\title{import_data}
+\title{Import data from an Excel file (step 3 )}
 \usage{
 import_data()
 }
@@ -10,8 +10,8 @@ import_data()
 A data frame with the desired data set
 }
 \description{
-import_data
+Import data from an Excel file (step 3 )
 }
 \examples{
-import<- import_data()
+import <- import_data()
 }

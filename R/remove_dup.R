@@ -1,4 +1,4 @@
-#' remove_dup
+#' Remove Duplicate Sequest Node Identifications (Step 5)
 #'
 #' @param df data frame with original data from PD to remove duplicates
 #' created from using the multi-level sequence searching algorithm

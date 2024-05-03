@@ -2,7 +2,7 @@
 % Please edit documentation in R/remove_dup.R
 \name{remove_dup}
 \alias{remove_dup}
-\title{remove_dup}
+\title{Remove Duplicate Sequest Node Identifications (Step 5)}
 \usage{
 remove_dup(df)
 }
@@ -14,7 +14,7 @@ created from using the multi-level sequence searching algorithm}
 a data frame with no duplicate sequest node identifications
 }
 \description{
-remove_dup
+Remove Duplicate Sequest Node Identifications (Step 5)
 }
 \examples{
 pd_data <- remove_dup(pd_data)

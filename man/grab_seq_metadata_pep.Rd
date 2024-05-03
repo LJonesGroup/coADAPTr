@@ -2,7 +2,8 @@
 % Please edit documentation in R/grab_seq_metadata_pep.R
 \name{grab_seq_metadata_pep}
 \alias{grab_seq_metadata_pep}
-\title{grab_seq_metadata_pep}
+\title{Grab Sequence Metadata for Peptide Level Graphing (Step 10)
+SKIP Using this Function. It is used in merge_metadata_pep function.}
 \usage{
 grab_seq_metadata_pep(df_in)
 }
@@ -12,10 +13,11 @@ locations}
 }
 \value{
 a data frame containing the MasterProteinAccessions, Sequence,
-peptide, and start columns
+peptide, and start columns. ONLY used inside of merge_metadata_pep function.
 }
 \description{
-grab_seq_metadata_pep
+Grab Sequence Metadata for Peptide Level Graphing (Step 10)
+SKIP Using this Function. It is used in merge_metadata_pep function.
 }
 \examples{
 new_df <- grab_seq_metadata_pep(raw_data)

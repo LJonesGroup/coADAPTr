@@ -1,4 +1,4 @@
-#' area_calculations_res
+#' Calculate the Extent of Modification at the Residue Level (Step 13)
 #' @param df_in data frame from modified raw data to calculate the EOM
 #' @return a data frame containing the extent of modification calculations
 #' at the residue level

@@ -1,4 +1,4 @@
-#' FASTA_file
+#' Import the Corresponding FASTA File (Step 1)
 #' @param FASTA_path FASTA file path
 #' @return FASTA file saved as a data frame
 #' @export

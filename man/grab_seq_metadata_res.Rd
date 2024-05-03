@@ -2,7 +2,7 @@
 % Please edit documentation in R/grab_seq_metadata_res.R
 \name{grab_seq_metadata_res}
 \alias{grab_seq_metadata_res}
-\title{grab_seq_metadata_res}
+\title{Grab Sequence Metadata for Residue Level Graphing (Step 14)}
 \usage{
 grab_seq_metadata_res(df_in)
 }
@@ -11,10 +11,10 @@ grab_seq_metadata_res(df_in)
 }
 \value{
 A data frame with columns MasterProteinAccessions, Sequence, Res,
-start
+start columns. ONLY used inside of graphing_data_res function.
 }
 \description{
-grab_seq_metadata_res
+Grab Sequence Metadata for Residue Level Graphing (Step 14)
 }
 \examples{
 new_df<-grab_seq_metadata_res(raw_data)

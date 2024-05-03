@@ -1,7 +1,7 @@
-#' grab_seq_metadata_res
+#' Grab Sequence Metadata for Residue Level Graphing (Step 14)
 #' @param df_in data frame with original data to match proteins and residue
 #' @return A data frame with columns MasterProteinAccessions, Sequence, Res,
-#' start
+#' start columns. ONLY used inside of graphing_data_res function.
 #' @export
 #'
 #' @examples new_df<-grab_seq_metadata_res(raw_data)

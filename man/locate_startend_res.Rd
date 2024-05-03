@@ -2,7 +2,7 @@
 % Please edit documentation in R/locate_startend_res.R
 \name{locate_startend_res}
 \alias{locate_startend_res}
-\title{locate_startend_res}
+\title{Locate the Start and End Residue of a Peptide (Step 8)}
 \usage{
 locate_startend_res(raw_data)
 }
@@ -14,7 +14,7 @@ protein sequences}
 A data frame with with the start and ending peptide location
 }
 \description{
-locate_startend_res
+Locate the Start and End Residue of a Peptide (Step 8)
 }
 \examples{
 new_df <- locate_startend_res(raw_data)

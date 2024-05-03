@@ -2,7 +2,7 @@
 % Please edit documentation in R/area_calculations_pep.R
 \name{area_calculations_pep}
 \alias{area_calculations_pep}
-\title{area_calculations_pep}
+\title{Calculate the Extent of Modification at the Peptide Level (Step 9)}
 \usage{
 area_calculations_pep(df_in)
 }
@@ -15,7 +15,7 @@ a data frame containing the values for the extent of modification
 calculation
 }
 \description{
-area_calculations_pep
+Calculate the Extent of Modification at the Peptide Level (Step 9)
 }
 \examples{
 EOM<- area_calculations_pep(pd_data_annotated)

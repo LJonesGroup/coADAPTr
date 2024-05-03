@@ -1,4 +1,4 @@
-#'area_calculations_pep
+#'Calculate the Extent of Modification at the Peptide Level (Step 9)
 #' @param df_in A data frame with the following columns: MasterProteinAccessions,
 #' Sequence, SampleControl, MOD, Precursor Abundance
 #' @return a data frame containing the values for the extent of modification

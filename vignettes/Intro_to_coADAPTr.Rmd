@@ -1,0 +1,32 @@
+---
+title: "Introduction of coADAPTr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction of coADAPTr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(coADAPTr)
+```
+
+This is an introduction to coADAPTr (Cocalent Labeling Automated Data Analysis Platform in R)
+
+We can use a series of functions to help process raw mass spectrometry data that has been sequence searched.
+
+The initial input is an excel sheet (.xlsx or .xls) that contains the minimum columns:
+- MasterProteinAccessions
+- UniprotID
+- Modifications (Modification Type; Modification Position)
+- Sequence (If using Proteome Discoverer 2.5> be sure to change "Annotated Sequence' to "Sequence")
+- Precursor Abundance
+- Spectrum File (Indicate Laser-L vs No Laser-NL Samples in the Spectrum File Names)
+- Retention Time 

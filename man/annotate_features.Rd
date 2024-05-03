@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotate_features.R
 \name{annotate_features}
 \alias{annotate_features}
-\title{annotate_features}
+\title{Perform Annotation of Raw Data (Step 6)}
 \usage{
 annotate_features(raw_data)
 }
@@ -14,7 +14,7 @@ annotate specific features}
 a modified data frame with appropriate modification to the raw data
 }
 \description{
-annotate_features
+Perform Annotation of Raw Data (Step 6)
 }
 \examples{
 newdf<- annotate_features(raw_data)

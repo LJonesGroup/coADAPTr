@@ -1,14 +1,16 @@
-library(readxl)
-library(openxlsx)
-library(VennDiagram)
-library(RColorBrewer)
-
+#' Create and Save a Venn Diagram Plot
+#'
+#' @return A Venn diagram plot saved as a PNG file
+#' @export
+#'
+#' @examples venn_diagram()
+#' @aliases venn_diagram
 venn_diagram <- function() {
   # Prompt user to select Excel file
   excel_file <- file.choose()
 
   # Read data from Excel file
-  data <- read_excel(excel_file, col_names = FALSE)
+  data <- read_excel(excel_file, col_names = TRUE)
 
   # Prompt user to select output folder
   output_folder <- choose.dir()
@@ -47,63 +49,26 @@ venn_diagram <- function() {
     fill = custom_palette,
     alpha = 0.5, # Adjust transparency for better visualization
     margin = 0.1, # Increase margin for better plot appearance
-    fontfamily = "sans", # Set font family to Arial
+    fontfamily = "sans", # Set font family to Helvetica (or similar font)
     fontface = "bold",   # Set font face to bold
-    cat.fontsize = 35,   # Set category font size to 35 (bubble titles)
-    cex = 2.5,
-    cat.fontfamily = "sans", # Set category title font family to sans
+    cat.fontsize = 20,   # Set category font size to 20
+    cex = 2,           # Adjust overall font size
+    cat.cex = 2.5,         # Set category title font size to 24
+    cat.fontfamily = "sans", # Set category title font family
     cat.fontface = "bold"  # Set category title font face to bold
   )
-
-  # Increase the font size of bubble titles (category names)
-  venn_plot$vpList$category[[1]]$fontsize <- 35  # Adjust the font size as needed
-
-  # Prompt user to specify the name of the output Excel file for data
-  excel_file_name <- readline(prompt = "Enter the name of the output Excel file for data (without extension): ")
-  excel_file_path <- file.path(output_folder, paste0(excel_file_name, ".xlsx"))
-
-  # Create a new Excel workbook
-  wb <- createWorkbook()
-
-  # Add a worksheet for all data
-  addWorksheet(wb, "Venn_Data")
-
-  # Write data to different columns within the same worksheet
-  start_col <- 1  # Start writing data from column 1
-  for (i in 1:length(venn_bubble_names)) {
-    # Calculate the end column
-    end_col <- start_col + length(condition_lists[[i]]) - 1
-
-    # Write data to the specified range of columns
-    col_header <- venn_bubble_names[i]
-    writeData(wb, sheet = "Venn_Data", x = data.frame(Condition = col_header, Data = condition_lists[[i]]),
-              startCol = start_col, startRow = 1, colNames = TRUE)
-
-    # Update the start column for the next set of data
-    start_col <- end_col + 2  # Add some padding between sets of data
-  }
-
-  # Save the Excel workbook
-  saveWorkbook(wb, excel_file_path)
-
-  cat("Data from each Venn bubble and intersection saved to:", excel_file_path, "\n")
 
   # Prompt user to specify the name of the output PNG file
   png_file_name <- readline(prompt = "Enter the name of the output PNG file (without extension): ")
   png_file <- file.path(output_folder, paste0(png_file_name, ".png"))
 
   # Save plot as PNG
-  png(filename = png_file, width = 800, height = 800) # Adjust width and height as needed
+  png(filename = png_file, width = 1000, height = 1000) # Adjust width and height as needed
   grid.draw(venn_plot)
   dev.off()
 
   cat("Venn diagram plot saved at:", png_file, "\n")
+  if (FALSE) {
+    venn_diagram()
+  }
 }
-
-# Call the function to create the Venn diagram plot and save data to Excel
-venn_diagram()
-
-
-
-
-

@@ -2,7 +2,7 @@
 % Please edit documentation in R/filtered_graphing_df_pep.R
 \name{filtered_graphing_df_pep}
 \alias{filtered_graphing_df_pep}
-\title{filtered_graphing_df_pep}
+\title{Filter Data for Creating Extent of Modification Graphs at the Peptide Level (Step 12)}
 \usage{
 filtered_graphing_df_pep(df_in)
 }
@@ -14,7 +14,7 @@ modifications}
 a data frame containing the filtered FPOP data
 }
 \description{
-filtered_graphing_df_pep
+Filter Data for Creating Extent of Modification Graphs at the Peptide Level (Step 12)
 }
 \examples{
 graphing_data<- filtered_graphing_df_pep(EOM)
