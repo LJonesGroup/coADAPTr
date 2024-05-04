@@ -1,0 +1,74 @@
+#' Create and Save a Venn Diagram Plot
+#'
+#' @return A Venn diagram plot saved as a PNG file
+#' @export
+#'
+#' @examples venn_diagram()
+#' @aliases venn_diagram
+venn_diagram <- function() {
+  # Prompt user to select Excel file
+  excel_file <- file.choose()
+
+  # Read data from Excel file
+  data <- read_excel(excel_file, col_names = TRUE)
+
+  # Prompt user to select output folder
+  output_folder <- choose.dir()
+
+  # Get the number of conditions
+  num_conditions <- ncol(data)
+
+  # Get bubble names from the user
+  venn_bubble_names <- readline(prompt = "Enter names for the Venn diagram bubbles separated by commas: ")
+  venn_bubble_names <- strsplit(venn_bubble_names, ",")[[1]]
+
+  # Ensure the number of bubble names matches the number of conditions
+  if (length(venn_bubble_names) != num_conditions) {
+    stop("Number of bubble names provided does not match the number of columns in the Excel file.")
+  }
+
+  # Process each column separately
+  condition_lists <- lapply(seq_len(num_conditions), function(i) {
+    column_data <- na.omit(data[[i]])
+    if (length(column_data) == 0) {
+      return(NULL)
+    } else {
+      return(column_data)
+    }
+  })
+
+  # Generate a custom color palette (using shades of blue or gray)
+  custom_palette <- brewer.pal(num_conditions, "Blues") # You can replace "Blues" with "Greys" for gray shades
+
+  # Create Venn diagram plot
+  venn_plot <- venn.diagram(
+    x = condition_lists,
+    category.names = venn_bubble_names,
+    filename = NULL,
+    col = custom_palette,
+    fill = custom_palette,
+    alpha = 0.5, # Adjust transparency for better visualization
+    margin = 0.1, # Increase margin for better plot appearance
+    fontfamily = "sans", # Set font family to Helvetica (or similar font)
+    fontface = "bold",   # Set font face to bold
+    cat.fontsize = 20,   # Set category font size to 20
+    cex = 2,           # Adjust overall font size
+    cat.cex = 2.5,         # Set category title font size to 24
+    cat.fontfamily = "sans", # Set category title font family
+    cat.fontface = "bold"  # Set category title font face to bold
+  )
+
+  # Prompt user to specify the name of the output PNG file
+  png_file_name <- readline(prompt = "Enter the name of the output PNG file (without extension): ")
+  png_file <- file.path(output_folder, paste0(png_file_name, ".png"))
+
+  # Save plot as PNG
+  png(filename = png_file, width = 1000, height = 1000) # Adjust width and height as needed
+  grid.draw(venn_plot)
+  dev.off()
+
+  cat("Venn diagram plot saved at:", png_file, "\n")
+  if (FALSE) {
+    venn_diagram()
+  }
+}

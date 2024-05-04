@@ -1,0 +1,28 @@
+FASTA                   Import FASTA File
+annotate                Annnotate
+area_pep                calculate the peptide total areas
+area_res                Calculate Area and Associated Metrics
+file_path               Select the file location of sequence searched
+                        MS sata
+filter_pep              filter the quantifiable peptide extent of
+                        modifications
+filtered_graphing_df_res
+                        Filter Graphing Data
+generate_peptide_bar_graph
+                        Generate Peptide Bar Graph
+generate_protein_eom_plots
+                        Generate Extent of Modification (EOM) Plots for
+                        Proteins
+grab_pep                grab the quantifiable peptide extent of
+                        modifications
+grab_res                Grab the quantifiable residue extent of
+                        modifications
+graphing_df_res         Prepare Data for Graphing
+locate                  Locate start and end residues
+output                  Select a folder for your tables and figures to
+                        be saved
+parse                   Parse fasta files
+save_df                 Save Data Frames as Separate Excel Files
+save_pep_graphs         Save Extent of Modification (EOM) Plots for
+                        modified residues
+save_res_graphs         Save Graphs for Each Protein in Data Frame
