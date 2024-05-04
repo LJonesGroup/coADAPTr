@@ -14,7 +14,7 @@ Usage To get started, load the package in R:
 
 r Copy code library(coADAPTr) For more information on how to use the package, see the vignettes:
 
-r Copy code vignette("coADAPTr-introduction") vignette("coADAPTr-workflow") Acknowledgments This package was developed by [Your Name] in [Your Lab] at [Your Institution]. We gratefully acknowledge the support of our funding agencies and the helpful comments of our colleagues.
+r Copy code vignette("coADAPTr-introduction") vignette("coADAPTr-workflow") Acknowledgments This package was developed by Dr. Raquel L. Shortt in the Dr. Lisa M. Jones Lab at The University of California San Diego. We gratefully acknowledge the support of our funding agencies and the helpful comments of our colleagues.
 
 License This package is released under the GNU General Public License v3.0.
 ---
