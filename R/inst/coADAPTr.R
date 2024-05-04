@@ -129,5 +129,4 @@ generate_eom_plot_pep(df_in = quant_graph_df_pep, file_output = file_output)
 
 generate_eom_plot_res(df_in = quant_graph_df_res, file_output = file_output)
 
-output_folder()
 dev.off()
