@@ -129,4 +129,9 @@ generate_eom_plot_pep(df_in = quant_graph_df_pep, file_output = file_output)
 
 generate_eom_plot_res(df_in = quant_graph_df_res, file_output = file_output)
 
+#Step 21 Saving Peptide Level Grouped Bar Graphs
+
+generate_grouped_bar_plot_pep()
+
+
 dev.off()
