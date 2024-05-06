@@ -56,9 +56,9 @@ step:
 before_beginning()
 ```
 
-## Step-by-Step Guide 
+## Step-by-Step Guide
 
-### Step 1: Read in Required Inputs 
+### Step 1: Read in Required Inputs
 
 Start by reading in the necessary inputs for the analysis. This
 typically includes a FASTA file containing protein sequences
@@ -67,7 +67,7 @@ typically includes a FASTA file containing protein sequences
 FASTA <- FASTA_file()
 ```
 
-### Step 2: Set Output Directory 
+### Step 2: Set Output Directory
 
 Define the output directory where the results will be saved:
 
@@ -75,7 +75,7 @@ Define the output directory where the results will be saved:
 file_output <- output_folder()
 ```
 
-### Step 3: Read in Data from Proteome Discoverer 
+### Step 3: Read in Data from Proteome Discoverer
 
 Import the data from Proteome Discoverer using the import_data()
 function:
@@ -107,7 +107,7 @@ to use remove_dup()*
 pd_data <- import_data()
 ```
 
-### Step 4: Identify Sample and Control Spectrum Files 
+### Step 4: Identify Sample and Control Spectrum Files
 
 Determine which spectrum files correspond to the sample and control
 groups using the SampleControl() function:
@@ -116,7 +116,7 @@ groups using the SampleControl() function:
 pd_data <- SampleControl(pd_data)
 ```
 
-### Step 5: Remove Duplicate Entries 
+### Step 5: Remove Duplicate Entries
 
 If the MS files were analyzed via Proteome Discoverer, you can remove
 duplicate entries using the remove_dup() function:
@@ -129,7 +129,7 @@ multilevel sequence searching algorithm.*
 pd_data <- remove_dup(pd_data)
 ```
 
-### Step 6: Clean and Parse Data 
+### Step 6: Clean and Parse Data
 
 Annotate the features in the data from the PD output file using the
 annotate_features() function:
@@ -138,7 +138,7 @@ annotate_features() function:
 pd_data_annotated <- annotate_features(pd_data)
 ```
 
-### Step 7: Parse the FASTA File 
+### Step 7: Parse the FASTA File
 
 Parse the FASTA file to extract relevant information using the
 parse_fasta() function:
@@ -147,7 +147,7 @@ parse_fasta() function:
 FASTA <- parse_fasta(FASTA)
 ```
 
-### Step 8: Locate Residue Numbers 
+### Step 8: Locate Residue Numbers
 
 Locate the residue numbers in the FASTA file using the
 locate_startend_res() function:
@@ -165,7 +165,7 @@ area_calculations_pep() function:
 Areas_pep <- area_calculations_pep(pd_data_fasta_merged)
 ```
 
-### Step 10: Merge Metada with Graphing Data 
+### Step 10: Merge Metada with Graphing Data
 
 Merge the metadata (ie. the peptide and modification location) with the
 graphing data using the merge_metadata() function:
@@ -174,7 +174,7 @@ graphing data using the merge_metadata() function:
 graphing_df_pep <- merge_metadata_pep(Areas_pep, pd_data_fasta_merged)
 ```
 
-### Step 11: Filter Graphical Data 
+### Step 11: Filter Graphical Data
 
 Filter the graphical data to include only acceptable data using the
 filtered_graphing_df_pep() function:
@@ -183,7 +183,7 @@ filtered_graphing_df_pep() function:
 quant_graph_df_pep <- filtered_graphing_df_pep(graphing_df_pep)
 ```
 
-### Step 12: Calculate Residue Level Areas and Extent of Modification 
+### Step 12: Calculate Residue Level Areas and Extent of Modification
 
 Calculate the residue level areas and extent of modification using the
 area_calculations_res() function:
@@ -192,7 +192,7 @@ area_calculations_res() function:
 Areas_res <- area_calculations_res(pd_data_fasta_merged)
 ```
 
-### Step 13: Prepare Residue Level Graphing Data 
+### Step 13: Prepare Residue Level Graphing Data
 
 Prepare the residue level graphing data by annotating the peptide and
 residue location using the graphing_data_res() function:
@@ -201,7 +201,7 @@ residue location using the graphing_data_res() function:
 graphing_df_res <- graphing_data_res(Areas_res, pd_data_fasta_merged)
 ```
 
-### Step 14: Filter Residue Level Graphing Data 
+### Step 14: Filter Residue Level Graphing Data
 
 Filter the residue level graphing data for quantifiable modifications
 using the filtered_graphing_df_res() function:
@@ -210,7 +210,7 @@ using the filtered_graphing_df_res() function:
 quant_graph_df_res <- filtered_graphing_df_res(graphing_df_res)
 ```
 
-### Step 15: Save Tables and Plots 
+### Step 15: Save Tables and Plots
 
 Save the tables and plots generated during the analysis using the
 save_data_frames() function: generate_eom_plot_pep()
