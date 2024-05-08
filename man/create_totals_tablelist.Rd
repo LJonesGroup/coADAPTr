@@ -18,5 +18,5 @@ A data frame containing the total number of unique proteins, sequences, and resi
 Creating a List of Total Peptides and Residues Modified (Step 17)
 }
 \examples{
-Totals<- create_totals_tablelist(quant_graph_df, quant_graph_df_re)
+Totals<- create_totals_tablelist(quant_graph_df_pep, quant_graph_df_res)
 }

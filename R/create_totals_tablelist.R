@@ -6,7 +6,7 @@
 #' @return A data frame containing the total number of unique proteins, sequences, and residues modified
 #' @export
 #'
-#' @examples Totals<- create_totals_tablelist(quant_graph_df, quant_graph_df_re)
+#' @examples Totals<- create_totals_tablelist(quant_graph_df_pep, quant_graph_df_res)
 #' @aliases create_totals_tablelist
 create_totals_tablelist <- function(df_in, df_res) {
   df_out <- data.frame(

@@ -38,7 +38,9 @@ venn_diagram <- function() {
   })
 
   # Generate a custom color palette (using shades of blue or gray)
-  custom_palette <- brewer.pal(num_conditions, "Blues") # You can replace "Blues" with "Greys" for gray shades
+  custom_palette <- c("#0570b0", "#3690c0", "#74a9cf", "#a6bddb", "#d0d1e6", "#084594", "#2171b5", "#4292c6", "#6baed6", "#9ecae1", "#c6dbef", "#08519c", "#3182bd", "#6baed6", "#9ecae1", "#c6dbef")
+  custom_palette <- custom_palette[1:num_conditions] # ensuring the palette has the desired number of colors
+
 
   # Create Venn diagram plot
   venn_plot <- venn.diagram(
@@ -51,9 +53,9 @@ venn_diagram <- function() {
     margin = 0.1, # Increase margin for better plot appearance
     fontfamily = "sans", # Set font family to Helvetica (or similar font)
     fontface = "bold",   # Set font face to bold
-    cat.fontsize = 30,   # Set category font size to 20
-    cex = 7,           # Adjust overall font size
-    cat.cex = 7,         # Set category title font size to 24
+    cat.fontsize = 20,   # Set category font size to 20
+    cex = 2.5,           # Adjust overall font size
+    cat.cex = 2.5,         # Set category title font size to 24
     cat.fontfamily = "sans", # Set category title font family
     cat.fontface = "bold"  # Set category title font face to bold
   )
