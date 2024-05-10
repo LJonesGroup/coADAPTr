@@ -41,7 +41,6 @@ venn_diagram <- function() {
   custom_palette <- c("#0570b0", "#3690c0", "#74a9cf", "#a6bddb", "#d0d1e6", "#084594", "#2171b5", "#4292c6", "#6baed6", "#9ecae1", "#c6dbef", "#08519c", "#3182bd", "#6baed6", "#9ecae1", "#c6dbef")
   custom_palette <- custom_palette[1:num_conditions] # ensuring the palette has the desired number of colors
 
-
   # Create Venn diagram plot
   venn_plot <- venn.diagram(
     x = condition_lists,
@@ -70,6 +69,16 @@ venn_diagram <- function() {
   dev.off()
 
   cat("Venn diagram plot saved at:", png_file, "\n")
+
+  # Calculate overlap
+  overlap <- calculate.overlap(condition_lists)
+
+  # Save overlap to Excel
+  overlap_file <- file.path(output_folder, paste0(png_file_name, "_Overlap.xlsx"))
+  write.xlsx(overlap, overlap_file)
+
+  cat("Overlap information saved at:", overlap_file, "\n")
+
   if (FALSE) {
     venn_diagram()
   }
