@@ -58,8 +58,6 @@ pd_data<- remove_dup(pd_data)
 # Step 6 Clean and parse data from PD output file
 pd_data_annotated<- annotate_features(pd_data)
 
-# parse the PD data REMOVE
-pd_data_annotated <- annotate_features(pd_data)
 
 # Step 7 Parse the FASTA file for later manipulations
 FASTA<- parse_fasta(FASTA)
