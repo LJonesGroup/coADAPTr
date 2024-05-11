@@ -87,6 +87,79 @@ output_folder <- function() {
 
 file_output <- output_folder()
 
+#Calculate Total Abundance (denominator)
+sum_abundance <- function(data) {
+  # Find columns containing "Abundance"
+  abundance_cols <- grep("Abundance", colnames(data), value = TRUE)
+
+  # Sum numerical content of abundance columns for each row
+  data$AbundanceTotals <- rowSums(data[, abundance_cols, drop = FALSE], na.rm = TRUE)
+
+  return(data)
+}
+
+# Apply function
+pd_data <- sum_abundance(pd_data)
+
+#Calculate True Precursor Abundance
+calculate_abundances <- function(data) {
+  # Find columns containing "Abundance"
+  abundance_cols <- grep("Abundance:", colnames(data), value = TRUE)
+
+  # Loop through each abundance column
+  for (col in abundance_cols) {
+    # Extract the number and letter from the original column name
+    num_letter <- gsub("Abundance: ", "", col)
+
+    # Calculate the new column
+    new_col <- paste("TRUE Abundance:", num_letter, sep = " ")
+    data[[new_col]] <- data[[col]] * data$Intensity / data$AbundanceTotals
+  }
+
+  return(data)
+}
+
+pd_data<- calculate_abundances(pd_data)
+
+#Extract Necessary Columns
+extract_columns <- function(data) {
+  # Select the desired columns
+  selected_cols <- c("Sequence", "Modifications", "Master_Protein_Accessions", "Protein_Accessions")
+
+  # Find columns containing "TRUE Abundance"
+  abundance_cols <- grep("^TRUE Abundance", colnames(data), value = TRUE)
+
+  # Combine selected columns with abundance columns
+  all_selected_cols <- c(selected_cols, abundance_cols)
+
+  # Subset the dataframe
+  data_subset <- data[, all_selected_cols, drop = FALSE]
+
+  return(data_subset)
+}
+cleaned_data<- extract_columns(pd_data)
+
+#renaming columns
+# Function to interactively rename columns
+rename_columns_interactively <- function(data) {
+  # Display current column names
+  print("Current column names:")
+  print(colnames(data))
+
+  # Allow user to select columns to rename
+  selected_cols <- select(data)
+
+  # Allow user to input new column names
+  new_names <- vector("character", length(selected_cols))
+  for (i in 1:length(selected_cols)) {
+    new_names[i] <- readline(paste("Enter new name for column", selected_cols[i], ": "))
+  }
+
+  # Rename selected columns
+  data <- data %>% rename_at(selected_cols, ~ new_names)
+
+  return(data)
+}
 
 ##If your file input is from fragpipe start here
 
