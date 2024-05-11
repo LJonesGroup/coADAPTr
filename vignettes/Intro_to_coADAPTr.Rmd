@@ -99,7 +99,7 @@ to use remove_dup()*
 
 pd_data \<- import_data()
 
-![](images/PD Data-04.PNG){width="25in"}
+![](images/PD%20Data-04.PNG){width="25in"}
 
 ### Step 4: Identify Sample and Control Spectrum Files
 
@@ -225,14 +225,14 @@ generate_eom_plot_res()
 TotalsTable\<- create_totals_tablelist (quant_graph_df_pep,
 quant_graph_df_res)
 
-![](images/totals table.PNG){width="579"}
+![](images/totals%20table.PNG){width="579"}
 
 save_data_frames(file_output, TotalsTable = TotalsTable,
 quant_graph_df_pep = quant_graph_df_pep, quant_graph_df_res =
 quant_graph_df_res, graphing_df_pep = graphing_df_pep, graphing_df_res =
 graphing_df_res)
 
-![](images/saved data frames.PNG){width="396"}
+![](images/saved%20data%20frames.PNG){width="396"}
 
 generate_eom_plot_pep(df_in = quant_graph_df_pep, file_output =
 file_output)
@@ -254,9 +254,9 @@ The excel workbook containing the information to place in the venn
 diagram have a a column list of master protein accessions correlation to
 a condition that is indicated in the header.
 
-![](images/venn data.PNG){width="462"}
+![](images/venn%20data.PNG){width="462"}
 
-## Step 17: Creating and Saving Grouped Bar Graphs. 
+## Step 17: Creating and Saving Grouped Bar Graphs.
 
 Once you have analyzed data of different conditions, combine the
 quantifiable graphing data into one data frame. In the last column
@@ -268,7 +268,7 @@ grouped_bar_plot_pep()
 The excel workbook containing the extent of modification for varying
 conditions should look like this
 
-![](images/grouped bar graph data.PNG){width="572"}
+![](images/grouped%20bar%20graph%20data.PNG){width="572"}
 
 This vignette includes explanations and documentation for each step in
 the data analysis workflow. It should serve as a comprehensive guide for
