@@ -168,7 +168,6 @@ renamed_data <- rename_columns_interactively(cleaned_data)
 
 # Transform the data in the column into rows
 
-library(tidyr)
 
 transform_data <- function(data) {
   # Pivot the data into long format, splitting columns containing ":"
@@ -214,8 +213,12 @@ annotate_features <- function(raw_data) {
                                        raw_data$ModPositionN))
   raw_data$ModPosition <- gsub("^; ", "", raw_data$ModPosition)
 
+  # Extract letters before ":" in the "Spectrum File" column and add to "Condition" column
+  raw_data$Condition <- sub("^(.*):.*", "\\1", raw_data$`Spectrum File`)
+
   return(raw_data)
 }
+
 
 annotated_data<-annotate_features(transformed_data)
 
