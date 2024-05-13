@@ -124,44 +124,47 @@ pd_data<- calculate_abundances(pd_data)
 #Extract Necessary Columns
 extract_columns <- function(data) {
   # Select the desired columns
-  selected_cols <- c("Sequence", "Modifications", "Master_Protein_Accessions", "Protein_Accessions")
+  selected_cols <- c("Sequence", "Modifications", "Master Protein Accessions", "Protein Accessions")
 
-  # Find columns containing "TRUE Abundance"
-  abundance_cols <- grep("^TRUE Abundance", colnames(data), value = TRUE)
+  # Identify indices of columns containing "TRUE Abundance"
+  abundance_indices <- grepl("TRUE Abundance", colnames(data))
 
   # Combine selected columns with abundance columns
-  all_selected_cols <- c(selected_cols, abundance_cols)
+  all_selected_cols <- c(selected_cols, colnames(data)[abundance_indices])
 
   # Subset the dataframe
   data_subset <- data[, all_selected_cols, drop = FALSE]
 
   return(data_subset)
 }
+
+
+
 cleaned_data<- extract_columns(pd_data)
 
 #renaming columns
 # Function to interactively rename columns
 rename_columns_interactively <- function(data) {
-  # Display current column names
-  print("Current column names:")
-  print(colnames(data))
+  # Prompt user to select columns for renaming
+  selected_columns <- select.list(
+    colnames(data),
+    multiple = TRUE,
+    title = "Select columns to rename:",
+    graphics = TRUE
+  )
 
-  # Allow user to select columns to rename
-  selected_cols <- select(data)
-
-  # Allow user to input new column names
-  new_names <- vector("character", length(selected_cols))
-  for (i in 1:length(selected_cols)) {
-    new_names[i] <- readline(paste("Enter new name for column", selected_cols[i], ": "))
+  # Loop through selected columns and rename them
+  for (col in selected_columns) {
+    new_name <- readline(prompt = paste("Enter new name for column", col, "in the format Condition:SampleType: "))
+    # Rename the column
+    colnames(data)[colnames(data) == col] <- new_name
   }
-
-  # Rename selected columns
-  data <- data %>% rename_at(selected_cols, ~ new_names)
 
   return(data)
 }
 
-##If your file input is from fragpipe start here
+
+renamed_data <- rename_columns_interactively(cleaned_data)
 
 #extracting proetin sequence
 #adding L or NL to files
