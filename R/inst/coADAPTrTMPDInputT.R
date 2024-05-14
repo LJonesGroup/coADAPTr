@@ -263,12 +263,12 @@ locate_startend_res <- function(raw_data){
 pd_data_fasta_merged <- locate_startend_res(annotated_data)
 
 #Perform EOM Calculations
-area_calculations_pep <- function(df_in) {
 
+area_calculations_pep <- function(df_in) {
   # Group by the necessary columns including 'Condition'
   df_out <- df_in %>%
     group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
-    reframe(TotalArea = sum(`Precursor Abundance`)) %>%
+    reframe(TotalArea = sum(`Precursor Abundance`, na.rm = TRUE)) %>%
     ungroup() %>%
     pivot_wider(
       id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
@@ -306,17 +306,18 @@ area_calculations_pep <- function(df_in) {
                 summarize(N = n()),
               by = c("MasterProteinAccessions", "Sequence", "Condition"))
 
-  # Calculate standard deviation
+  # Calculate standard deviation, replacing NA with 0
   test <- df_in %>%
     group_by(MasterProteinAccessions, Sequence, Condition) %>%
-    reframe(sdprep = sd(`Precursor Abundance`))
+    summarize(sdprep = sd(replace_na(`Precursor Abundance`, 0), na.rm = TRUE))
   df_out <- df_out %>%
     left_join(test, by = c("MasterProteinAccessions", "Sequence", "Condition")) %>%
-    mutate(SD = sdprep / (TotalSampleArea + TotalControlArea))
+    mutate(SD = sdprep / (TotalSampleArea * TotalControlArea))
 
   # Return the final dataframe
   return(df_out)
 }
+
 
 
 
