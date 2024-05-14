@@ -261,3 +261,85 @@ locate_startend_res <- function(raw_data){
 }
 
 pd_data_fasta_merged <- locate_startend_res(annotated_data)
+
+#Perform EOM Calculations
+area_calculations_pep <- function(df_in) {
+
+  # Group by the necessary columns including 'Condition'
+  df_out <- df_in %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
+    reframe(TotalArea = sum(`Precursor Abundance`)) %>%
+    ungroup() %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+      names_from = c("SampleControl", "MOD"),
+      values_from = "TotalArea",
+      values_fill = NA
+    )
+
+  # Rename columns
+  df_out <- df_out %>%
+    rename(
+      Control_OxidizedArea = Control_Oxidized,
+      Control_UnoxidizedArea = Control_Unoxidized,
+      Sample_OxidizedArea = Sample_Oxidized,
+      Sample_UnoxidizedArea = Sample_Unoxidized
+    )
+
+  # Replace NA values with 0 where applicable
+  df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
+  df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
+
+  # Calculate Total Areas
+  df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")], na.rm = TRUE)
+  df_out$TotalControlArea <- rowSums(df_out[, c("Control_OxidizedArea", "Control_UnoxidizedArea")], na.rm = TRUE)
+
+  # Calculate EOM values
+  df_out$EOMSample <- df_out$Sample_OxidizedArea / df_out$TotalSampleArea
+  df_out$EOMControl <- df_out$Control_OxidizedArea / df_out$TotalControlArea
+  df_out$EOM <- df_out$EOMSample - df_out$EOMControl
+
+  # Calculate count (N)
+  df_out <- df_out %>%
+    left_join(df_in %>%
+                group_by(MasterProteinAccessions, Sequence, Condition) %>%
+                summarize(N = n()),
+              by = c("MasterProteinAccessions", "Sequence", "Condition"))
+
+  # Calculate standard deviation
+  test <- df_in %>%
+    group_by(MasterProteinAccessions, Sequence, Condition) %>%
+    reframe(sdprep = sd(`Precursor Abundance`))
+  df_out <- df_out %>%
+    left_join(test, by = c("MasterProteinAccessions", "Sequence", "Condition")) %>%
+    mutate(SD = sdprep / (TotalSampleArea + TotalControlArea))
+
+  # Return the final dataframe
+  return(df_out)
+}
+
+
+
+Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
+
+#Merge metadata
+merge_metadata_pep <- function(df_in, rawdatafastamerged) {
+  df_out <- left_join(df_in, grab_seq_metadata_pep(rawdatafastamerged))
+
+  df_out <- df_out[order(df_out$start), ]
+
+  df_out$MasterProteinAccessions <- gsub(".*\\|(.*?)\\|.*", "\\1", df_out$MasterProteinAccessions)
+
+  return(df_out)
+}
+graphing_df_pep<- merge_metadata_pep(Areas_pep, pd_data_fasta_merged)
+
+#Filter out quantifiable modifications
+filtered_graphing_df_pep <- function(df_in) {
+  df_out = df_in[df_in$EOM > 0 & df_in$EOM > df_in$SD & df_in$N > 4, ]
+  df_out<- df_out %>%
+    arrange(start)
+  df_out <- df_out[!is.na(df_out$MasterProteinAccessions), ]
+  return(df_out)
+}
+quant_graph_df_pep<- filtered_graphing_df_pep(graphing_df_pep)
