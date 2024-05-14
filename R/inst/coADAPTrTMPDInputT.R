@@ -191,33 +191,46 @@ annotate_features <- function(raw_data) {
     mutate(`Master Protein Accessions` = sapply(strsplit(`Master Protein Accessions`, ";"), `[`, 1),
            UniprotID = `Master Protein Accessions`)  # Adding this line to create the UniprotID column
 
-  raw_data$Modifications <- gsub(";C\\d+\\(Carbamidomethyl\\)", ";", raw_data$Modifications)
-  raw_data$Modifications <- gsub("C\\d+\\(Carbamidomethyl\\);", ";", raw_data$Modifications)
-  raw_data$Modifications <- gsub("C\\d+\\(Carbamidomethyl\\)", "", raw_data$Modifications)
-  raw_data$Modifications <- gsub(";(?=[^A-Za-z0-9]*$)", "", raw_data$Modifications, perl = TRUE)
-  raw_data$Modifications <- sub("^;\\s", "", raw_data$Modifications)
-  raw_data$Modifications <- ifelse(grepl("^; [A-Z]", raw_data$Modifications),
-                                   sub("^;\\s", "", raw_data$Modifications),
-                                   raw_data$Modifications)
-  raw_data$MOD <- ifelse(is.na(raw_data$Modifications) | raw_data$Modifications == "", "Unoxidized",
-                         ifelse(grepl("()", raw_data$Modifications), "Oxidized", "Unoxidized"))
-  raw_data$MOD <- ifelse(is.na(raw_data$Modifications) | raw_data$Modifications == "" | grepl("^\\s*$", raw_data$Modifications) | !grepl("[A-Za-z]", raw_data$Modifications), "Unoxidized", raw_data$MOD)
+  # Rename Modifications column to Mods
+  raw_data <- raw_data %>%
+    rename(Mods = Modifications)
 
-  raw_data$ModPositionL <- sub("^([[:alpha:]]*).*", "\\1",
-                               raw_data$Modifications)
-  raw_data$ModPositionN <- as.numeric(gsub(".*?([0-9]+).*", "\\1",
-                                           raw_data$Modifications))
+  # Remove specific modifications and clean up semicolons
+  raw_data <- raw_data %>%
+    mutate(Modifications = Mods) %>%
+    mutate(Modifications = gsub(";[A-Z]\\d+\\(Carbamidomethyl\\)", ";", Modifications)) %>%
+    mutate(Modifications = gsub("[A-Z]\\d+\\(Carbamidomethyl\\);", ";", Modifications)) %>%
+    mutate(Modifications = gsub("[A-Z]\\d+\\(Carbamidomethyl\\)", "", Modifications)) %>%
+    mutate(Modifications = gsub(";[A-Z]\\d+\\(TMT[^)]*\\)", ";", Modifications)) %>%
+    mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\);", ";", Modifications)) %>%
+    mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\)", "", Modifications))
 
-  raw_data$ModPosition <- ifelse(raw_data$ModPositionL == "NA", "NA",
-                                 paste(raw_data$ModPositionL,
-                                       raw_data$ModPositionN))
-  raw_data$ModPosition <- gsub("^; ", "", raw_data$ModPosition)
+  # Cleanup: Remove leading, trailing, and multiple consecutive semicolons
+  raw_data <- raw_data %>%
+    mutate(Modifications = gsub("\\s*;\\s*", ";", Modifications)) %>%  # Remove spaces around semicolons
+    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%  # Replace multiple semicolons with a single one
+    mutate(Modifications = gsub("^;|;$", "", Modifications))  # Remove leading and trailing semicolons
+
+  # Determine if the sequence is oxidized or unoxidized
+  raw_data <- raw_data %>%
+    mutate(MOD = ifelse(is.na(Modifications) | Modifications == "", "Unoxidized",
+                        ifelse(grepl("Oxidation", Modifications), "Oxidized", "Unoxidized")))
+
+  # Create ModPositionL and ModPositionN columns
+  raw_data <- raw_data %>%
+    mutate(ModPositionL = sub("^([A-Z]*).*", "\\1", Modifications)) %>%
+    mutate(ModPositionN = gsub(".*?([0-9]+).*", "\\1", Modifications)) %>%
+    mutate(ModPositionN = ifelse(ModPositionN == Modifications, NA, ModPositionN)) %>%
+    mutate(ModPosition = ifelse(is.na(ModPositionL) | ModPositionL == "", NA,
+                                paste(ModPositionL, ModPositionN, sep = "")))
 
   # Extract letters before ":" in the "Spectrum File" column and add to "Condition" column
-  raw_data$Condition <- sub("^(.*):.*", "\\1", raw_data$`Spectrum File`)
+  raw_data <- raw_data %>%
+    mutate(Condition = sub("^(.*):.*", "\\1", `Spectrum File`))
 
   return(raw_data)
 }
+
 
 
 annotated_data<-annotate_features(transformed_data)
@@ -262,7 +275,7 @@ locate_startend_res <- function(raw_data){
 
 pd_data_fasta_merged <- locate_startend_res(annotated_data)
 
-#Perform EOM Calculations
+#Perform EOM Calculations at the peptide level
 
 area_calculations_pep <- function(df_in) {
   # Group by the necessary columns including 'Condition'
@@ -344,3 +357,286 @@ filtered_graphing_df_pep <- function(df_in) {
   return(df_out)
 }
 quant_graph_df_pep<- filtered_graphing_df_pep(graphing_df_pep)
+
+#Perform EOM Calculations at the residue level
+
+
+area_calculations_res <- function(df_in) {
+  all_conditions <- unique(df_in$Condition)
+  result_list <- list()
+
+  for (condition in all_conditions) {
+    df_condition <- df_in %>%
+      filter(Condition == condition)
+
+    # Group by the necessary columns and compute TotalArea
+    df_out <- df_condition %>%
+      filter(mod_count == 0 | mod_count == 1) %>%
+      group_by(MasterProteinAccessions, Sequence, SampleControl, MOD) %>%
+      reframe(TotalArea = sum(`Precursor Abundance`)) %>%
+      ungroup() %>%
+      pivot_wider(
+        id_cols = c("MasterProteinAccessions", "Sequence"),
+        names_from = c("SampleControl", "MOD"),
+        values_from = "TotalArea",
+        values_fill = NA
+      )
+
+    # Compute SampleTotalArea and ControlTotalArea
+    df_out <- df_out %>%
+      mutate(SampleTotalArea = Sample_Oxidized + Sample_Unoxidized,
+             ControlTotalArea = Control_Oxidized + Control_Unoxidized) %>%
+      select(-Sample_Oxidized, -Sample_Unoxidized, -Control_Unoxidized, -Control_Oxidized)
+
+    # Process the second part to get OxidizedArea
+    df_out2 <- df_condition %>%
+      filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized") %>%
+      group_by(MasterProteinAccessions, Sequence, Res, SampleControl) %>%
+      reframe(OxidizedArea = sum(`Precursor Abundance`)) %>%
+      ungroup() %>%
+      pivot_wider(
+        id_cols = c("MasterProteinAccessions", "Sequence", "Res"),
+        names_from = c("SampleControl"),
+        values_from = "OxidizedArea",
+        values_fill = NA
+      )
+
+    # Join the two dataframes
+    df_out <- full_join(df_out, df_out2, by = c("MasterProteinAccessions", "Sequence"))
+
+    # Rename columns
+    df_out <- df_out %>%
+      rename(SampleOxidizedArea = Sample,
+             ControlOxidizedArea = Control)
+
+    # Calculate EOM values
+    df_out <- df_out %>%
+      mutate(EOMSample = SampleOxidizedArea / SampleTotalArea,
+             EOMControl = ControlOxidizedArea / ControlTotalArea,
+             EOM = EOMSample - EOMControl)
+
+    # Calculate count (N)
+    N_df <- df_condition %>%
+      filter(mod_count == 0 | mod_count == 1, !is.na(Res)) %>%
+      group_by(MasterProteinAccessions, Sequence, Res) %>%
+      summarize(N = n())
+
+    df_out <- df_out %>%
+      left_join(N_df, by = c("MasterProteinAccessions", "Sequence", "Res"))
+
+    # Calculate standard deviation
+    sd_df <- df_condition %>%
+      group_by(MasterProteinAccessions, Sequence, Res) %>%
+      summarize(sdprep = sd(replace_na(`Precursor Abundance`, 0), na.rm = TRUE))
+
+    df_out <- df_out %>%
+      left_join(sd_df, by = c("MasterProteinAccessions", "Sequence", "Res")) %>%
+      mutate(SD = sdprep / (SampleTotalArea * ControlTotalArea))
+
+    # Filter out rows with NA in Res and EOM
+    df_out <- df_out %>%
+      filter(!is.na(Res) & !is.na(EOM)) %>%
+      mutate(Condition = condition)  # Add Condition column
+
+    result_list[[condition]] <- df_out
+  }
+
+  # Combine all results into a single dataframe
+  final_df <- bind_rows(result_list)
+
+  return(final_df)
+}
+
+Areas_res<- area_calculations_res(pd_data_fasta_merged)
+
+#Merge metadata for residue level quantification
+graphing_data_res <- function(df_in, pd_data_fasta_merged) {
+  df_out <- df_in %>%
+    left_join(grab_seq_metadata_res(pd_data_fasta_merged)) %>%
+    filter(!(is.na(Res) | Res == "")) %>%
+    arrange(start)%>%
+    mutate(MasterProteinAccessions = gsub(".*\\|(.*?)\\|.*", "\\1", MasterProteinAccessions))
+
+  return(df_out)
+}
+
+graphing_df_res<- graphing_data_res(Areas_res, pd_data_fasta_merged)
+
+#Filter out quantifiable modifications at the residue level
+filtered_graphing_df_res <- function(df_in) {
+  df_out = df_in[df_in$EOM > 0 & df_in$EOM > df_in$SD & df_in$N > 4, ]
+  df_out<- df_out %>%
+    arrange(start)
+  df_out <- df_out[!is.na(df_out$MasterProteinAccessions), ]
+  return(df_out)
+}
+
+quant_graph_df_res<- filtered_graphing_df_res(graphing_df_res)
+
+#Createing Totals Table for saving
+
+create_totals_tablelist <- function(df_in, df_res) {
+  all_conditions <- unique(df_in$Condition)
+  result_list <- list()
+
+  for (condition in all_conditions) {
+    df_condition_in <- df_in %>%
+      filter(Condition == condition)
+
+    df_condition_res <- df_res %>%
+      filter(Condition == condition)
+
+    df_out <- data.frame(
+      Condition = condition,
+      UniqueProteinMod = NA,
+      UniqueSeqMod = NA,
+      UniqueResMod = NA,
+      QuantifiableModProtein = NA,
+      QuantifiableModSeq = NA,
+      QuantifiableModRes = NA
+    )
+
+    unique_protein_mod <- unique(df_condition_in$MasterProteinAccessions)
+    df_out$UniqueProteinMod <- length(unique_protein_mod)
+
+    unique_seq_mod <- unique(df_condition_in$Sequence)
+    df_out$UniqueSeqMod <- length(unique_seq_mod)
+
+    unique_seq_res_mod <- unique(df_condition_res %>%
+                                   select(Sequence, Res))
+    df_out$UniqueResMod <- nrow(unique_seq_res_mod)
+
+    df_filtered <- df_condition_in %>%
+      filter(EOM > 0 & EOM > SD & !is.na(SD))
+
+    df_filtered_res <- df_condition_res %>%
+      filter(EOM > 0 & EOM > SD)
+
+    quantifiable_protein_mod <- unique(df_filtered$MasterProteinAccessions)
+    df_out$QuantifiableModProtein <- length(quantifiable_protein_mod)
+
+    quantifiable_seq_mod <- unique(df_filtered$Sequence)
+    df_out$QuantifiableModSeq <- length(quantifiable_seq_mod)
+
+    quantifiable_seq_res_mod <- unique(df_filtered_res %>%
+                                         select(Sequence, Res))
+    df_out$QuantifiableModRes <- nrow(quantifiable_seq_res_mod)
+
+    result_list[[condition]] <- df_out
+  }
+
+  final_df <- bind_rows(result_list)
+
+  return(final_df)
+}
+
+
+
+TotalsTable<-create_totals_tablelist(graphing_df_pep, graphing_df_res)
+
+
+####Saving tables---------------------------------------------------------------------------
+
+#Step 18 Save Data Frames as Excel Files
+save_data_frames <- function(output_directory, ...) {
+  # Prompt the user to input the file name
+  cat("Enter the file name (without extension): ")
+  file_name <- readline()
+
+  # Remove any leading or trailing whitespace
+  file_name <- trimws(file_name)
+
+  # Check if the file name is empty, if so, use a default name
+  if (nchar(file_name) == 0) {
+    file_name <- "output"
+  }
+
+  # Create a list of data frames
+  data_frames <- list(...)
+
+  # Iterate over each data frame and save as separate Excel files
+  for (i in seq_along(data_frames)) {
+    # Get the current data frame
+    df <- data_frames[[i]]
+
+    # Create the output file name
+    output_file_name <- paste0(file_name, "_", names(data_frames)[i])
+
+    # Create the output file path in the output directory
+    output_file_path <- file.path(output_directory, paste0(output_file_name, ".xlsx"))
+
+    # Save the data frame as an Excel file
+    writexl::write_xlsx(df, output_file_path)
+
+    # Print a message to indicate successful saving
+    cat(names(data_frames)[i], "saved as", output_file_path, "\n")
+  }
+}
+
+save_data_frames(file_output, TotalsTable = TotalsTable, Areas_pep = Areas_pep, Areas_res = Areas_res, quant_graph_df_pep = quant_graph_df_pep, quant_graph_df_res = quant_graph_df_res, graphing_df_pep = graphing_df_pep, graphing_df_res=graphing_df_res)
+
+#### Saving Plots -----------------------------------------------------------------------
+#Creating a bar graph for each condition at the peptide level
+generate_grouped_bar_plot_pep <- function() {
+  # Prompt the user to select the Excel file
+  cat("Select the Excel file containing the data: ")
+  filepath <- file.choose()
+
+  # Load the data from the selected Excel file
+  df_in <- readxl::read_excel(filepath)
+
+  # Arrange the dataframe by start
+  df_in <- df_in %>%
+    arrange(start)
+
+  # Auto-detect unique conditions
+  unique_conditions <- unique(df_in$Condition)
+
+  # Manually specify blue colors for filling the bars
+  condition_colors <- c("#0570b0", "#3690c0", "#74a9cf", "#a6bddb", "#d0d1e6", "#084594", "#2171b5", "#4292c6", "#6baed6", "#9ecae1", "#c6dbef", "#08519c", "#3182bd", "#6baed6", "#9ecae1", "#c6dbef")
+
+  # Create a factor variable to represent the sorted order of conditions
+  df_in$Condition <- factor(df_in$Condition, levels = unique_conditions)
+
+  # Prompt the user to specify the filename
+  cat("Enter the filename (without extension): ")
+  filename <- readline()
+
+  # Remove any leading or trailing whitespace
+  filename <- trimws(filename)
+
+  # Iterate over each protein and make a grouped bar plot for it
+  for (protein in unique(df_in$MasterProteinAccessions)) {
+    # Subset the dataframe for this protein
+    temp <- subset(df_in, MasterProteinAccessions == protein)
+
+    # Generate a grouped bar plot of the extent of modification for each peptide
+    # that maps to this protein, with different conditions represented by color
+    fig <- ggplot(temp, aes(x = peptide, y = EOM, fill = Condition)) +
+      geom_bar(position = position_dodge(width = 0.9), stat = "identity") +
+      geom_errorbar(aes(ymin = EOM - SD, ymax = EOM + SD), position = position_dodge(width = 0.9), width = 0.25) +
+      labs(title = paste(protein, "Peptide Level Analysis"),
+           x = "Peptide",
+           y = "Extent of Modification",
+           fill = "Condition") +
+      theme_classic() +
+      theme(text = element_text(size = 18, family = "sans"),
+            plot.title = element_text(hjust = 0.5, size = 20, family = "sans", face = "bold"),
+            legend.text = element_text(size = 16, family = "sans"),
+            legend.title = element_text(size = 18, family = "sans")) +
+      scale_fill_manual(values = condition_colors)
+
+    # Create the output directory for bar graphs based on the file output and excel filename
+    graph_output_directory <- file.path(file_output, paste0(filename, "_PeptideLevelGroupedBarGraphs"))
+    dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
+
+    # Generate the full file path for this protein and save the figure
+    file_out <- file.path(graph_output_directory, paste0(protein, ".png"))
+    ggsave(filename = file_out, plot = fig, device = "png")
+
+    # Print a message to indicate successful saving
+    cat("Grouped bar graph for", protein, "saved as", file_out, "\n")
+  }
+}
+
+generate_grouped_bar_plot_pep()
