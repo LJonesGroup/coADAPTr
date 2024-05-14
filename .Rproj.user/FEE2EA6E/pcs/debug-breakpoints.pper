@@ -1,5 +1,21 @@
 {
     "debugBreakpointsState": {
-        "breakpoints": []
+        "breakpoints": [
+            {
+                "id": 1,
+                "path": "~/GitHub/coADAPTr/R/inst/coADAPTrTMPDInputT.R",
+                "line_number": 499,
+                "function_steps": "",
+                "function_name": "create_totals_tablelist",
+                "state": 2,
+                "editor_state": 2,
+                "editor_line_number": 499,
+                "is_pending_debug_completion": false,
+                "needs_updated_steps": false,
+                "type": 0,
+                "is_package_breakpoint": false,
+                "package_name": ""
+            }
+        ]
     }
 }

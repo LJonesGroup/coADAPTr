@@ -328,7 +328,7 @@ area_calculations_pep <- function(df_in) {
     summarize(sdprep = sd(replace_na(`Precursor Abundance`, 0), na.rm = TRUE))
   df_out <- df_out %>%
     left_join(test, by = c("MasterProteinAccessions", "Sequence", "Condition")) %>%
-    mutate(SD = sdprep / (TotalSampleArea * TotalControlArea))
+    mutate(SD = sdprep / (TotalSampleArea + TotalControlArea + sdprep))
 
   # Return the final dataframe
   return(df_out)
@@ -434,7 +434,7 @@ area_calculations_res <- function(df_in) {
 
     df_out <- df_out %>%
       left_join(sd_df, by = c("MasterProteinAccessions", "Sequence", "Res")) %>%
-      mutate(SD = sdprep / (SampleTotalArea * ControlTotalArea))
+      mutate(SD = sdprep / (SampleTotalArea + ControlTotalArea + sdprep))
 
     # Filter out rows with NA in Res and EOM
     df_out <- df_out %>%
@@ -491,23 +491,23 @@ create_totals_tablelist <- function(df_in, df_res) {
 
     df_out <- data.frame(
       Condition = condition,
-      UniqueProteinMod = NA,
-      UniqueSeqMod = NA,
-      UniqueResMod = NA,
+      UniqueProteinDet = NA,
+      UniqueSeqDet = NA,
+      UniqueResDet = NA,
       QuantifiableModProtein = NA,
       QuantifiableModSeq = NA,
       QuantifiableModRes = NA
     )
 
-    unique_protein_mod <- unique(df_condition_in$MasterProteinAccessions)
-    df_out$UniqueProteinMod <- length(unique_protein_mod)
+    unique_protein_det <- unique(df_condition_in$MasterProteinAccessions)
+    df_out$UniqueProteinDet <- length(unique_protein_det)
 
-    unique_seq_mod <- unique(df_condition_in$Sequence)
-    df_out$UniqueSeqMod <- length(unique_seq_mod)
+    unique_seq_det <- unique(df_condition_in$Sequence)
+    df_out$UniqueSeqDet <- length(unique_seq_det)
 
-    unique_seq_res_mod <- unique(df_condition_res %>%
+    unique_seq_res_det <- unique(df_condition_res %>%
                                    select(Sequence, Res))
-    df_out$UniqueResMod <- nrow(unique_seq_res_mod)
+    df_out$UniqueResDet <- nrow(unique_seq_res_det)
 
     df_filtered <- df_condition_in %>%
       filter(EOM > 0 & EOM > SD & !is.na(SD))
