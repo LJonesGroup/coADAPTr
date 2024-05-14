@@ -312,7 +312,7 @@ area_calculations_pep <- function(df_in) {
     summarize(sdprep = sd(replace_na(`Precursor Abundance`, 0), na.rm = TRUE))
   df_out <- df_out %>%
     left_join(test, by = c("MasterProteinAccessions", "Sequence", "Condition")) %>%
-    mutate(SD = sdprep / (TotalSampleArea * TotalControlArea))
+    mutate(SD = sdprep / (TotalSampleArea + TotalControlArea + sdprep))
 
   # Return the final dataframe
   return(df_out)
