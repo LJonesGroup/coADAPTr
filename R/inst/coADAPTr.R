@@ -27,9 +27,6 @@ OG_pd_data<-pd_data
 
 pd_data<- remove_dup(pd_data)
 
-
-
-
 # Raw Data Annotations and Parsing of the FASTA File-----------------------------------------------------------
 ###########################################################################
 # Step 6 Clean and parse data from PD output file

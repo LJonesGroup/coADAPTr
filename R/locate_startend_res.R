@@ -16,7 +16,7 @@ locate_startend_res <- function(raw_data){
   raw_data <- merge(raw_data, FASTA, by = "UniprotID")
 
   index <- str_locate(raw_data$protein_sequence, raw_data$Sequence)
-  raw_data <- cbind(raw_data, index)  # TODO: memory efficiency?
+  raw_data <- cbind(raw_data, index)
 
   raw_data$peptide<- paste(raw_data$start,"-", raw_data$end)
 

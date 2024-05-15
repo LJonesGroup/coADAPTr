@@ -35,7 +35,7 @@ annotate_features <- function(raw_data) {
   # Determine if the sequence is oxidized or unoxidized
   raw_data <- raw_data %>%
     mutate(MOD = ifelse(is.na(Modifications) | Modifications == "", "Unoxidized",
-                        ifelse(grepl("Oxidation", Modifications), "Oxidized", "Unoxidized")))
+                        ifelse(grepl("", Modifications), "Oxidized", "Unoxidized")))
 
   # Create ModPositionL and ModPositionN columns
   raw_data <- raw_data %>%
@@ -44,10 +44,6 @@ annotate_features <- function(raw_data) {
     mutate(ModPositionN = ifelse(ModPositionN == Modifications, NA, ModPositionN)) %>%
     mutate(ModPosition = ifelse(is.na(ModPositionL) | ModPositionL == "", NA,
                                 paste(ModPositionL, ModPositionN, sep = "")))
-
-  # Extract letters before ":" in the "Spectrum File" column and add to "Condition" column
-  raw_data <- raw_data %>%
-    mutate(Condition = sub("^(.*):.*", "\\1", `Spectrum File`))
 
   return(raw_data)
 }
