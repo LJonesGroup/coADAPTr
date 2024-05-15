@@ -1,5 +1,7 @@
 #' Calculate the Extent of Modification at the Residue Level (Step 13)
-#' @param df_in data frame from modified raw data to calculate the EOM
+#'
+#' @param df_in The annotated data frame merged with the parsed FASTA file.
+#'
 #' @return a data frame containing the extent of modification calculations
 #' at the residue level
 #' @export

@@ -1,9 +1,9 @@
 #' Grab Sequence Metadata for Peptide Level Graphing (Step 10)
 #' SKIP Using this Function. It is used in merge_metadata_pep function.
 #'
-#' @param df_in data frame with original data to match proteins and peptide
+#' @param df_in Data frame with original data merged with the FASTA file.
 #' locations
-#' @return a data frame containing the MasterProteinAccessions, Sequence,
+#' @return A data frame containing the MasterProteinAccessions, Sequence,
 #' peptide, and start columns. ONLY used inside of merge_metadata_pep function.
 #' @export
 #'

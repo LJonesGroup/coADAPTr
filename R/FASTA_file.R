@@ -1,5 +1,6 @@
-#' Import the Corresponding FASTA File (Step 1)
-#' @param FASTA_path FASTA file path
+#' Import the Corresponding FASTA File
+#'
+#' @param FASTA_path FASTA file path that is user defined in the File Explorer Prompt
 #' @return FASTA file saved as a data frame
 #' @export
 #'

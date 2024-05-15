@@ -7,11 +7,11 @@
 annotate_features(raw_data)
 }
 \arguments{
-\item{raw_data}{raw data from proteome discoverer with modifications that
-annotate specific features}
+\item{raw_data}{Raw data from proteome discoverer that has the Sample and Control
+files indicated}
 }
 \value{
-a modified data frame with appropriate modification to the raw data
+A modified data frame with appropriate modification to the raw data
 }
 \description{
 Perform Annotation of Raw Data (Step 6)

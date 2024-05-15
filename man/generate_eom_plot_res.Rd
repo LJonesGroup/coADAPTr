@@ -2,7 +2,7 @@
 % Please edit documentation in R/generate_eom_plot_res.R
 \name{generate_eom_plot_res}
 \alias{generate_eom_plot_res}
-\title{Create a Plot for the Extent of Modification at the Residue Level (Step 20)}
+\title{Create a Plot for the Extent of Modification at the Residue Level (Step 16D)}
 \usage{
 generate_eom_plot_res(df_in, file_output, filename)
 }
@@ -18,7 +18,7 @@ a bar graph for each protein with quantifiable residue level
  modifications
 }
 \description{
-Create a Plot for the Extent of Modification at the Residue Level (Step 20)
+Create a Plot for the Extent of Modification at the Residue Level (Step 16D)
 }
 \examples{
  generate_eom_plot_res(df_in = quant_graph_df_res, file_output = file_output,)

@@ -8,7 +8,7 @@
 #' @return A column indicating Sample vs Control
 #' @export
 #'
-#' @examples pd_data <- addSampleControl(pd_data)
+#' @examples pd_data <- SampleControl(pd_data)
 #' @aliases SampleControl
 SampleControl <- function(pd_data) {
   pd_data$SampleControl <- ifelse(grepl("NL", pd_data$`Spectrum File`), "Control", "Sample")

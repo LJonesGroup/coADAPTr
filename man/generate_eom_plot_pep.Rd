@@ -2,7 +2,7 @@
 % Please edit documentation in R/generate_eom_plot_pep.R
 \name{generate_eom_plot_pep}
 \alias{generate_eom_plot_pep}
-\title{Create a Plot for the Extent of Modification at the Peptide Level (Step 19)}
+\title{Create a Plot for the Extent of Modification at the Peptide Level (Step 16C)}
 \usage{
 generate_eom_plot_pep(df_in, file_output, filename)
 }
@@ -19,7 +19,7 @@ data frame. Must Run save_graphs_pep() to save the graphs in the desired
 location.
 }
 \description{
-Create a Plot for the Extent of Modification at the Peptide Level (Step 19)
+Create a Plot for the Extent of Modification at the Peptide Level (Step 16C)
 }
 \examples{
 plot_pep <- generate_eom_plot_pep(df_in = my_data_frame, file_output = "/path/to/output")

@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_totals_tablelist.R
 \name{create_totals_tablelist}
 \alias{create_totals_tablelist}
-\title{Creating a List of Total Peptides and Residues Modified (Step 17)}
+\title{Creating a List of Total Peptides and Residues Modified (Step 16A)}
 \usage{
 create_totals_tablelist(df_in, df_res)
 }
@@ -15,7 +15,7 @@ create_totals_tablelist(df_in, df_res)
 A data frame containing the total number of unique proteins, sequences, and residues modified
 }
 \description{
-Creating a List of Total Peptides and Residues Modified (Step 17)
+Creating a List of Total Peptides and Residues Modified (Step 16A)
 }
 \examples{
 Totals<- create_totals_tablelist(quant_graph_df_pep, quant_graph_df_res)

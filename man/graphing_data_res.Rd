@@ -2,21 +2,21 @@
 % Please edit documentation in R/graphing_data_res.R
 \name{graphing_data_res}
 \alias{graphing_data_res}
-\title{Filter Data for Graphing the Extent of Modification at the Residue Level (Step 15)}
+\title{Filter Data for Graphing the Extent of Modification at the Residue Level (Step 14)}
 \usage{
 graphing_data_res(df_in, pd_data_fasta_merged)
 }
 \arguments{
-\item{df_in}{data frame with residue level EOM calculations to filter
-for quantifiable modifications}
+\item{df_in}{Data frame with residue level EOM calculations and raw data that
+was merged with the FASTA file to filter for quantifiable modifications}
 
-\item{pd_data_fasta_mergedraw}{data merged with fasta data}
+\item{pd_data_fasta_mergedraw}{Raw data merged with FASTA file}
 }
 \value{
-a data frame containing quantifiable residue level modifications
+A data frame containing quantifiable residue level modifications
 }
 \description{
-Filter Data for Graphing the Extent of Modification at the Residue Level (Step 15)
+Filter Data for Graphing the Extent of Modification at the Residue Level (Step 14)
 }
 \examples{
 data_graphing<- graphing_data_res(filtered_graphing_df_res)

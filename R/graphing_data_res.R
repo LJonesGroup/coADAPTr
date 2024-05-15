@@ -1,10 +1,10 @@
-#' Filter Data for Graphing the Extent of Modification at the Residue Level (Step 15)
+#' Filter Data for Graphing the Extent of Modification at the Residue Level (Step 14)
 #'
-#' @param df_in data frame with residue level EOM calculations to filter
-#' for quantifiable modifications
-#' @param pd_data_fasta_mergedraw data merged with fasta data
+#' @param df_in Data frame with residue level EOM calculations and raw data that
+#'  was merged with the FASTA file to filter for quantifiable modifications
+#' @param pd_data_fasta_mergedraw Raw data merged with FASTA file
 #'
-#' @return a data frame containing quantifiable residue level modifications
+#' @return A data frame containing quantifiable residue level modifications
 #' @export
 #'
 #' @examples data_graphing<- graphing_data_res(filtered_graphing_df_res)

@@ -7,8 +7,7 @@
 area_calculations_pep(df_in)
 }
 \arguments{
-\item{df_in}{A data frame with the following columns: MasterProteinAccessions,
-Sequence, SampleControl, MOD, Precursor Abundance}
+\item{df_in}{The annotated data frame merged with the parsed FASTA file.}
 }
 \value{
 a data frame containing the values for the extent of modification

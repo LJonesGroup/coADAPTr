@@ -20,30 +20,7 @@ pd_data<- SampleControl(pd_data)
 
 # Step 5 Run this if MS files were analyzed via PD
 ##Skip if running Test Data Set
-
-remove_dup <- function(df) {
-
-  identical_cols <- setdiff(names(df), c("Identifying Node", "DeltaScore"))
-
-  df <- df %>%
-    group_by(across(all_of(identical_cols))) %>%
-    mutate(MultipleID = ifelse(n() > 1, "Yes", "No")) %>%
-    ungroup()
-
-  # Group the rows by the columns specified above and find the row with the highest DeltaScore in each group
-  df <- df %>%
-    group_by(across(all_of(identical_cols))) %>%
-    mutate(DMax = ifelse(MultipleID == "Yes" & DeltaScore == max(DeltaScore), "Max", NA_character_),
-           Multiple = ifelse(DMax == "Max", "Max", "Min")) %>%
-    ungroup()
-
-  # Filter the rows based on the specified criteria (MultipleID == "Yes" and DMax == "Max" or MultipleID == "No")
-  df <- df %>%
-    filter(MultipleID == "Yes" & DMax == "Max" | MultipleID == "No")
-
-  return(df)
-}
-
+##Can remove duplicates in excel before using coADAPTr if desired
 
 OG_pd_data<-pd_data
 
@@ -74,7 +51,7 @@ pd_data_fasta_merged <- locate_startend_res(pd_data_annotated)
 Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
 
 # Step 10 Subset sequence metadata like residue start/stop
-##(SKIP-Used in graphing_df_pep)
+##(grab_seq_metadata_pep SKIP-Used in graphing_df_pep)
 
 # Step 11 Merge metadata with numeric graphing data
 
@@ -92,12 +69,9 @@ quant_graph_df_pep<- filtered_graphing_df_pep(graphing_df_pep)
 Areas_res <- area_calculations_res(pd_data_fasta_merged)
 
 # Step 14  Subset sequence metadata like residue start/stop for residue level data
-# (SKIP-Used in graphing_df_res)
-
-#  Step 15  Filter graphing data for residue level data
 graphing_df_res<- graphing_data_res(Areas_res, pd_data_fasta_merged)
 
-#Step 16 Filters for residue level graphing.
+#Step 15 Filters for residue level graphing.
 
 quant_graph_df_res<- filtered_graphing_df_res(graphing_df_res)
 
@@ -106,34 +80,33 @@ quant_graph_df_res<- filtered_graphing_df_res(graphing_df_res)
 ########Saving Tables and Plots------------------------------------------------------------------------------------------------------------
 
 
-#Step 17 creating a table of totals
+#Step 16A creating a table of totals
 TotalsTable<-create_totals_tablelist(graphing_df_pep, graphing_df_res)
 
 
 ####Saving tables---------------------------------------------------------------------------
 
-#Step 18 Save Data Frames as Excel Files
+#Step 16B Save Data Frames as Excel Files
 
 save_data_frames(file_output, TotalsTable = TotalsTable, quant_graph_df_pep = quant_graph_df_pep, quant_graph_df_res = quant_graph_df_res, graphing_df_pep = graphing_df_pep, graphing_df_res=graphing_df_res)
 
 #### Saving Plots -----------------------------------------------------------------------
 
-# Step 19 Saving Peptide Level Bar Graphs
+# Step 16C Saving Peptide Level Bar Graphs
 
 generate_eom_plot_pep(df_in = quant_graph_df_pep, file_output = file_output)
 
-####################################################################################################
-#Step 20 Saving Residue Level Bar Graphs
+#Step 16D Saving Residue Level Bar Graphs
 
 generate_eom_plot_res(df_in = quant_graph_df_res, file_output = file_output)
 
-#Step 21 Saving Peptide Level Grouped Bar Graphs
+#Step 17 Saving Venn Diagrams
+venn_diagram()
+
+#Step 18 Saving Peptide Level Grouped Bar Graphs
 
 generate_grouped_bar_plot_pep()
 
-#Step 22 Saving Residue Level Grouped Bar Graphs
-
-#Step 23 Saving Venn Diagrams
-venn_diagram()
+generate_grouped_bar_plot_res()
 
 dev.off()

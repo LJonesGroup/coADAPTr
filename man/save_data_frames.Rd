@@ -2,7 +2,7 @@
 % Please edit documentation in R/save_data_frames.R
 \name{save_data_frames}
 \alias{save_data_frames}
-\title{Save the Data Frames from your Analysis (Step 18)}
+\title{Save the Data Frames from your Analysis (Step 16B)}
 \usage{
 save_data_frames(output_directory, ...)
 }
@@ -15,7 +15,7 @@ save_data_frames(output_directory, ...)
 data frames saved in the desired file path
 }
 \description{
-Save the Data Frames from your Analysis (Step 18)
+Save the Data Frames from your Analysis (Step 16B)
 }
 \examples{
 save_data_frames(file_path, file_output,

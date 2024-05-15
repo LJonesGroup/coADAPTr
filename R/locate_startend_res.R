@@ -1,6 +1,6 @@
 #' Locate the Start and End Residue of a Peptide (Step 8)
 #'
-#' @param raw_data data frame with original data to map peptide locations on
+#' @param raw_data Annotated data frame to map peptide locations on
 #' protein sequences
 #'
 #' @return A data frame with with the start and ending peptide location

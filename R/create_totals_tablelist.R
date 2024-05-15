@@ -1,4 +1,4 @@
-#' Creating a List of Total Peptides and Residues Modified (Step 17)
+#' Creating a List of Total Peptides and Residues Modified (Step 16A)
 #'
 #' @param df_in Filtered peptide level data frame
 #' @param df_res Filtered residue level data frame
@@ -10,25 +10,25 @@
 #' @aliases create_totals_tablelist
 create_totals_tablelist <- function(df_in, df_res) {
   df_out <- data.frame(
-    UniqueProteinMod = NA,
-    UniqueSeqMod = NA,
-    UniqueResMod = NA,
+    UniqueProteinDet = NA,
+    UniqueSeqDet = NA,
+    UniqueResDet = NA,
     QuantifiableModProtein = NA,
     QuantifiableModSeq = NA,
     QuantifiableModRes = NA
   )
 
 
-  unique_protein_mod <- unique(df_in$MasterProteinAccessions)
-  df_out$UniqueProteinMod <- length(unique_protein_mod)
+  unique_protein_det <- unique(df_in$MasterProteinAccessions)
+  df_out$UniqueProteinDet <- length(unique_protein_det)
 
 
-  unique_seq_mod <- unique(df_in$Sequence)
-  df_out$UniqueSeqMod <- length(unique_seq_mod)
+  unique_seq_det <- unique(df_in$Sequence)
+  df_out$UniqueSeqDet <- length(unique_seq_det)
 
 
-  unique_res_mod <- unique(df_res$Res)
-  df_out$UniqueResMod <- length(unique_res_mod)
+  unique_res_det <- unique(df_res$Res)
+  df_out$UniqueResDet <- length(unique_res_det)
 
 
   df_filtered <- df_in %>%

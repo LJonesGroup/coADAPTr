@@ -7,7 +7,7 @@
 locate_startend_res(raw_data)
 }
 \arguments{
-\item{raw_data}{data frame with original data to map peptide locations on
+\item{raw_data}{Annotated data frame to map peptide locations on
 protein sequences}
 }
 \value{

@@ -2,18 +2,18 @@
 % Please edit documentation in R/FASTA_file.R
 \name{FASTA_file}
 \alias{FASTA_file}
-\title{Import the Corresponding FASTA File (Step 1)}
+\title{Import the Corresponding FASTA File}
 \usage{
 FASTA_file()
 }
 \arguments{
-\item{FASTA_path}{FASTA file path}
+\item{FASTA_path}{FASTA file path that is user defined in the File Explorer Prompt}
 }
 \value{
 FASTA file saved as a data frame
 }
 \description{
-Import the Corresponding FASTA File (Step 1)
+Import the Corresponding FASTA File
 }
 \examples{
 HumanFASTA <- FASTA_file(file.fasta)

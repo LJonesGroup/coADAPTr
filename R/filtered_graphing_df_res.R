@@ -1,6 +1,7 @@
-#' Filter Data for Graphing the Extent of Modification at the Residue Level (Step 16)
-#' @param df_in a data frame with EOM data to filter for quantifiable residue
-#' level modifications
+#' Filter Data for Graphing the Extent of Modification at the Residue Level (Step 15)
+#'
+#' @param df_in A data frame with residue level EOM data to filter for
+#' quantifiable residue level modifications
 #' @return A data frame containing the filtered data
 #' @export
 #'

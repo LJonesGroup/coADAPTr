@@ -19,5 +19,5 @@ A column indicating Sample vs Control
 Identify Sample (Laser) or Control (No Laser) Files (Step4)
 }
 \examples{
-pd_data <- addSampleControl(pd_data)
+pd_data <- SampleControl(pd_data)
 }

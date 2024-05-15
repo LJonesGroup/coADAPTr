@@ -8,11 +8,11 @@ SKIP Using this Function. It is used in merge_metadata_pep function.}
 grab_seq_metadata_pep(df_in)
 }
 \arguments{
-\item{df_in}{data frame with original data to match proteins and peptide
+\item{df_in}{Data frame with original data merged with the FASTA file.
 locations}
 }
 \value{
-a data frame containing the MasterProteinAccessions, Sequence,
+A data frame containing the MasterProteinAccessions, Sequence,
 peptide, and start columns. ONLY used inside of merge_metadata_pep function.
 }
 \description{

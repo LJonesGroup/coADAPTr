@@ -1,6 +1,7 @@
 #'Calculate the Extent of Modification at the Peptide Level (Step 9)
-#' @param df_in A data frame with the following columns: MasterProteinAccessions,
-#' Sequence, SampleControl, MOD, Precursor Abundance
+#'
+#' @param df_in The annotated data frame merged with the parsed FASTA file.
+#'
 #' @return a data frame containing the values for the extent of modification
 #' calculation
 #' @export

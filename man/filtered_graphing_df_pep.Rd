@@ -7,7 +7,7 @@
 filtered_graphing_df_pep(df_in)
 }
 \arguments{
-\item{df_in}{a data frame with EOM data to filter for quantifiable
+\item{df_in}{A data frame with EOM data to filter for quantifiable
 modifications}
 }
 \value{

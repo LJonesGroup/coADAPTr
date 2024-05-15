@@ -1,9 +1,9 @@
 #' Remove Duplicate Sequest Node Identifications (Step 5)
 #'
-#' @param df data frame with original data from PD to remove duplicates
+#' @param df Data frame with original data from PD to remove duplicates
 #' created from using the multi-level sequence searching algorithm
 #'
-#' @return a data frame with no duplicate sequest node identifications
+#' @return A data frame with no duplicate Sequest node identifications
 #' @export
 #'
 #' @examples pd_data <- remove_dup(pd_data)

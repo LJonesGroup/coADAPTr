@@ -1,4 +1,4 @@
-#' Create a Plot for the Extent of Modification at the Residue Level (Step 20)
+#' Create a Plot for the Extent of Modification at the Residue Level (Step 16D)
 #'
 #' @param df_in a data frame containing the EOM and SD values for each residue
 #' @param file_output the directory where the output files will be saved

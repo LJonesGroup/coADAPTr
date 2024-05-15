@@ -1,8 +1,9 @@
 #' Parse through the FASTA File to Extract Relevant Data (Step 7)
 #'
-#' @param fasta_in FASTA file in the form of a dataframe
+#' @param fasta_in FASTA file in the form of a data frame
 #'
-#' @return a condensed dataframe with the protein sequence and the uniprot ID
+#' @return A condensed data frame with the protein sequence and the Uniprot ID
+#' extracted from the FASTA file
 #' @export
 #'
 #' @examples filtered_FASTA <- parse_fasta(FASTA)

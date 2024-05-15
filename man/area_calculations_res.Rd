@@ -7,7 +7,7 @@
 area_calculations_res(df_in)
 }
 \arguments{
-\item{df_in}{data frame from modified raw data to calculate the EOM}
+\item{df_in}{The annotated data frame merged with the parsed FASTA file.}
 }
 \value{
 a data frame containing the extent of modification calculations

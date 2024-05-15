@@ -713,5 +713,3 @@ generate_grouped_bar_plot_res <- function() {
   }
 }
 
-generate_grouped_bar_plot_res()
-

@@ -2,19 +2,19 @@
 % Please edit documentation in R/filtered_graphing_df_res.R
 \name{filtered_graphing_df_res}
 \alias{filtered_graphing_df_res}
-\title{Filter Data for Graphing the Extent of Modification at the Residue Level (Step 16)}
+\title{Filter Data for Graphing the Extent of Modification at the Residue Level (Step 15)}
 \usage{
 filtered_graphing_df_res(df_in)
 }
 \arguments{
-\item{df_in}{a data frame with EOM data to filter for quantifiable residue
-level modifications}
+\item{df_in}{A data frame with residue level EOM data to filter for
+quantifiable residue level modifications}
 }
 \value{
 A data frame containing the filtered data
 }
 \description{
-Filter Data for Graphing the Extent of Modification at the Residue Level (Step 16)
+Filter Data for Graphing the Extent of Modification at the Residue Level (Step 15)
 }
 \examples{
 graphing_df_res <- filtered_graphing_df_res(graphing_df)

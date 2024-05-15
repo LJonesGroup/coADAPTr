@@ -7,10 +7,11 @@
 parse_fasta(fasta_in)
 }
 \arguments{
-\item{fasta_in}{FASTA file in the form of a dataframe}
+\item{fasta_in}{FASTA file in the form of a data frame}
 }
 \value{
-a condensed dataframe with the protein sequence and the uniprot ID
+A condensed data frame with the protein sequence and the Uniprot ID
+extracted from the FASTA file
 }
 \description{
 Parse through the FASTA File to Extract Relevant Data (Step 7)

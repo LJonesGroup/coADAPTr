@@ -1,4 +1,4 @@
-#' Create a Plot for the Extent of Modification at the Peptide Level (Step 19)
+#' Create a Plot for the Extent of Modification at the Peptide Level (Step 16C)
 #'
 #' @param df_in a data frame with quantifiable peptide modifications
 #' @param file_output The file path to save the graphs

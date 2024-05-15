@@ -7,11 +7,11 @@
 remove_dup(df)
 }
 \arguments{
-\item{df}{data frame with original data from PD to remove duplicates
+\item{df}{Data frame with original data from PD to remove duplicates
 created from using the multi-level sequence searching algorithm}
 }
 \value{
-a data frame with no duplicate sequest node identifications
+A data frame with no duplicate Sequest node identifications
 }
 \description{
 Remove Duplicate Sequest Node Identifications (Step 5)

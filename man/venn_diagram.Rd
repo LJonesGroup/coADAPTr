@@ -2,7 +2,7 @@
 % Please edit documentation in R/venn_diagram.R
 \name{venn_diagram}
 \alias{venn_diagram}
-\title{Create and Save a Venn Diagram Plot}
+\title{Create and Save a Venn Diagram Plot (Step 17)}
 \usage{
 venn_diagram()
 }
@@ -10,7 +10,7 @@ venn_diagram()
 A Venn diagram plot saved as a PNG file
 }
 \description{
-Create and Save a Venn Diagram Plot
+Create and Save a Venn Diagram Plot (Step 17)
 }
 \examples{
 venn_diagram()
