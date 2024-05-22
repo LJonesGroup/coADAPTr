@@ -52,6 +52,7 @@ before_beginning <- function() {
   conflict_prefer("read.fasta", winner = "phylotools")
   conflict_prefer("rename", winner = "dplyr")
 }
+
 before_beginning()
 ###########################################################################
 #Homo sapien Reviewed 12062021
@@ -203,7 +204,11 @@ annotate_features <- function(raw_data) {
     mutate(Modifications = gsub("[A-Z]\\d+\\(Carbamidomethyl\\)", "", Modifications)) %>%
     mutate(Modifications = gsub(";[A-Z]\\d+\\(TMT[^)]*\\)", ";", Modifications)) %>%
     mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\);", ";", Modifications)) %>%
-    mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\)", "", Modifications))
+    mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\)", "", Modifications)) %>%
+    mutate(Modifications = gsub("N-Term\\(Prot\\)\\(TMTpro\\);", "", Modifications)) %>%
+    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%  # Remove any double semicolons that might result from deletions
+    mutate(Modifications = gsub("^;|;$", "", Modifications))      # Remove leading or trailing semicolons
+
 
   # Cleanup: Remove leading, trailing, and multiple consecutive semicolons
   raw_data <- raw_data %>%
@@ -218,7 +223,7 @@ annotate_features <- function(raw_data) {
 
   # Create ModPositionL and ModPositionN columns
   raw_data <- raw_data %>%
-    mutate(ModPositionL = sub("^([A-Z]*).*", "\\1", Modifications)) %>%
+    mutate(ModPositionL = sub("^\\s*([A-Z]).*", "\\1", Modifications)) %>%
     mutate(ModPositionN = gsub(".*?([0-9]+).*", "\\1", Modifications)) %>%
     mutate(ModPositionN = ifelse(ModPositionN == Modifications, NA, ModPositionN)) %>%
     mutate(ModPosition = ifelse(is.na(ModPositionL) | ModPositionL == "", NA,
@@ -251,32 +256,40 @@ parse_fasta <- function(fasta_in){
 FASTA<- parse_fasta(FASTA)
 
 #Merge the FASTA file with the annotated data
-locate_startend_res <- function(raw_data){
+library(dplyr)
+library(stringr)
 
-  uniqueMPA <- unique(raw_data[, c("Master Protein Accessions",'Sequence')])
-  uniqueMPA <- as.data.frame(uniqueMPA)
+locate_startend_res <- function(raw_data, FASTA){
 
-  raw_data <- merge(raw_data, FASTA, by = "UniprotID")
+  # Merge raw_data with FASTA by UniprotID
+  raw_data <- merge(raw_data, FASTA, by = "UniprotID", all.x = TRUE)
 
+  # Locate the start and end of the sequence within the protein sequence
   index <- str_locate(raw_data$protein_sequence, raw_data$Sequence)
-  raw_data <- cbind(raw_data, index)  # TODO: memory efficiency?
+  raw_data <- cbind(raw_data, index)
 
-  raw_data$peptide<- paste(raw_data$start,"-", raw_data$end)
+  # Create peptide column
+  raw_data$peptide <- paste(raw_data$start, "-", raw_data$end, sep = "")
 
+  # Count the number of modifications
   raw_data$mod_count <- str_count(raw_data$Modifications, "\\(.*?\\)")
   raw_data$mod_count <- ifelse(raw_data$MOD == "Unoxidized", 0, raw_data$mod_count)
 
+  # Convert ModPositionN and start to numeric
   raw_data$ModPositionN <- as.numeric(raw_data$ModPositionN)
   raw_data$start <- as.numeric(raw_data$start)
 
+  # Calculate modified residue positions
   raw_data$mod_res <- ifelse(!is.na(raw_data$ModPositionN) & raw_data$ModPositionN > 0, raw_data$start + raw_data$ModPositionN - 1, NA)
 
-  raw_data$Res<- paste(raw_data$ModPositionL, raw_data$mod_res)
+  # Create the Res column
+  raw_data$Res <- paste(raw_data$ModPositionL, raw_data$mod_res, sep = "")
 
   return(raw_data)
 }
 
-pd_data_fasta_merged <- locate_startend_res(annotated_data)
+
+pd_data_fasta_merged <- locate_startend_res(annotated_data, FASTA)
 
 #Perform EOM Calculations at the peptide level
 
@@ -340,6 +353,13 @@ area_calculations_pep <- function(df_in) {
 Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
 
 #Merge metadata
+grab_seq_metadata_pep <- function(df_in){
+  df_out <- subset(df_in, select = c("MasterProteinAccessions", "Sequence",
+                                     "peptide", "start"))
+  df_out <- df_out[!duplicated(df_out), ]
+  return(df_out)
+}
+
 merge_metadata_pep <- function(df_in, rawdatafastamerged) {
   df_out <- left_join(df_in, grab_seq_metadata_pep(rawdatafastamerged))
 
@@ -363,96 +383,87 @@ quant_graph_df_pep<- filtered_graphing_df_pep(graphing_df_pep)
 
 #Perform EOM Calculations at the residue level
 
-
 area_calculations_res <- function(df_in) {
-  all_conditions <- unique(df_in$Condition)
-  result_list <- list()
 
-  for (condition in all_conditions) {
-    df_condition <- df_in %>%
-      filter(Condition == condition)
+  # Filter for mod_count 0 or 1
+  df_out <- df_in %>%
+    filter(mod_count == 0 | mod_count == 1) %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
+    summarize(TotalArea = sum(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+      names_from = c("SampleControl", "MOD"),
+      values_from = "TotalArea",
+      values_fill = NA
+    )
 
-    # Group by the necessary columns and compute TotalArea
-    df_out <- df_condition %>%
-      filter(mod_count == 0 | mod_count == 1) %>%
-      group_by(MasterProteinAccessions, Sequence, SampleControl, MOD) %>%
-      reframe(TotalArea = sum(`Precursor Abundance`)) %>%
-      ungroup() %>%
-      pivot_wider(
-        id_cols = c("MasterProteinAccessions", "Sequence"),
-        names_from = c("SampleControl", "MOD"),
-        values_from = "TotalArea",
-        values_fill = NA
-      )
+  # Calculate total areas for Sample and Control
+  df_out <- df_out %>%
+    mutate(SampleTotalArea = coalesce(Sample_Oxidized, 0) + coalesce(Sample_Unoxidized, 0),
+           ControlTotalArea = coalesce(Control_Oxidized, 0) + coalesce(Control_Unoxidized, 0))
 
-    # Compute SampleTotalArea and ControlTotalArea
-    df_out <- df_out %>%
-      mutate(SampleTotalArea = Sample_Oxidized + Sample_Unoxidized,
-             ControlTotalArea = Control_Oxidized + Control_Unoxidized) %>%
-      select(-Sample_Oxidized, -Sample_Unoxidized, -Control_Unoxidized, -Control_Oxidized)
+  # Remove individual oxidized/unoxidized columns
+  df_out <- df_out %>%
+    select(-Sample_Oxidized, -Sample_Unoxidized, -Control_Unoxidized, -Control_Oxidized)
 
-    # Process the second part to get OxidizedArea
-    df_out2 <- df_condition %>%
-      filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized") %>%
-      group_by(MasterProteinAccessions, Sequence, Res, SampleControl) %>%
-      reframe(OxidizedArea = sum(`Precursor Abundance`)) %>%
-      ungroup() %>%
-      pivot_wider(
-        id_cols = c("MasterProteinAccessions", "Sequence", "Res"),
-        names_from = c("SampleControl"),
-        values_from = "OxidizedArea",
-        values_fill = NA
-      )
+  # Filter and summarize oxidized areas
+  df_out2 <- df_in %>%
+    filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized") %>%
+    group_by(MasterProteinAccessions, Sequence, Res, SampleControl, Condition) %>%
+    summarize(OxidizedArea = sum(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Res", "Condition"),
+      names_from = c("SampleControl"),
+      values_from = "OxidizedArea",
+      values_fill = NA
+    )
 
-    # Join the two dataframes
-    df_out <- full_join(df_out, df_out2, by = c("MasterProteinAccessions", "Sequence"))
+  # Merge the two dataframes
+  df_out <- full_join(df_out, df_out2, by = c("MasterProteinAccessions", "Sequence", "Condition"))
 
-    # Rename columns
-    df_out <- df_out %>%
-      rename(SampleOxidizedArea = Sample,
-             ControlOxidizedArea = Control)
+  # Rename columns
+  df_out <- df_out %>%
+    rename(SampleOxidizedArea = Sample,
+           ControlOxidizedArea = Control)
 
-    # Calculate EOM values
-    df_out <- df_out %>%
-      mutate(EOMSample = SampleOxidizedArea / SampleTotalArea,
-             EOMControl = ControlOxidizedArea / ControlTotalArea,
-             EOM = EOMSample - EOMControl)
+  # Calculate EOM values
+  df_out <- df_out %>%
+    mutate(EOMSample = SampleOxidizedArea / SampleTotalArea,
+           EOMControl = ControlOxidizedArea / ControlTotalArea,
+           EOM = EOMSample - EOMControl)
 
-    # Calculate count (N)
-    N_df <- df_condition %>%
-      filter(mod_count == 0 | mod_count == 1, !is.na(Res)) %>%
-      group_by(MasterProteinAccessions, Sequence, Res) %>%
-      summarize(N = n())
+  # Calculate count (N)
+  N_df <- df_in %>%
+    filter(mod_count == 0 | mod_count == 1, !is.na(Res)) %>%
+    group_by(MasterProteinAccessions, Sequence, Res) %>%
+    summarize(N = n(), .groups = "drop")  # Count the occurrences
 
-    df_out <- df_out %>%
-      left_join(N_df, by = c("MasterProteinAccessions", "Sequence", "Res"))
+  df_out <- df_out %>%
+    left_join(N_df, by = c("MasterProteinAccessions", "Sequence", "Res"))
 
-    # Calculate standard deviation
-    sd_df <- df_condition %>%
-      group_by(MasterProteinAccessions, Sequence, Res) %>%
-      summarize(sdprep = sd(replace_na(`Precursor Abundance`, 0), na.rm = TRUE))
+  # Calculate standard deviation
+  sd_df <- df_in %>%
+    group_by(MasterProteinAccessions, Sequence, Res) %>%
+    summarize(sdprep = sd(`Precursor Abundance`, na.rm = TRUE), .groups = "drop")
 
-    df_out <- df_out %>%
-      left_join(sd_df, by = c("MasterProteinAccessions", "Sequence", "Res")) %>%
-      mutate(SD = sdprep / (SampleTotalArea + ControlTotalArea + sdprep))
+  df_out <- df_out %>%
+    left_join(sd_df, by = c("MasterProteinAccessions", "Sequence", "Res")) %>%
+    mutate(SD = sdprep / (SampleTotalArea + ControlTotalArea + sdprep))
 
-    # Filter out rows with NA in Res and EOM
-    df_out <- df_out %>%
-      filter(!is.na(Res) & !is.na(EOM)) %>%
-      mutate(Condition = condition)  # Add Condition column
+  # Filter out rows with missing Res or EOM values
+  df_out <- df_out[complete.cases(df_out[c("Res", "EOM")]), ]
 
-    result_list[[condition]] <- df_out
-  }
-
-  # Combine all results into a single dataframe
-  final_df <- bind_rows(result_list)
-
-  return(final_df)
+  return(df_out)
 }
 
-Areas_res<- area_calculations_res(pd_data_fasta_merged)
+Areas_res<-area_calculations_res(pd_data_fasta_merged)
 
 #Merge metadata for residue level quantification
+grab_seq_metadata_res <- function(df_in){
+  df_out <- subset(df_in, select = c("MasterProteinAccessions", "Sequence", "Res", "start"))
+  df_out <- df_out[!duplicated(df_out), ]
+  return(df_out)
+}
 graphing_data_res <- function(df_in, pd_data_fasta_merged) {
   df_out <- df_in %>%
     left_join(grab_seq_metadata_res(pd_data_fasta_merged)) %>%
@@ -713,3 +724,4 @@ generate_grouped_bar_plot_res <- function() {
   }
 }
 
+generate_grouped_bar_plot_res()
