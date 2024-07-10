@@ -14,6 +14,43 @@ file_output<- output_folder()
 
 pd_data<- import_data()
 
+######TESTING SELECTION FUNCTION
+column_selection <- function(df) {
+  refined_data <- data.frame()
+
+  col_names <- colnames(df)
+
+  # Function to prompt for column selection and renaming
+  select_and_rename_column <- function(prompt, new_name) {
+    cat(prompt, "\n")
+    selected_col <- select.list(
+      col_names,
+      multiple = FALSE,
+      title = prompt,
+      graphics = TRUE
+    )
+    refined_data[[new_name]] <- df[[selected_col]]
+    cat(paste("Selected column:", selected_col, "\n"))
+    cat(paste("Renamed as:", new_name, "\n\n"))
+  }
+
+  # Prompt and select columns iteratively
+  select_and_rename_column("Please select the column containing the Protein Sequences (unannotated):", "Sequence")
+  select_and_rename_column("Please select the column containing Master Protein Accessions:", "Master Protein Accessions")
+  select_and_rename_column("Please select the column containing the protein modifications:", "Modifications")
+  select_and_rename_column("Please select the column containing precursor abundance/intensities:", "Precursor Abundance")
+  select_and_rename_column("Please select the column containing the spectrum file IDs:", "Spectrum File")
+
+  return(refined_data)
+}
+
+column_selection(pd_data)
+# Example usage:
+# Assuming df is your input data frame
+# refined_data <- column_selection(df)
+# print(refined_data)
+
+
 # Step 4 Identify which spectrum files correlate to Sample and Control
 pd_data<- SampleControl(pd_data)
 
