@@ -12,16 +12,15 @@ file_output<- output_folder()
 
 # Step-3 Read in data from Proteome Discoverer
 
-pd_data<- import_data()
+raw_data<- import_data()
 
 ######TESTING SELECTION FUNCTION
 column_selection <- function(df) {
-  refined_data <- data.frame()
-
+  refined_data <- data.frame(matrix(ncol = 0, nrow = nrow(df)))  # Initialize an empty data frame with the same number of rows as df
   col_names <- colnames(df)
 
-  # Function to prompt for column selection and renaming
-  select_and_rename_column <- function(prompt, new_name) {
+  # Function to prompt for column selection
+  select_column <- function(prompt) {
     cat(prompt, "\n")
     selected_col <- select.list(
       col_names,
@@ -29,26 +28,32 @@ column_selection <- function(df) {
       title = prompt,
       graphics = TRUE
     )
-    refined_data[[new_name]] <- df[[selected_col]]
-    cat(paste("Selected column:", selected_col, "\n"))
-    cat(paste("Renamed as:", new_name, "\n\n"))
+    if (!is.null(selected_col) && selected_col != "") {
+      return(selected_col)
+    } else {
+      stop("No column selected, exiting the function.")
+    }
   }
 
-  # Prompt and select columns iteratively
-  select_and_rename_column("Please select the column containing the Protein Sequences (unannotated):", "Sequence")
-  select_and_rename_column("Please select the column containing Master Protein Accessions:", "Master Protein Accessions")
-  select_and_rename_column("Please select the column containing the protein modifications:", "Modifications")
-  select_and_rename_column("Please select the column containing precursor abundance/intensities:", "Precursor Abundance")
-  select_and_rename_column("Please select the column containing the spectrum file IDs:", "Spectrum File")
+  # Prompt and select columns
+  seq_col <- select_column("Please select the column containing the peptide sequences (unannotated):")
+  acc_col <- select_column("Please select the column containing the Uniprot ID or master protein accessions:")
+  mod_col <- select_column("Please select the column containing the protein modifications:")
+  pre_col <- select_column("Please select the column containing precursor abundance/intensities:")
+  spe_col <- select_column("Please select the column containing the spectrum file IDs:")
+
+  # Add selected columns to refined_data
+  refined_data <- cbind(refined_data, df[[seq_col]], df[[acc_col]], df[[mod_col]], df[[pre_col]], df[[spe_col]])
+
+  # Rename columns
+  colnames(refined_data) <- c("Sequence", "Master Protein Accessions", "Modifications", "Precursor Abundance", "Spectrum File")
 
   return(refined_data)
 }
 
-column_selection(pd_data)
-# Example usage:
-# Assuming df is your input data frame
-# refined_data <- column_selection(df)
-# print(refined_data)
+
+pd_data <- column_selection(raw_data)
+
 
 
 # Step 4 Identify which spectrum files correlate to Sample and Control
