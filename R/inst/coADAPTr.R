@@ -109,6 +109,10 @@ annotate_features <- function(raw_data) {
   raw_data <- raw_data %>%
     mutate(MOD = ifelse(nchar(gsub("\\s+", "", Modifications)) >= 2, "Oxidized", MOD))
 
+  # Ensure there are no empty values in the MOD column
+  raw_data <- raw_data %>%
+    mutate(MOD = ifelse(MOD == "" | is.na(MOD), "Unoxidized", MOD))
+
   # Create ModPositionL and ModPositionN columns
   raw_data <- raw_data %>%
     mutate(ModPositionL = sub("^\\s*([A-Z]).*", "\\1", Modifications)) %>%
@@ -166,59 +170,70 @@ pd_data_fasta_merged<- locate_startend_res(pd_data_annotated, FASTA)
 
 Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
 area_calculations_pep <- function(df_in) {
-  # Group by the necessary columns including 'Condition'
-  df_out <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
-    reframe(TotalArea = sum(`Precursor Abundance`, na.rm = TRUE)) %>%
-    ungroup() %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
-      names_from = c("SampleControl", "MOD"),
-      values_from = "TotalArea",
-      values_fill = NA
-    )
+  # Initialize an empty dataframe to store results
+  df_out_all <- data.frame()
 
-  # Rename columns
-  df_out <- df_out %>%
-    rename(
-      Control_OxidizedArea = Control_Oxidized,
-      Control_UnoxidizedArea = Control_Unoxidized,
-      Sample_OxidizedArea = Sample_Oxidized,
-      Sample_UnoxidizedArea = Sample_Unoxidized
-    )
+  # Get the unique conditions
+  conditions <- unique(df_in$Condition)
 
-  # Replace NA values with 0 where applicable
-  df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
-  df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
+  # Loop through each condition
+  for (condition in conditions) {
+    df_condition <- df_in %>% filter(Condition == condition)
 
-  # Calculate Total Areas
-  df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")], na.rm = TRUE)
-  df_out$TotalControlArea <- rowSums(df_out[, c("Control_OxidizedArea", "Control_UnoxidizedArea")], na.rm = TRUE)
+    df_out <- df_condition %>%
+      group_by(MasterProteinAccessions, Sequence, SampleControl, MOD) %>%
+      summarise(TotalArea = sum(`Precursor Abundance`), .groups = 'drop') %>%
+      pivot_wider(
+        id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+        names_from = c("SampleControl", "MOD"),
+        values_from = "TotalArea",
+        values_fill = NA
+      )
 
-  # Calculate EOM values
-  df_out$EOMSample <- df_out$Sample_OxidizedArea / df_out$TotalSampleArea
-  df_out$EOMControl <- df_out$Control_OxidizedArea / df_out$TotalControlArea
-  df_out$EOM <- df_out$EOMSample - df_out$EOMControl
+    df_out <- df_out %>%
+      rename(
+        Control_OxidizedArea = Control_Oxidized,
+        Control_UnoxidizedArea = Control_Unoxidized,
+        Sample_OxidizedArea = Sample_Oxidized,
+        Sample_UnoxidizedArea = Sample_Unoxidized
+      )
 
-  # Calculate count (N)
-  df_out <- df_out %>%
-    left_join(df_in %>%
-                group_by(MasterProteinAccessions, Sequence, Condition) %>%
-                summarize(N = n()),
-              by = c("MasterProteinAccessions", "Sequence", "Condition"))
+    df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
+    df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
 
-  # Calculate standard deviation, replacing NA with 0
-  test <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, Condition) %>%
-    summarize(sdprep = sd(replace_na(`Precursor Abundance`, 0), na.rm = TRUE))
-  df_out <- df_out %>%
-    left_join(test, by = c("MasterProteinAccessions", "Sequence", "Condition")) %>%
-    mutate(SD = sdprep / (TotalSampleArea + TotalControlArea + sdprep))
+    df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")], na.rm = TRUE)
+    df_out$TotalControlArea <- rowSums(df_out[, c("Control_OxidizedArea", "Control_UnoxidizedArea")], na.rm = TRUE)
 
-  # Return the final dataframe
-  return(df_out)
+    df_out$EOMSample <- df_out$Sample_OxidizedArea / df_out$TotalSampleArea
+    df_out$EOMControl <- df_out$Control_OxidizedArea / df_out$TotalControlArea
+    df_out$EOM <- df_out$EOMSample - df_out$EOMControl
+
+    df_out <- df_out %>%
+      left_join(
+        df_condition %>%
+          group_by(MasterProteinAccessions, Sequence, Condition) %>%
+          summarise(N = n(), .groups = 'drop'),
+        by = c("MasterProteinAccessions", "Sequence", "Condition")
+      )
+
+    df_out <- df_out %>%
+      left_join(
+        df_condition %>%
+          group_by(MasterProteinAccessions, Sequence, Condition) %>%
+          summarise(sdprep = sd(`Precursor Abundance`), .groups = 'drop'),
+        by = c("MasterProteinAccessions", "Sequence", "Condition")
+      )
+
+    df_out$SD <- df_out$sdprep / (df_out$TotalSampleArea + df_out$TotalControlArea)
+
+    # Append the result for the current condition to the final output dataframe
+    df_out_all <- bind_rows(df_out_all, df_out)
+  }
+
+  return(df_out_all)
 }
-Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
+
+Areas_pepp<- area_calculations_pep(pd_data_fasta_merged)
 
 # Step 10 Subset sequence metadata like residue start/stop
 ##(grab_seq_metadata_pep SKIP-Used in graphing_df_pep)
