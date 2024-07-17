@@ -47,7 +47,7 @@ column_selection <- function(df) {
   refined_data <- cbind(refined_data, df[[seq_col]], df[[acc_col]], df[[mod_col]], df[[pre_col]], df[[spe_col]], df[[cond_col]])
 
   # Rename columns
-  colnames(refined_data) <- c("Sequence", "Master Protein Accessions", "Modifications", "Precursor Abundance", "Spectrum File")
+  colnames(refined_data) <- c("Sequence", "Master Protein Accessions", "Modifications", "Precursor Abundance", "Spectrum File", "Condition")
 
   return(refined_data)
 }
@@ -73,7 +73,6 @@ pd_data<- remove_dup(pd_data)
 # Raw Data Annotations and Parsing of the FASTA File-----------------------------------------------------------
 ###########################################################################
 # Step 6 Clean and parse data from PD output file
-pd_data_annotated<- annotate_features(pd_data)
 annotate_features <- function(raw_data) {
   raw_data <- raw_data %>%
     mutate(`Master Protein Accessions` = sapply(strsplit(`Master Protein Accessions`, ";"), `[`, 1),
@@ -106,9 +105,9 @@ annotate_features <- function(raw_data) {
   raw_data <- raw_data %>%
     mutate(MOD = ifelse(is.na(Modifications) | Modifications == "" | Modifications == "NA" | Modifications == " ", "Unoxidized", "Oxidized"))
 
-  # Correct the MOD column after cleaning up Carbamidomethyl modifications
+  # Double check the MOD column for accuracy
   raw_data <- raw_data %>%
-    mutate(MOD = ifelse(Mods == "" | Mods == "NA" | grepl("Carbamidomethyl", Mods), "Unoxidized", MOD))
+    mutate(MOD = ifelse(nchar(gsub("\\s+", "", Modifications)) >= 2, "Oxidized", MOD))
 
   # Create ModPositionL and ModPositionN columns
   raw_data <- raw_data %>%
@@ -125,24 +124,101 @@ annotate_features <- function(raw_data) {
   return(raw_data)
 }
 
-
-
-pd_data_annotated<-annotate_features(pd_data)
+pd_data_annotated <- annotate_features(pd_data)
 
 # Step 7 Parse the FASTA file for later manipulations
 FASTA<- parse_fasta(FASTA)
 
 # Step 8 Locate the residue number for the peptide termini and residues
+locate_startend_res <- function(raw_data, FASTA){
 
-pd_data_fasta_merged <- locate_startend_res(pd_data_annotated)
+  # Merge raw_data with FASTA by UniprotID
+  raw_data <- merge(raw_data, FASTA, by = "UniprotID", all.x = TRUE)
 
+  # Locate the start and end of the sequence within the protein sequence
+  index <- str_locate(raw_data$protein_sequence, raw_data$Sequence)
+  raw_data <- cbind(raw_data, index)
 
+  # Create peptide column
+  raw_data$peptide <- paste(raw_data$start, "-", raw_data$end, sep = "")
+
+  # Count the number of modifications
+  raw_data$mod_count <- str_count(raw_data$Modifications, "\\(.*?\\)")
+  raw_data$mod_count <- ifelse(raw_data$MOD == "Unoxidized", 0, raw_data$mod_count)
+
+  # Convert ModPositionN and start to numeric
+  raw_data$ModPositionN <- as.numeric(raw_data$ModPositionN)
+  raw_data$start <- as.numeric(raw_data$start)
+
+  # Calculate modified residue positions
+  raw_data$mod_res <- ifelse(!is.na(raw_data$ModPositionN) & raw_data$ModPositionN > 0, raw_data$start + raw_data$ModPositionN - 1, NA)
+
+  # Create the Res column
+  raw_data$Res <- paste(raw_data$ModPositionL, raw_data$mod_res, sep = "")
+
+  return(raw_data)
+}
+
+pd_data_fasta_merged<- locate_startend_res(pd_data_annotated, FASTA)
 
 # FPOP Calculations ---------------------------------------------------------------------------------------------
 # Step 9 Calculating the total peptide areas and the extent of modification at the peptide level
 
 Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
+area_calculations_pep <- function(df_in) {
+  # Group by the necessary columns including 'Condition'
+  df_out <- df_in %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
+    reframe(TotalArea = sum(`Precursor Abundance`, na.rm = TRUE)) %>%
+    ungroup() %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+      names_from = c("SampleControl", "MOD"),
+      values_from = "TotalArea",
+      values_fill = NA
+    )
 
+  # Rename columns
+  df_out <- df_out %>%
+    rename(
+      Control_OxidizedArea = Control_Oxidized,
+      Control_UnoxidizedArea = Control_Unoxidized,
+      Sample_OxidizedArea = Sample_Oxidized,
+      Sample_UnoxidizedArea = Sample_Unoxidized
+    )
+
+  # Replace NA values with 0 where applicable
+  df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
+  df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
+
+  # Calculate Total Areas
+  df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")], na.rm = TRUE)
+  df_out$TotalControlArea <- rowSums(df_out[, c("Control_OxidizedArea", "Control_UnoxidizedArea")], na.rm = TRUE)
+
+  # Calculate EOM values
+  df_out$EOMSample <- df_out$Sample_OxidizedArea / df_out$TotalSampleArea
+  df_out$EOMControl <- df_out$Control_OxidizedArea / df_out$TotalControlArea
+  df_out$EOM <- df_out$EOMSample - df_out$EOMControl
+
+  # Calculate count (N)
+  df_out <- df_out %>%
+    left_join(df_in %>%
+                group_by(MasterProteinAccessions, Sequence, Condition) %>%
+                summarize(N = n()),
+              by = c("MasterProteinAccessions", "Sequence", "Condition"))
+
+  # Calculate standard deviation, replacing NA with 0
+  test <- df_in %>%
+    group_by(MasterProteinAccessions, Sequence, Condition) %>%
+    summarize(sdprep = sd(replace_na(`Precursor Abundance`, 0), na.rm = TRUE))
+  df_out <- df_out %>%
+    left_join(test, by = c("MasterProteinAccessions", "Sequence", "Condition")) %>%
+    mutate(SD = sdprep / (TotalSampleArea + TotalControlArea + sdprep))
+
+  # Return the final dataframe
+  return(df_out)
+}
+Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
 
 # Step 10 Subset sequence metadata like residue start/stop
 ##(grab_seq_metadata_pep SKIP-Used in graphing_df_pep)
