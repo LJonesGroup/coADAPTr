@@ -41,9 +41,10 @@ column_selection <- function(df) {
   mod_col <- select_column("Please select the column containing the protein modifications:")
   pre_col <- select_column("Please select the column containing precursor abundance/intensities:")
   spe_col <- select_column("Please select the column containing the spectrum file IDs:")
+  cond_col <- select_column("Please select the column containing the experimental conditions:")
 
   # Add selected columns to refined_data
-  refined_data <- cbind(refined_data, df[[seq_col]], df[[acc_col]], df[[mod_col]], df[[pre_col]], df[[spe_col]])
+  refined_data <- cbind(refined_data, df[[seq_col]], df[[acc_col]], df[[mod_col]], df[[pre_col]], df[[spe_col]], df[[cond_col]])
 
   # Rename columns
   colnames(refined_data) <- c("Sequence", "Master Protein Accessions", "Modifications", "Precursor Abundance", "Spectrum File")
