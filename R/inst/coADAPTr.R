@@ -121,10 +121,6 @@ annotate_features <- function(raw_data) {
     mutate(ModPosition = ifelse(is.na(ModPositionL) | ModPositionL == "", NA,
                                 paste(ModPositionL, ModPositionN, sep = "")))
 
-  # Extract letters before ":" in the "Spectrum File" column and add to "Condition" column
-  raw_data <- raw_data %>%
-    mutate(Condition = sub("^(.*):.*", "\\1", `Spectrum File`))
-
   return(raw_data)
 }
 
@@ -168,21 +164,100 @@ pd_data_fasta_merged<- locate_startend_res(pd_data_annotated, FASTA)
 # FPOP Calculations ---------------------------------------------------------------------------------------------
 # Step 9 Calculating the total peptide areas and the extent of modification at the peptide level
 
-Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
-area_calculations_pep <- function(df_in) {
-  # Initialize an empty dataframe to store results
-  df_out_all <- data.frame()
+area_calculations_pepp <- function(df_in) {
+  # Group by the necessary columns including 'Condition'
+  df_out <- df_in %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
+    reframe(TotalArea = sum(`Precursor Abundance`, na.rm = TRUE)) %>%
+    ungroup() %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+      names_from = c("SampleControl", "MOD"),
+      values_from = "TotalArea",
+      values_fill = NA
+    )
 
-  # Get the unique conditions
-  conditions <- unique(df_in$Condition)
+  # Rename columns
+  df_out <- df_out %>%
+    rename(
+      Control_OxidizedArea = Control_Oxidized,
+      Control_UnoxidizedArea = Control_Unoxidized,
+      Sample_OxidizedArea = Sample_Oxidized,
+      Sample_UnoxidizedArea = Sample_Unoxidized
+    )
 
-  # Loop through each condition
-  for (condition in conditions) {
-    df_condition <- df_in %>% filter(Condition == condition)
+  # Replace NA values with 0 where applicable
+  df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
+  df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
 
-    df_out <- df_condition %>%
-      group_by(MasterProteinAccessions, Sequence, SampleControl, MOD) %>%
-      summarise(TotalArea = sum(`Precursor Abundance`), .groups = 'drop') %>%
+  # Calculate Total Areas
+  df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")], na.rm = TRUE)
+  df_out$TotalControlArea <- rowSums(df_out[, c("Control_OxidizedArea", "Control_UnoxidizedArea")], na.rm = TRUE)
+
+  # Calculate EOM values
+  df_out$EOMSample <- df_out$Sample_OxidizedArea / df_out$TotalSampleArea
+  df_out$EOMControl <- df_out$Control_OxidizedArea / df_out$TotalControlArea
+  df_out$EOM <- df_out$EOMSample - df_out$EOMControl
+
+  # Calculate count (N)
+  df_out <- df_out %>%
+    left_join(df_in %>%
+                group_by(MasterProteinAccessions, Sequence, Condition) %>%
+                summarize(N = n()),
+              by = c("MasterProteinAccessions", "Sequence", "Condition"))
+
+  # Calculate standard deviation, replacing NA with 0
+
+  #Calculate the Difference
+  df_out$Difference<- df_out$EOMSample - df_out$EOMControl
+
+  #Calculate the Variance
+  df_out <- df_in %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
+    reframe(TotalArea = var(`Precursor Abundance`, na.rm = TRUE)) %>%
+    ungroup() %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+      names_from = c("SampleControl", "MOD"),
+      values_from = "TotalArea",
+      values_fill = NA
+    )
+
+  # Rename columns
+  df_out <- df_out %>%
+    rename(
+      Control_OxidizedVar = Control_Oxidized,
+      Control_UnoxidizedVar = Control_Unoxidized,
+      Sample_OxidizedVar = Sample_Oxidized,
+      Sample_UnoxidizedVar = Sample_Unoxidized
+    )
+  #Calculate Total Variance
+  df_out$TotalSampleVar <- rowSums(df_out[, c("Sample_OxidizedVar", "Sample_UnoxidizedVar")], na.rm = TRUE)
+  df_out$TotalControlVar <- rowSums(df_out[, c("Control_OxidizedVar", "Control_UnoxidizedVar")], na.rm = TRUE)
+
+  # Return the final dataframe
+  return(df_out)
+}
+
+
+Areas_pepp<- area_calculations_pepp(pd_data_fasta_merged)
+
+#STDV CALCULATIONS
+
+library(dplyr)
+library(tidyr)
+
+# Function to calculate variance
+library(dplyr)
+library(tidyr)
+
+# Function to calculate variance and handle missing data
+var_calculations <- function(df_in) {
+    # Group by the necessary columns including 'Condition'
+    df_out <- df_in %>%
+      group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
+      reframe(TotalArea = sum(`Precursor Abundance`, na.rm = TRUE)) %>%
+      ungroup() %>%
       pivot_wider(
         id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
         names_from = c("SampleControl", "MOD"),
@@ -190,6 +265,7 @@ area_calculations_pep <- function(df_in) {
         values_fill = NA
       )
 
+    # Rename columns
     df_out <- df_out %>%
       rename(
         Control_OxidizedArea = Control_Oxidized,
@@ -198,42 +274,51 @@ area_calculations_pep <- function(df_in) {
         Sample_UnoxidizedArea = Sample_Unoxidized
       )
 
+    # Replace NA values with 0 where applicable
     df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
     df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
 
+    # Calculate Total Areas
     df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")], na.rm = TRUE)
     df_out$TotalControlArea <- rowSums(df_out[, c("Control_OxidizedArea", "Control_UnoxidizedArea")], na.rm = TRUE)
 
+    # Calculate EOM values
     df_out$EOMSample <- df_out$Sample_OxidizedArea / df_out$TotalSampleArea
     df_out$EOMControl <- df_out$Control_OxidizedArea / df_out$TotalControlArea
     df_out$EOM <- df_out$EOMSample - df_out$EOMControl
 
-    df_out <- df_out %>%
-      left_join(
-        df_condition %>%
-          group_by(MasterProteinAccessions, Sequence, Condition) %>%
-          summarise(N = n(), .groups = 'drop'),
-        by = c("MasterProteinAccessions", "Sequence", "Condition")
+    #Calculate the Difference
+    df_out$Difference<- df_out$EOMSample - df_out$EOMControl
+
+    #Calculate the Variance
+    df_out <- df_in %>%
+      group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
+      reframe(TotalArea = var(`Precursor Abundance`, na.rm = TRUE)) %>%
+      ungroup() %>%
+      pivot_wider(
+        id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+        names_from = c("SampleControl", "MOD"),
+        values_from = "TotalArea",
+        values_fill = NA
       )
 
+    # Rename columns
     df_out <- df_out %>%
-      left_join(
-        df_condition %>%
-          group_by(MasterProteinAccessions, Sequence, Condition) %>%
-          summarise(sdprep = sd(`Precursor Abundance`), .groups = 'drop'),
-        by = c("MasterProteinAccessions", "Sequence", "Condition")
+      rename(
+        Control_OxidizedVar = Control_Oxidized,
+        Control_UnoxidizedVar = Control_Unoxidized,
+        Sample_OxidizedVar = Sample_Oxidized,
+        Sample_UnoxidizedVar = Sample_Unoxidized
       )
-
-    df_out$SD <- df_out$sdprep / (df_out$TotalSampleArea + df_out$TotalControlArea)
-
-    # Append the result for the current condition to the final output dataframe
-    df_out_all <- bind_rows(df_out_all, df_out)
-  }
-
-  return(df_out_all)
+    #Calculate Total Variance
+    df_out$TotalSampleVar <- rowSums(df_out[, c("Sample_OxidizedVar", "Sample_UnoxidizedVar")], na.rm = TRUE)
+    df_out$TotalControlVar <- rowSums(df_out[, c("Control_OxidizedVar", "Control_UnoxidizedVar")], na.rm = TRUE)
 }
 
-Areas_pepp<- area_calculations_pep(pd_data_fasta_merged)
+
+variance<- var_calculations(pd_data_fasta_merged)
+
+
 
 # Step 10 Subset sequence metadata like residue start/stop
 ##(grab_seq_metadata_pep SKIP-Used in graphing_df_pep)
