@@ -257,6 +257,17 @@ area_calculations_pepp <- function(df_in) {
   df_out$Sample_TotalVar<- test2$Sample_TotalVar
   df_out$Control_TotalVar<- test2$Control_TotalVar
 
+
+  # Corrected formulas for Variance calculations in R
+  df_out$VarianceSample <- df_out$EOMSample^2 * (((df_out$Sample_OxidizedVar) / (df_out$Sample_OxidizedArea^2)) + (df_out$TotalSampleVar) / (df_out$TotalSampleArea^2))
+  df_out$VarianceControl <- df_out$EOMControl^2 * (((df_out$Control_OxidizedVar) / (df_out$Control_OxidizedArea^2)) + (df_out$TotalControlVar) / (df_out$TotalControlArea^2))
+
+  # Sum of Variances for Total Variance
+  df_out$TotalVariance <- df_out$VarianceSample + df_out$VarianceControl
+
+  # Calculation of Standard Deviation
+  df_out$StandardDeviation <- sqrt(df_out$TotalVariance)
+
   # Return the final dataframe
   return(df_out)
 }
