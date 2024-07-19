@@ -371,11 +371,36 @@ area_calculations_resss <- function(df_in) {
       Sample_OxidizedVar = Sample,
     )
 
+  #Calculating Total Vairance
+  total_var <- df_in %>%
+    filter((mod_count == 0 | mod_count == 1)) %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, Condition) %>%
+    summarize(TotalVar = var(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+      names_from = c("SampleControl"),
+      values_from = "TotalVar",
+      values_fill = list(TotalVar = NA)
+    ) %>%
+    rename(
+      SampleTotalVar = Sample,
+      ControlTotalVar = Control
+    )
 
-  df_out <- full_join(df_out, ox_var, by = c("MasterProteinAccessions", "Sequence", "Res", "Condition"))
 
 
+  merged<- inner_join(total_var, ox_var , by = c("MasterProteinAccessions", "Sequence", "Condition"))
+  #merge variance data with df_out
+  df_out<- inner_join(df_out, merged, by = c("MasterProteinAccessions", "Sequence", "Res", "Condition"))
+  # Corrected formulas for Variance calculations in R
+  df_out$VarianceSample <- df_out$EOMSample^2 * (((df_out$Sample_OxidizedVar) / (df_out$SampleOxidizedArea^2)) + (df_out$SampleTotalVar) / (df_out$SampleTotalArea^2))
+  df_out$VarianceControl <- df_out$EOMControl^2 * (((df_out$Control_OxidizedVar) / (df_out$ControlOxidizedArea^2)) + (df_out$ControlTotalVar) / (df_out$ControlTotalArea^2))
 
+  # Sum of Variances for Total Variance
+  df_out$TotalVariance <- df_out$VarianceSample + df_out$VarianceControl
+
+  # Calculation of Standard Deviation
+  df_out$SD <- sqrt(df_out$TotalVariance)
   # Filter out rows with missing Res or EOM values
   #df_out <- df_out[complete.cases(df_out[c("Res", "EOM")]), ]
 
@@ -385,6 +410,13 @@ area_calculations_resss <- function(df_in) {
 }
 
 Areas_res<- area_calculations_resss(pd_data_fasta_merged)
+
+###
+##CORRECT SD
+
+
+
+
 
 #####TESTING RES LEVEL SD
 
@@ -412,6 +444,7 @@ RESSDTEST <- function(df_in) {
     Sample_OxidizedVar = Sample,
 
     )
+  #Calculating total variance
 
 
   # Return the final dataframe
@@ -445,16 +478,18 @@ RESSDTESTall <- function(df_in) {
 }
 sdtestunox_all<- RESSDTESTall(pd_data_fasta_merged)
 
-
+####
+#merge of total and ox variance
+merged<- inner_join(sdtestunox_all, sdtest, by = c("MasterProteinAccessions", "Sequence", "Condition"))
 #TESTING RES SD
 RESSDTESTTOTALS <- function(df_in) {
   # Calculate Total Variance
   df_out <- df_in %>%
     filter((mod_count == 0 | mod_count == 1)) %>%
-    group_by(MasterProteinAccessions, Sequence, Res, SampleControl, Condition) %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, Condition) %>%
     summarize(TotalVar = var(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
     pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence", "Res", "Condition"),
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
       names_from = c("SampleControl"),
       values_from = "TotalVar",
       values_fill = list(TotalVar = NA)
