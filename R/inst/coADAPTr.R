@@ -369,6 +369,95 @@ area_calculations_resss <- function(df_in) {
 
 testresiduefunction<- area_calculations_resss(pd_data_fasta_merged)
 
+#####TESTING RES LEVEL SD
+
+
+#Calculate Variance and Standard Variation
+# Group by the necessary columns including 'Condition'
+RESSDTEST <- function(df_in) {
+  df_out<- df_in %>%
+    filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized") %>%
+    group_by(MasterProteinAccessions, Sequence, Res, SampleControl, Condition) %>%
+    summarize(OxidizedVar = var(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Res", "Condition"),
+      names_from = c("SampleControl"),
+      values_from = "OxidizedVar",
+      values_fill = NA
+    )
+  # Rename columns
+  df_out <- df_out %>%
+  rename(
+    Control_OxidizedVar = Control,
+    Sample_OxidizedVar = Sample,
+
+    )
+
+
+  # Return the final dataframe
+  return(df_out)
+}
+sdtest<- RESSDTEST(pd_data_fasta_merged)
+
+###UNOXIDIZED TEST
+RESSDTESTall <- function(df_in) {
+  df_out <- df_in %>%
+    filter(mod_count == 0 | mod_count == 1) %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
+    summarize(TotalArea = var(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+      names_from = c("SampleControl", "MOD"),
+      values_from = "TotalArea",
+      values_fill = NA
+    )
+  # Rename columns
+  #df_out <- df_out %>%
+    #rename(
+     # Control_OxidizedVar = Control,
+      #Sample_OxidizedVar = Sample,
+
+    #)
+
+
+  # Return the final dataframe
+  return(df_out)
+}
+sdtestunox_all<- RESSDTEST(pd_data_fasta_merged)
+
+
+#TESTING RES SD
+RESSDTESTTOTALS <- function(df_in) {
+  # Calculate Total Variance
+  df_out <- df_in %>%
+    filter((mod_count == 0 | mod_count == 1)) %>%
+    group_by(MasterProteinAccessions, Sequence, Res, SampleControl, Condition) %>%
+    summarize(TotalVar = var(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Res", "Condition"),
+      names_from = c("SampleControl"),
+      values_from = "TotalVar",
+      values_fill = list(TotalVar = NA)
+    ) %>%
+    rename(
+      Sample_TotalVar = Sample,
+      Control_TotalVar = Control
+    )
+
+  return(df_out)
+}
+
+# Assuming pd_data_fasta_merged is your dataset
+sdtesttotals <- RESSDTESTTOTALS(pd_data_fasta_merged)
+
+
+
+
+
+
+
+
+
 
 # Assuming pd_data_fasta_merged is your dataset
 residue_data <- area_calculations_res(pd_data_fasta_merged)
