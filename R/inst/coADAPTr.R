@@ -164,7 +164,7 @@ pd_data_fasta_merged<- locate_startend_res(pd_data_annotated, FASTA)
 # FPOP Calculations ---------------------------------------------------------------------------------------------
 # Step 9 Calculating the total peptide areas and the extent of modification at the peptide level
 
-area_calculations_pepp <- function(df_in) {
+area_calculations_pep <- function(df_in) {
   # Group by the necessary columns including 'Condition'
   df_out <- df_in %>%
     group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
@@ -187,8 +187,8 @@ area_calculations_pepp <- function(df_in) {
     )
 
   # Replace NA values with 0 where applicable
-  df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
-  df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
+  #df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
+  #df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
 
   # Calculate Total Areas
   df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")], na.rm = TRUE)
@@ -237,7 +237,7 @@ area_calculations_pepp <- function(df_in) {
 
   #Calculating Total Valiance
   test2 <- df_in %>%
-  group_by(MasterProteinAccessions, Sequence, SampleControl, Condition) %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, Condition) %>%
     reframe(TotalArea = var(`Precursor Abundance`, na.rm = TRUE)) %>%
     ungroup() %>%
     pivot_wider(
@@ -266,14 +266,14 @@ area_calculations_pepp <- function(df_in) {
   df_out$TotalVariance <- df_out$VarianceSample + df_out$VarianceControl
 
   # Calculation of Standard Deviation
-  df_out$StandardDeviation <- sqrt(df_out$TotalVariance)
+  df_out$SD <- sqrt(df_out$TotalVariance)
 
   # Return the final dataframe
   return(df_out)
 }
 
 
-Areas_pepp<- area_calculations_pepp(pd_data_fasta_merged)
+Areas_pep<- area_calculations_pepp(pd_data_fasta_merged)
 
 
 
@@ -294,7 +294,86 @@ quant_graph_df_pep<- filtered_graphing_df_pep(graphing_df_pep)
 #Residue Level-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #Step 13 Calculating the total peptide areas and the extent of modification at the residue level
 
-Areas_res <- area_calculations_res(pd_data_fasta_merged)
+area_calculations_resss <- function(df_in) {
+
+  # Filter for mod_count 0 or 1
+  df_out <- df_in %>%
+    filter(mod_count == 0 | mod_count == 1) %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
+    summarize(TotalArea = sum(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+      names_from = c("SampleControl", "MOD"),
+      values_from = "TotalArea",
+      values_fill = NA
+    )
+
+  # Calculate total areas for Sample and Control
+  df_out <- df_out %>%
+    mutate(SampleTotalArea = coalesce(Sample_Oxidized, 0) + coalesce(Sample_Unoxidized, 0),
+           ControlTotalArea = coalesce(Control_Oxidized, 0) + coalesce(Control_Unoxidized, 0))
+
+  # Remove individual oxidized/unoxidized columns
+  df_out <- df_out %>%
+    select(-Sample_Oxidized, -Sample_Unoxidized, -Control_Unoxidized, -Control_Oxidized)
+
+  # Filter and summarize oxidized areas
+  df_out2 <- df_in %>%
+    filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized") %>%
+    group_by(MasterProteinAccessions, Sequence, Res, SampleControl, Condition) %>%
+    summarize(OxidizedArea = sum(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Res", "Condition"),
+      names_from = c("SampleControl"),
+      values_from = "OxidizedArea",
+      values_fill = NA
+    )
+
+  # Merge the two dataframes
+  df_out <- full_join(df_out, df_out2, by = c("MasterProteinAccessions", "Sequence", "Condition"))
+
+  # Rename columns
+  df_out <- df_out %>%
+    rename(SampleOxidizedArea = Sample,
+           ControlOxidizedArea = Control)
+
+  # Calculate EOM values
+  df_out <- df_out %>%
+    mutate(EOMSample = SampleOxidizedArea / SampleTotalArea,
+           EOMControl = ControlOxidizedArea / ControlTotalArea,
+           EOM = EOMSample - EOMControl)
+
+  # Calculate count (N)
+  N_df <- df_in %>%
+    filter(mod_count == 0 | mod_count == 1, !is.na(Res)) %>%
+    group_by(MasterProteinAccessions, Sequence, Res) %>%
+    summarize(N = n(), .groups = "drop")  # Count the occurrences
+
+  df_out <- df_out %>%
+    left_join(N_df, by = c("MasterProteinAccessions", "Sequence", "Res"))
+
+  # Calculate standard deviation
+  sd_df <- df_in %>%
+    group_by(MasterProteinAccessions, Sequence, Res) %>%
+    summarize(sdprep = sd(`Precursor Abundance`, na.rm = TRUE), .groups = "drop")
+
+  df_out <- df_out %>%
+    left_join(sd_df, by = c("MasterProteinAccessions", "Sequence", "Res")) %>%
+    mutate(SD = sdprep / (SampleTotalArea + ControlTotalArea + sdprep))
+
+  # Filter out rows with missing Res or EOM values
+  df_out <- df_out[complete.cases(df_out[c("Res", "EOM")]), ]
+
+  return(df_out)
+}
+
+testresiduefunction<- area_calculations_resss(pd_data_fasta_merged)
+
+
+# Assuming pd_data_fasta_merged is your dataset
+residue_data <- area_calculations_res(pd_data_fasta_merged)
+# Assuming pd_data_fasta_merged is your dataset
+residue_data <- area_calculations_res(pd_data_fasta_merged)
 
 # Step 14  Subset sequence metadata like residue start/stop for residue level data
 graphing_df_res<- graphing_data_res(Areas_res, pd_data_fasta_merged)
