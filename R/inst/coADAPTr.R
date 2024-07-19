@@ -53,7 +53,7 @@ column_selection <- function(df) {
 }
 
 
-pd_data <- column_selection(raw_data)
+Selected_data <- column_selection(raw_data)
 
 rename_and_split_spectrum_files <- function(df_in) {
   # Check if the "Spectrum File" column exists
@@ -65,7 +65,7 @@ rename_and_split_spectrum_files <- function(df_in) {
     print(unique_files)
 
     # Initialize a data frame to hold the mappings
-    mappings <- data.frame(Original = character(), SampleType = character(), Condition = character(), stringsAsFactors = FALSE)
+    mappings <- data.frame(Original = character(), NewName = character(), Condition = character(), stringsAsFactors = FALSE)
 
     # Loop through each unique file identifier
     for (file in unique_files) {
@@ -73,7 +73,7 @@ rename_and_split_spectrum_files <- function(df_in) {
       parts <- strsplit(response, ":")[[1]]
       if (length(parts) == 2) {
         # Append the mappings
-        mappings <- rbind(mappings, data.frame(Original = file, SampleType = parts[2], Condition = parts[1]))
+        mappings <- rbind(mappings, data.frame(Original = file, NewName = parts[2], Condition = parts[1]))
       } else {
         cat("Invalid input. Skipping '", file, "'\n")
       }
@@ -81,16 +81,13 @@ rename_and_split_spectrum_files <- function(df_in) {
 
     # Rename and assign based on mappings
     if (nrow(mappings) > 0) {
-      # Map FileIdentifier to SampleType
-      df_in$SampleType <- df_in$FileIdentifier
+      # Map FileIdentifier to NewName and Condition
       for (i in 1:nrow(mappings)) {
-        df_in$SampleType[df_in$FileIdentifier == mappings$Original[i]] <- mappings$SampleType[i]
+        df_in$`Spectrum File`[df_in$FileIdentifier == mappings$Original[i]] <- mappings$NewName[i]
         df_in$Condition[df_in$FileIdentifier == mappings$Original[i]] <- mappings$Condition[i]
       }
       # Optionally remove the temporary identifier column
       df_in$FileIdentifier <- NULL
-      # Rename column after all mappings are applied
-      colnames(df_in)[colnames(df_in) == "Spectrum File"] <- "SampleType"
     }
   } else {
     cat("'Spectrum File' column not found in the data frame.\n")
@@ -101,13 +98,15 @@ rename_and_split_spectrum_files <- function(df_in) {
 
 # Usage:
 # cleaned_data should be your data frame variable
-modified_data <- rename_and_split_spectrum_files(pd_data)
+modified_data <- rename_and_split_spectrum_files(Selected_data)
+
+
 
 
 
 # Step 4 Identify which spectrum files correlate to Sample and Control
-pd_data<- SampleControl(pd_data)
-
+modified_data<- SampleControl(modified_data)
+modified_data<- SampleControl(Selected_data)
 
 # Step 5 Run this if MS files were analyzed via PD
 ##Skip if running Test Data Set
@@ -121,6 +120,7 @@ pd_data<- remove_dup(pd_data)
 # Raw Data Annotations and Parsing of the FASTA File-----------------------------------------------------------
 ###########################################################################
 # Step 6 Clean and parse data from PD output file
+library(dplyr)
 annotate_features <- function(raw_data) {
   raw_data <- raw_data %>%
     mutate(`Master Protein Accessions` = sapply(strsplit(`Master Protein Accessions`, ";"), `[`, 1),
@@ -140,39 +140,30 @@ annotate_features <- function(raw_data) {
     mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\);", ";", Modifications)) %>%
     mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\)", "", Modifications)) %>%
     mutate(Modifications = gsub("N-Term\\(Prot\\)\\(TMTpro\\);", "", Modifications)) %>%
-    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%  # Remove any double semicolons that might result from deletions
-    mutate(Modifications = gsub("^;|;$", "", Modifications))      # Remove leading or trailing semicolons
+    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%
+    mutate(Modifications = gsub("^;|;$", "", Modifications))
 
   # Cleanup: Remove leading, trailing, and multiple consecutive semicolons
   raw_data <- raw_data %>%
-    mutate(Modifications = gsub("\\s*;\\s*", ";", Modifications)) %>%  # Remove spaces around semicolons
-    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%  # Replace multiple semicolons with a single one
-    mutate(Modifications = gsub("^;|;$", "", Modifications))  # Remove leading and trailing semicolons
+    mutate(Modifications = gsub("\\s*;\\s*", ";", Modifications)) %>%
+    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%
+    mutate(Modifications = gsub("^;|;$", "", Modifications))
 
   # Determine if the sequence is oxidized or unoxidized
   raw_data <- raw_data %>%
     mutate(MOD = ifelse(is.na(Modifications) | Modifications == "" | Modifications == "NA" | Modifications == " ", "Unoxidized", "Oxidized"))
 
-  # Double check the MOD column for accuracy
-  raw_data <- raw_data %>%
-    mutate(MOD = ifelse(nchar(gsub("\\s+", "", Modifications)) >= 2, "Oxidized", MOD))
-
-  # Ensure there are no empty values in the MOD column
-  raw_data <- raw_data %>%
-    mutate(MOD = ifelse(MOD == "" | is.na(MOD), "Unoxidized", MOD))
-
   # Create ModPositionL and ModPositionN columns
   raw_data <- raw_data %>%
-    mutate(ModPositionL = sub("^\\s*([A-Z]).*", "\\1", Modifications)) %>%
-    mutate(ModPositionN = gsub(".*?([0-9]+).*", "\\1", Modifications)) %>%
-    mutate(ModPositionN = ifelse(ModPositionN == Modifications, NA, ModPositionN)) %>%
-    mutate(ModPosition = ifelse(is.na(ModPositionL) | ModPositionL == "", NA,
-                                paste(ModPositionL, ModPositionN, sep = "")))
+    mutate(ModPositionL = ifelse(nchar(Modifications) > 0, gsub(".*?([A-Za-z]).*", "\\1", Modifications), NA)) %>%
+    mutate(ModPositionN = ifelse(nchar(Modifications) > 0, gsub(".*?(\\d+).*", "\\1", Modifications), NA))
 
   return(raw_data)
 }
 
-pd_data_annotated <- annotate_features(pd_data)
+# Usage:
+# Assume 'modified_data' is your data frame variable
+modified_data_annotated <- annotate_features(modified_data)
 
 # Step 7 Parse the FASTA file for later manipulations
 FASTA<- parse_fasta(FASTA)
@@ -207,7 +198,7 @@ locate_startend_res <- function(raw_data, FASTA){
   return(raw_data)
 }
 
-pd_data_fasta_merged<- locate_startend_res(pd_data_annotated, FASTA)
+mod_data_fasta_merged<- locate_startend_res(modified_data_annotated, FASTA)
 
 # FPOP Calculations ---------------------------------------------------------------------------------------------
 # Step 9 Calculating the total peptide areas and the extent of modification at the peptide level
@@ -321,7 +312,7 @@ area_calculations_pep <- function(df_in) {
 }
 
 
-Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
+Areas_pep<- area_calculations_pep(mod_data_fasta_merged)
 
 
 
@@ -331,7 +322,7 @@ Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
 
 # Step 11 Merge metadata with numeric graphing data
 
-graphing_df_pep<- merge_metadata_pep(Areas_pep, pd_data_fasta_merged)
+graphing_df_pep<- merge_metadata_pep(Areas_pep, mod_data_fasta_merged)
 
 
 # Step 12 Filter Graphical Data to include data that is acceptable.
@@ -457,18 +448,12 @@ area_calculations_resss <- function(df_in) {
   return(df_out)
 }
 
-Areas_res<- area_calculations_resss(pd_data_fasta_merged)
-
-###
-##CORRECT SD
-
-
-
+Areas_res<- area_calculations_resss(mod_data_fasta_merged)
 
 
 
 # Step 14  Subset sequence metadata like residue start/stop for residue level data
-graphing_df_res<- graphing_data_res(Areas_res, pd_data_fasta_merged)
+graphing_df_res<- graphing_data_res(Areas_res, mod_data_fasta_merged)
 
 #Step 15 Filters for residue level graphing.
 

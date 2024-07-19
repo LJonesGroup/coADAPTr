@@ -89,59 +89,89 @@ output_folder <- function() {
 file_output <- output_folder()
 
 #Calculate Total Abundance (denominator)
-sum_abundance <- function(data) {
-  # Find columns containing "Abundance"
-  abundance_cols <- grep("Abundance", colnames(data), value = TRUE)
+# Function to sum selected TMT abundance columns and calculate true abundances
+sum_and_calculate_abundances <- function(data) {
+  # Function to prompt for column selection within the main function
+  select_tmt_abundance_columns <- function() {
+    col_names <- colnames(data)
+    selected_cols <- select.list(
+      col_names,
+      multiple = TRUE,
+      title = "Select columns containing TMT abundances (Hold Ctrl to select multiple):",
+      graphics = TRUE
+    )
+    if (length(selected_cols) == 0) {
+      stop("No columns selected, exiting the function.")
+    }
+    return(selected_cols)
+  }
 
-  # Sum numerical content of abundance columns for each row
+  # Prompt user to select TMT abundance columns
+  cat("Please select the columns containing TMT abundances. You can select multiple columns.\n")
+  abundance_cols <- select_tmt_abundance_columns()
+
+  # Sum numerical content of selected abundance columns for each row
   data$AbundanceTotals <- rowSums(data[, abundance_cols, drop = FALSE], na.rm = TRUE)
 
-  return(data)
-}
-
-# Apply function
-pd_data <- sum_abundance(pd_data)
-
-#Calculate True Precursor Abundance
-calculate_abundances <- function(data) {
-  # Find columns containing "Abundance"
-  abundance_cols <- grep("Abundance:", colnames(data), value = TRUE)
-
-  # Loop through each abundance column
+  # Loop through each selected abundance column to calculate true abundances
   for (col in abundance_cols) {
-    # Extract the number and letter from the original column name
-    num_letter <- gsub("Abundance: ", "", col)
-
-    # Calculate the new column
-    new_col <- paste("TRUE Abundance:", num_letter, sep = " ")
-    data[[new_col]] <- data[[col]] * data$Intensity / data$AbundanceTotals
+    # Create a new column name based on the original one
+    new_col_name <- paste("TRUE Abundance", col, sep = ": ")
+    data[[new_col_name]] <- data[[col]] * data$Intensity / data$AbundanceTotals
   }
 
   return(data)
 }
 
-pd_data<- calculate_abundances(pd_data)
+# Usage:
+# Assume 'pd_data' is your data frame variable
+pd_data <- sum_and_calculate_abundances(pd_data)
+
+
+
 
 #Extract Necessary Columns
-extract_columns <- function(data) {
-  # Select the desired columns
-  selected_cols <- c("Sequence", "Modifications", "Master Protein Accessions", "Protein Accessions")
+column_selection <- function(df) {
+  refined_data <- data.frame(matrix(ncol = 0, nrow = nrow(df)))  # Initialize an empty data frame with the same number of rows as df
+  col_names <- colnames(df)
 
-  # Identify indices of columns containing "TRUE Abundance"
-  abundance_indices <- grepl("TRUE Abundance", colnames(data))
+  # Function to prompt for column selection, allowing multiple selections
+  select_column <- function(prompt, allow_multiple = FALSE) {
+    cat(prompt, "\n")
+    selected_cols <- select.list(
+      col_names,
+      multiple = allow_multiple,
+      title = prompt,
+      graphics = TRUE
+    )
+    if (length(selected_cols) == 0) {
+      stop("No column selected, exiting the function.")
+    }
+    return(selected_cols)
+  }
 
-  # Combine selected columns with abundance columns
-  all_selected_cols <- c(selected_cols, colnames(data)[abundance_indices])
+  # Prompt and select columns
+  seq_col <- select_column("Please select the column containing the peptide sequences (unannotated):")
+  acc_col <- select_column("Please select the column containing the Uniprot ID or master protein accessions:")
+  mod_col <- select_column("Please select the column containing the protein modifications:")
+  prec_cols <- select_column("Please select the column(s) containing the adjusted precursor abundances/intensities:", allow_multiple = TRUE)
 
-  # Subset the dataframe
-  data_subset <- data[, all_selected_cols, drop = FALSE]
+  # Add selected columns to refined_data
+  refined_data <- cbind(refined_data, df[, c(seq_col, acc_col, mod_col)])
+  refined_data <- cbind(refined_data, df[, prec_cols])
 
-  return(data_subset)
+  # Rename columns for clarity if needed
+  colnames(refined_data) <- c("Sequence", "Master Protein Accessions", "Modifications", prec_cols)
+
+  return(refined_data)
 }
 
+# Usage:
+# Assume 'raw_data' is your data frame variable
+Selected_data <- column_selection(pd_data)
 
 
-cleaned_data<- extract_columns(pd_data)
+
 
 #renaming columns
 # Function to interactively rename columns
@@ -165,7 +195,7 @@ rename_columns_interactively <- function(data) {
 }
 
 
-renamed_data <- rename_columns_interactively(cleaned_data)
+renamed_data <- rename_columns_interactively(Selected_data)
 
 # Transform the data in the column into rows
 
@@ -187,6 +217,7 @@ SampleControl <- function(pd_data) {
 transformed_data <- SampleControl(transformed_data)
 
 #Annotate features in transformed data
+library(dplyr)
 annotate_features <- function(raw_data) {
   raw_data <- raw_data %>%
     mutate(`Master Protein Accessions` = sapply(strsplit(`Master Protein Accessions`, ";"), `[`, 1),
@@ -206,35 +237,27 @@ annotate_features <- function(raw_data) {
     mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\);", ";", Modifications)) %>%
     mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\)", "", Modifications)) %>%
     mutate(Modifications = gsub("N-Term\\(Prot\\)\\(TMTpro\\);", "", Modifications)) %>%
-    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%  # Remove any double semicolons that might result from deletions
-    mutate(Modifications = gsub("^;|;$", "", Modifications))      # Remove leading or trailing semicolons
-
+    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%
+    mutate(Modifications = gsub("^;|;$", "", Modifications))
 
   # Cleanup: Remove leading, trailing, and multiple consecutive semicolons
   raw_data <- raw_data %>%
-    mutate(Modifications = gsub("\\s*;\\s*", ";", Modifications)) %>%  # Remove spaces around semicolons
-    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%  # Replace multiple semicolons with a single one
-    mutate(Modifications = gsub("^;|;$", "", Modifications))  # Remove leading and trailing semicolons
+    mutate(Modifications = gsub("\\s*;\\s*", ";", Modifications)) %>%
+    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%
+    mutate(Modifications = gsub("^;|;$", "", Modifications))
 
   # Determine if the sequence is oxidized or unoxidized
   raw_data <- raw_data %>%
-    mutate(MOD = ifelse(is.na(Modifications) | Modifications == "", "Unoxidized",
-                        ifelse(grepl("Oxidation", Modifications), "Oxidized", "Unoxidized")))
+    mutate(MOD = ifelse(is.na(Modifications) | Modifications == "" | Modifications == "NA" | Modifications == " ", "Unoxidized", "Oxidized"))
 
   # Create ModPositionL and ModPositionN columns
   raw_data <- raw_data %>%
-    mutate(ModPositionL = sub("^\\s*([A-Z]).*", "\\1", Modifications)) %>%
-    mutate(ModPositionN = gsub(".*?([0-9]+).*", "\\1", Modifications)) %>%
-    mutate(ModPositionN = ifelse(ModPositionN == Modifications, NA, ModPositionN)) %>%
-    mutate(ModPosition = ifelse(is.na(ModPositionL) | ModPositionL == "", NA,
-                                paste(ModPositionL, ModPositionN, sep = "")))
-
-  # Extract letters before ":" in the "Spectrum File" column and add to "Condition" column
-  raw_data <- raw_data %>%
-    mutate(Condition = sub("^(.*):.*", "\\1", `Spectrum File`))
+    mutate(ModPositionL = ifelse(nchar(Modifications) > 0, gsub(".*?([A-Za-z]).*", "\\1", Modifications), NA)) %>%
+    mutate(ModPositionN = ifelse(nchar(Modifications) > 0, gsub(".*?(\\d+).*", "\\1", Modifications), NA))
 
   return(raw_data)
 }
+
 
 
 
@@ -281,7 +304,8 @@ locate_startend_res <- function(raw_data, FASTA){
 
   # Create the Res column
   raw_data$Res <- paste(raw_data$ModPositionL, raw_data$mod_res, sep = "")
-
+  #Create a conditions Column
+  raw_data$Condition <- sub(":.*", "", raw_data$`Spectrum File`)
   return(raw_data)
 }
 
@@ -313,8 +337,8 @@ area_calculations_pep <- function(df_in) {
     )
 
   # Replace NA values with 0 where applicable
-  df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
-  df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
+  #df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
+  #df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
 
   # Calculate Total Areas
   df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")], na.rm = TRUE)
@@ -332,19 +356,71 @@ area_calculations_pep <- function(df_in) {
                 summarize(N = n()),
               by = c("MasterProteinAccessions", "Sequence", "Condition"))
 
-  # Calculate standard deviation, replacing NA with 0
+  #Calculate Variance and Standard Variation
+  # Group by the necessary columns including 'Condition'
   test <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, Condition) %>%
-    summarize(sdprep = sd(replace_na(`Precursor Abundance`, 0), na.rm = TRUE))
-  df_out <- df_out %>%
-    left_join(test, by = c("MasterProteinAccessions", "Sequence", "Condition")) %>%
-    mutate(SD = sdprep / (TotalSampleArea + TotalControlArea + sdprep))
+    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
+    reframe(TotalVar = var(`Precursor Abundance`, na.rm = TRUE)) %>%
+    ungroup() %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+      names_from = c("SampleControl", "MOD"),
+      values_from = "TotalVar",
+      values_fill = NA
+    )
+
+  # Rename columns
+  test <- test %>%
+    rename(
+      Control_OxidizedVar = Control_Oxidized,
+      Control_UnoxidizedVar = Control_Unoxidized,
+      Sample_OxidizedVar = Sample_Oxidized,
+      Sample_UnoxidizedVar = Sample_Unoxidized
+    )
+
+  df_out$Control_OxidizedVar<- test$Control_OxidizedVar
+  df_out$Control_UnoxidizedVar<- test$Control_UnoxidizedVar
+  df_out$Sample_OxidizedVar<- test$Sample_OxidizedVar
+  df_out$Sample_UnoxidizedVar<- test$Sample_UnoxidizedVar
+  df_out$TotalSampleVar<- rowSums(test[, c("Sample_OxidizedVar", "Sample_UnoxidizedVar")], na.rm = TRUE)
+  df_out$TotalControlVar<- rowSums(test[, c("Control_OxidizedVar", "Control_UnoxidizedVar")], na.rm = TRUE)
+
+  #Calculating Total Variance
+  test2 <- df_in %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, Condition) %>%
+    reframe(TotalArea = var(`Precursor Abundance`, na.rm = TRUE)) %>%
+    ungroup() %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+      names_from = c("SampleControl"),
+      values_from = "TotalArea",
+      values_fill = NA
+    )
+
+  # Rename columns
+  test2 <- test2 %>%
+    rename(
+      Sample_TotalVar = Sample,
+      Control_TotalVar = Control,
+
+    )
+  df_out$Sample_TotalVar<- test2$Sample_TotalVar
+  df_out$Control_TotalVar<- test2$Control_TotalVar
+
+
+  # Corrected formulas for Variance calculations in R
+  df_out$VarianceSample <- df_out$EOMSample^2 * (((df_out$Sample_OxidizedVar) / (df_out$Sample_OxidizedArea^2)) + (df_out$TotalSampleVar) / (df_out$TotalSampleArea^2))
+  df_out$VarianceControl <- df_out$EOMControl^2 * (((df_out$Control_OxidizedVar) / (df_out$Control_OxidizedArea^2)) + (df_out$TotalControlVar) / (df_out$TotalControlArea^2))
+
+  # Sum of Variances for Total Variance
+  df_out$TotalVariance <- df_out$VarianceSample + df_out$VarianceControl
+
+  # Calculation of Standard Deviation
+  df_out$SD <- sqrt(df_out$TotalVariance)
 
   # Return the final dataframe
   return(df_out)
 }
-
-
 
 
 Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
@@ -381,7 +457,6 @@ quant_graph_df_pep<- filtered_graphing_df_pep(graphing_df_pep)
 #Perform EOM Calculations at the residue level
 
 area_calculations_res <- function(df_in) {
-
   # Filter for mod_count 0 or 1
   df_out <- df_in %>%
     filter(mod_count == 0 | mod_count == 1) %>%
@@ -439,16 +514,58 @@ area_calculations_res <- function(df_in) {
     left_join(N_df, by = c("MasterProteinAccessions", "Sequence", "Res"))
 
   # Calculate standard deviation
-  sd_df <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, Res) %>%
-    summarize(sdprep = sd(`Precursor Abundance`, na.rm = TRUE), .groups = "drop")
+  #Calculate the oxidized variation
+  ox_var<- df_in %>%
+    filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized") %>%
+    group_by(MasterProteinAccessions, Sequence, Res, SampleControl, Condition) %>%
+    summarize(OxidizedVar = var(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Res", "Condition"),
+      names_from = c("SampleControl"),
+      values_from = "OxidizedVar",
+      values_fill = NA
+    )
+  # Rename columns
+  ox_var <- ox_var %>%
+    rename(
+      Control_OxidizedVar = Control,
+      Sample_OxidizedVar = Sample,
+    )
 
-  df_out <- df_out %>%
-    left_join(sd_df, by = c("MasterProteinAccessions", "Sequence", "Res")) %>%
-    mutate(SD = sdprep / (SampleTotalArea + ControlTotalArea + sdprep))
+  #Calculating Total Vairance
+  total_var <- df_in %>%
+    filter((mod_count == 0 | mod_count == 1)) %>%
+    group_by(MasterProteinAccessions, Sequence, SampleControl, Condition) %>%
+    summarize(TotalVar = var(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
+      names_from = c("SampleControl"),
+      values_from = "TotalVar",
+      values_fill = list(TotalVar = NA)
+    ) %>%
+    rename(
+      SampleTotalVar = Sample,
+      ControlTotalVar = Control
+    )
 
+
+
+  merged<- inner_join(total_var, ox_var , by = c("MasterProteinAccessions", "Sequence", "Condition"))
+  #merge variance data with df_out
+  df_out<- inner_join(df_out, merged, by = c("MasterProteinAccessions", "Sequence", "Res", "Condition"))
+  # Corrected formulas for Variance calculations in R
+  df_out$VarianceSample <- df_out$EOMSample^2 * (((df_out$Sample_OxidizedVar) / (df_out$SampleOxidizedArea^2)) + (df_out$SampleTotalVar) / (df_out$SampleTotalArea^2))
+  df_out$VarianceControl <- df_out$EOMControl^2 * (((df_out$Control_OxidizedVar) / (df_out$ControlOxidizedArea^2)) + (df_out$ControlTotalVar) / (df_out$ControlTotalArea^2))
+
+  # Sum of Variances for Total Variance
+  df_out$TotalVariance <- df_out$VarianceSample + df_out$VarianceControl
+
+  # Calculation of Standard Deviation
+  df_out$SD <- sqrt(df_out$TotalVariance)
   # Filter out rows with missing Res or EOM values
-  df_out <- df_out[complete.cases(df_out[c("Res", "EOM")]), ]
+  #df_out <- df_out[complete.cases(df_out[c("Res", "EOM")]), ]
+
+
 
   return(df_out)
 }
@@ -587,7 +704,6 @@ save_data_frames <- function(output_directory, ...) {
 save_data_frames(file_output, TotalsTable = TotalsTable, Areas_pep = Areas_pep, Areas_res = Areas_res, quant_graph_df_pep = quant_graph_df_pep, quant_graph_df_res = quant_graph_df_res, graphing_df_pep = graphing_df_pep, graphing_df_res=graphing_df_res)
 
 #### Saving Plots -----------------------------------------------------------------------
-# Creating a bar graph for each condition at the peptide level
 generate_grouped_bar_plot_pep <- function() {
   # Prompt the user to select the Excel file
   cat("Select the Excel file containing the data: ")
@@ -609,20 +725,28 @@ generate_grouped_bar_plot_pep <- function() {
   # Create a factor variable to represent the sorted order of conditions
   df_in$Condition <- factor(df_in$Condition, levels = unique_conditions)
 
-  # Prompt the user to specify the filename
-  cat("Enter the filename (without extension): ")
-  filename <- readline()
+  # Prompt the user to select the directory to save the bar graphs
+  cat("Select the directory to save the bar graphs: ")
+  base_dir <- choose.dir(default = "", caption = "Select directory to save the bar graphs")
 
-  # Remove any leading or trailing whitespace
-  filename <- trimws(filename)
+  # Prompt the user to specify the subdirectory name
+  cat("Enter the name for the new subdirectory (without spaces): ")
+  subdirectory_name <- readline()
+  subdirectory_name <- trimws(subdirectory_name)
+
+  # Create the output directory for bar graphs
+  graph_output_directory <- file.path(base_dir, subdirectory_name)
+  dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
 
   # Iterate over each protein and make a grouped bar plot for it
   for (protein in unique(df_in$MasterProteinAccessions)) {
     # Subset the dataframe for this protein
     temp <- subset(df_in, MasterProteinAccessions == protein)
 
-    # Generate a grouped bar plot of the extent of modification for each peptide
-    # that maps to this protein, with different conditions represented by color
+    # Calculate plot width based on number of peptides
+    plot_width <- max(6, min(length(unique(temp$peptide)) * 0.5, 20))
+
+    # Generate a grouped bar plot
     fig <- ggplot(temp, aes(x = peptide, y = EOM, fill = Condition)) +
       geom_bar(position = position_dodge(width = 0.9), stat = "identity") +
       geom_errorbar(aes(ymin = EOM - SD, ymax = EOM + SD), position = position_dodge(width = 0.9), width = 0.25) +
@@ -639,59 +763,59 @@ generate_grouped_bar_plot_pep <- function() {
             axis.title.x = element_text(margin = margin(t = 20))) +
       scale_fill_manual(values = condition_colors)
 
-    # Create the output directory for bar graphs based on the file output and excel filename
-    graph_output_directory <- file.path(file_output, paste0(filename, "_PeptideLevelGroupedBarGraphs"))
-    dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
-
-    # Generate the full file path for this protein and save the figure
+    # Save the figure
     file_out <- file.path(graph_output_directory, paste0(protein, ".png"))
-    ggsave(filename = file_out, plot = fig, device = "png")
+    ggsave(filename = file_out, plot = fig, device = "png", width = plot_width, height = 6)
 
     # Print a message to indicate successful saving
     cat("Grouped bar graph for", protein, "saved as", file_out, "\n")
   }
 }
 
+# To run the function
 generate_grouped_bar_plot_pep()
 
 
-
-# Generating grouped bar plot at the residue level
 generate_grouped_bar_plot_res <- function() {
   # Prompt the user to select the Excel file
-  cat("Select the Excel file containing the data: ")
+  cat("Select the Excel file containing the data:\n")
   filepath <- file.choose()
 
   # Load the data from the selected Excel file
   df_in <- readxl::read_excel(filepath)
 
-  # Arrange the dataframe by start
+  # Arrange the dataframe by protein
   df_in <- df_in %>%
-    arrange(start)
+    arrange(MasterProteinAccessions)
 
   # Auto-detect unique conditions
   unique_conditions <- unique(df_in$Condition)
 
-  # Manually specify blue colors for filling the bars
-  condition_colors <- c("#0570b0", "#3690c0", "#74a9cf", "#a6bddb", "#d0d1e6", "#084594", "#2171b5", "#4292c6", "#6baed6", "#9ecae1", "#c6dbef", "#08519c", "#3182bd", "#6baed6", "#9ecae1", "#c6dbef")
+  # Manually specify colors for filling the bars
+  condition_colors <- colorRampPalette(c("#0570b0", "#74a9cf", "#a6bddb", "#d0d1e6"))(length(unique_conditions))
 
-  # Create a factor variable to represent the sorted order of conditions
+  # Create a factor variable for conditions to ensure they appear in the same order across plots
   df_in$Condition <- factor(df_in$Condition, levels = unique_conditions)
 
-  # Prompt the user to specify the filename
-  cat("Enter the filename (without extension): ")
-  filename <- readline()
+  # Prompt the user to select the directory to save the bar graphs
+  cat("Select the directory to save the bar graphs:\n")
+  base_dir <- choose.dir(default = "", caption = "Select directory to save the bar graphs")
 
-  # Remove any leading or trailing whitespace
-  filename <- trimws(filename)
+  # Prompt the user to specify the subdirectory name
+  cat("Enter the name for the new subdirectory (without spaces): ")
+  subdirectory_name <- readline()
+  subdirectory_name <- trimws(subdirectory_name)
+
+  # Create the output directory for bar graphs
+  graph_output_directory <- file.path(base_dir, subdirectory_name)
+  dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
 
   # Iterate over each protein and make a grouped bar plot for it
   for (protein in unique(df_in$MasterProteinAccessions)) {
     # Subset the dataframe for this protein
     temp <- subset(df_in, MasterProteinAccessions == protein)
 
-    # Generate a grouped bar plot of the extent of modification for each peptide
-    # that maps to this protein, with different conditions represented by color
+    # Generate a grouped bar plot of the extent of modification for each residue
     fig <- ggplot(temp, aes(x = Res, y = EOM, fill = Condition)) +
       geom_bar(position = position_dodge(width = 0.9), stat = "identity") +
       geom_errorbar(aes(ymin = EOM - SD, ymax = EOM + SD), position = position_dodge(width = 0.9), width = 0.25) +
@@ -708,11 +832,7 @@ generate_grouped_bar_plot_res <- function() {
             axis.title.x = element_text(margin = margin(t = 20))) +
       scale_fill_manual(values = condition_colors)
 
-    # Create the output directory for bar graphs based on the file output and excel filename
-    graph_output_directory <- file.path(file_output, paste0(filename, "_ResidueLevelGroupedBarGraphs"))
-    dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
-
-    # Generate the full file path for this protein and save the figure
+    # Save the figure
     file_out <- file.path(graph_output_directory, paste0(protein, ".png"))
     ggsave(filename = file_out, plot = fig, device = "png")
 
@@ -721,7 +841,10 @@ generate_grouped_bar_plot_res <- function() {
   }
 }
 
+# To run the function
 generate_grouped_bar_plot_res()
+
+
 
 #Generate Venn Diagrams
 venn_diagram <- function() {
@@ -807,37 +930,26 @@ venn_diagram()
 #####
 #Counting modified peptides per protein and graphing
 
+library(readxl)
+library(dplyr)
+library(ggplot2)
+
 count_peptides_per_protein <- function() {
-  data_list <- list()
-  conditions <- c()
+  # User selects the input file
+  file_path <- file.choose()
+  data <- read_excel(file_path)
 
-  repeat {
-    file_path <- file.choose()
-    condition <- readline(prompt = "What condition does this data correspond to? ")
-    conditions <- c(conditions, condition)
-
-    data <- read_excel(file_path)
-
-    count_data <- data %>%
-      group_by(MasterProteinAccessions) %>%
-      summarise(SequenceCount = n()) %>%
-      ungroup()
-
-    data_list[[condition]] <- count_data
-
-    more_files <- readline(prompt = "Do you want to input another file? (yes/no) ")
-    if (tolower(more_files) != "yes") {
-      break
-    }
-  }
-
-  graph_title <- readline(prompt = "Enter the title for the Bar Graph: ")
-
-  combined_data <- bind_rows(data_list, .id = "Condition")
-  summary_data <- combined_data %>%
+  # Summarize data: Count peptides per protein grouped by condition
+  summary_data <- data %>%
+    group_by(MasterProteinAccessions, Condition) %>%
+    summarise(SequenceCount = n(), .groups = 'drop') %>%
     group_by(Condition, SequenceCount) %>%
     summarise(ProteinCount = n(), .groups = 'drop')
 
+  # User defines the title for the bar graph
+  graph_title <- readline(prompt = "Enter the title for the Bar Graph: ")
+
+  # Plotting the grouped bar graph
   p <- ggplot(summary_data, aes(x = SequenceCount, y = ProteinCount, fill = Condition)) +
     geom_bar(stat = "identity", position = "dodge") +
     labs(title = graph_title, x = "Number of Peptides per Protein", y = "Number of Proteins") +
@@ -852,59 +964,48 @@ count_peptides_per_protein <- function() {
 
   print(p)
 
+  # User chooses the output directory and filenames
   output_dir <- choose.dir(default = "", caption = "Select directory to save the count data and graph")
   file_name <- readline(prompt = "Enter the base name for the saved files (without extension): ")
 
-  output_file <- file.path(output_dir, paste0(file_name, ".xlsx"))
-  graph_file <- file.path(output_dir, paste0(file_name, ".png"))
+  # Save the data and graph
+  write_xlsx(summary_data, paste0(output_dir, "/", file_name, ".xlsx"))
+  ggsave(paste0(output_dir, "/", file_name, ".png"), plot = p, width = 10, height = 6)
 
-  write_xlsx(summary_data, output_file)
-  ggsave(graph_file, plot = p, width = 10, height = 6)
-
-  print(paste("Data saved to", output_file))
-  print(paste("Graph saved to", graph_file))
+  print(paste("Data saved to", paste0(output_dir, "/", file_name, ".xlsx")))
+  print(paste("Graph saved to", paste0(output_dir, "/", file_name, ".png")))
 }
 
 # To run the function
 count_peptides_per_protein()
+
 ####
 
 
 #Count Residues Per Protein
+library(readxl)
+library(dplyr)
+library(ggplot2)
+
 count_residue_entries_per_protein <- function() {
-  data_list <- list()
-  conditions <- c()
+  # User selects the input file
+  file_path <- file.choose()
+  data <- read_excel(file_path)
 
-  repeat {
-    file_path <- file.choose()
-    condition <- readline(prompt = "What condition does this data correspond to? ")
-    conditions <- c(conditions, condition)
+  # Ensure "Res" column contains non-NA values and only valid entries with numbers followed by letters
+  data <- data %>% filter(!is.na(Res) & grepl("^[A-Za-z][0-9]+", Res))
 
-    data <- read_excel(file_path)
-
-    # Ensure "Res" column contains non-NA values and only valid entries with numbers followed by letters
-    data <- data %>% filter(!is.na(Res) & grepl("^[A-Za-z][0-9]+", Res))
-
-    count_data <- data %>%
-      group_by(MasterProteinAccessions) %>%
-      summarise(ResidueEntryCount = n()) %>%
-      ungroup()
-
-    data_list[[condition]] <- count_data
-
-    more_files <- readline(prompt = "Do you want to input another file? (yes/no) ")
-    if (tolower(more_files) != "yes") {
-      break
-    }
-  }
-
-  graph_title <- readline(prompt = "Enter the title for the Bar Graph: ")
-
-  combined_data <- bind_rows(data_list, .id = "Condition")
-  summary_data <- combined_data %>%
+  # Count residue entries per protein for each condition
+  summary_data <- data %>%
+    group_by(MasterProteinAccessions, Condition) %>%
+    summarise(ResidueEntryCount = n(), .groups = 'drop') %>%
     group_by(Condition, ResidueEntryCount) %>%
     summarise(ProteinCount = n(), .groups = 'drop')
 
+  # User defines the title for the bar graph
+  graph_title <- readline(prompt = "Enter the title for the Bar Graph: ")
+
+  # Plotting the grouped bar graph
   p <- ggplot(summary_data, aes(x = ResidueEntryCount, y = ProteinCount, fill = Condition)) +
     geom_bar(stat = "identity", position = "dodge") +
     labs(title = graph_title, x = "Number of Residue Entries per Protein", y = "Number of Proteins") +
@@ -919,18 +1020,18 @@ count_residue_entries_per_protein <- function() {
 
   print(p)
 
+  # User chooses the output directory and filenames
   output_dir <- choose.dir(default = "", caption = "Select directory to save the count data and graph")
   file_name <- readline(prompt = "Enter the base name for the saved files (without extension): ")
 
-  output_file <- file.path(output_dir, paste0(file_name, ".xlsx"))
-  graph_file <- file.path(output_dir, paste0(file_name, ".png"))
+  # Save the data and graph
+  write_xlsx(summary_data, paste0(output_dir, "/", file_name, ".xlsx"))
+  ggsave(paste0(output_dir, "/", file_name, ".png"), plot = p, width = 10, height = 6)
 
-  write_xlsx(summary_data, output_file)
-  ggsave(graph_file, plot = p, width = 10, height = 6)
-
-  print(paste("Data saved to", output_file))
-  print(paste("Graph saved to", graph_file))
+  print(paste("Data saved to", paste0(output_dir, "/", file_name, ".xlsx")))
+  print(paste("Graph saved to", paste0(output_dir, "/", file_name, ".png")))
 }
 
 # To run the function
 count_residue_entries_per_protein()
+
