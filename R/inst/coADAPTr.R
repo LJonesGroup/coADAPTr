@@ -55,6 +55,54 @@ column_selection <- function(df) {
 
 pd_data <- column_selection(raw_data)
 
+rename_and_split_spectrum_files <- function(df_in) {
+  # Check if the "Spectrum File" column exists
+  if ("Spectrum File" %in% colnames(df_in)) {
+    # Extract the part before the first '.' to find unique files
+    df_in$FileIdentifier <- sapply(strsplit(as.character(df_in$`Spectrum File`), "\\."), `[`, 1)
+    unique_files <- unique(df_in$FileIdentifier)
+    cat("Unique File Identifiers detected:\n")
+    print(unique_files)
+
+    # Initialize a data frame to hold the mappings
+    mappings <- data.frame(Original = character(), SampleType = character(), Condition = character(), stringsAsFactors = FALSE)
+
+    # Loop through each unique file identifier
+    for (file in unique_files) {
+      response <- readline(prompt = paste("Enter new name for '", file, "' in the format 'Condition:SampleType': ", sep=""))
+      parts <- strsplit(response, ":")[[1]]
+      if (length(parts) == 2) {
+        # Append the mappings
+        mappings <- rbind(mappings, data.frame(Original = file, SampleType = parts[2], Condition = parts[1]))
+      } else {
+        cat("Invalid input. Skipping '", file, "'\n")
+      }
+    }
+
+    # Rename and assign based on mappings
+    if (nrow(mappings) > 0) {
+      # Map FileIdentifier to SampleType
+      df_in$SampleType <- df_in$FileIdentifier
+      for (i in 1:nrow(mappings)) {
+        df_in$SampleType[df_in$FileIdentifier == mappings$Original[i]] <- mappings$SampleType[i]
+        df_in$Condition[df_in$FileIdentifier == mappings$Original[i]] <- mappings$Condition[i]
+      }
+      # Optionally remove the temporary identifier column
+      df_in$FileIdentifier <- NULL
+      # Rename column after all mappings are applied
+      colnames(df_in)[colnames(df_in) == "Spectrum File"] <- "SampleType"
+    }
+  } else {
+    cat("'Spectrum File' column not found in the data frame.\n")
+  }
+
+  return(df_in)
+}
+
+# Usage:
+# cleaned_data should be your data frame variable
+modified_data <- rename_and_split_spectrum_files(pd_data)
+
 
 
 # Step 4 Identify which spectrum files correlate to Sample and Control
