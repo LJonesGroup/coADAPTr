@@ -235,7 +235,7 @@ area_calculations_pep <- function(df_in) {
   df_out$TotalSampleVar<- rowSums(test[, c("Sample_OxidizedVar", "Sample_UnoxidizedVar")], na.rm = TRUE)
   df_out$TotalControlVar<- rowSums(test[, c("Control_OxidizedVar", "Control_UnoxidizedVar")], na.rm = TRUE)
 
-  #Calculating Total Valiance
+  #Calculating Total Variance
   test2 <- df_in %>%
     group_by(MasterProteinAccessions, Sequence, SampleControl, Condition) %>%
     reframe(TotalArea = var(`Precursor Abundance`, na.rm = TRUE)) %>%
@@ -273,7 +273,7 @@ area_calculations_pep <- function(df_in) {
 }
 
 
-Areas_pep<- area_calculations_pepp(pd_data_fasta_merged)
+Areas_pep<- area_calculations_pep(pd_data_fasta_merged)
 
 
 
@@ -353,25 +353,45 @@ area_calculations_resss <- function(df_in) {
     left_join(N_df, by = c("MasterProteinAccessions", "Sequence", "Res"))
 
   # Calculate standard deviation
-  sd_df <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, Res) %>%
-    summarize(sdprep = sd(`Precursor Abundance`, na.rm = TRUE), .groups = "drop")
+  #Calculate the oxidized variation
+  ox_var<- df_in %>%
+    filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized") %>%
+    group_by(MasterProteinAccessions, Sequence, Res, SampleControl, Condition) %>%
+    summarize(OxidizedVar = var(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
+    pivot_wider(
+      id_cols = c("MasterProteinAccessions", "Sequence", "Res", "Condition"),
+      names_from = c("SampleControl"),
+      values_from = "OxidizedVar",
+      values_fill = NA
+    )
+  # Rename columns
+  ox_var <- ox_var %>%
+    rename(
+      Control_OxidizedVar = Control,
+      Sample_OxidizedVar = Sample,
+    )
 
-  df_out <- df_out %>%
-    left_join(sd_df, by = c("MasterProteinAccessions", "Sequence", "Res")) %>%
-    mutate(SD = sdprep / (SampleTotalArea + ControlTotalArea + sdprep))
+
+  df_out <- full_join(df_out, ox_var, by = c("MasterProteinAccessions", "Sequence", "Res", "Condition"))
+
+
 
   # Filter out rows with missing Res or EOM values
-  df_out <- df_out[complete.cases(df_out[c("Res", "EOM")]), ]
+  #df_out <- df_out[complete.cases(df_out[c("Res", "EOM")]), ]
+
+
 
   return(df_out)
 }
 
-testresiduefunction<- area_calculations_resss(pd_data_fasta_merged)
+Areas_res<- area_calculations_resss(pd_data_fasta_merged)
 
 #####TESTING RES LEVEL SD
 
+#Calculate the Total Variation
+# Calculate Total Variance
 
+######################
 #Calculate Variance and Standard Variation
 # Group by the necessary columns including 'Condition'
 RESSDTEST <- function(df_in) {
@@ -412,18 +432,18 @@ RESSDTESTall <- function(df_in) {
       values_fill = NA
     )
   # Rename columns
-  #df_out <- df_out %>%
-    #rename(
-     # Control_OxidizedVar = Control,
-      #Sample_OxidizedVar = Sample,
+  df_out <- df_out %>%
+    rename(
+      Control_OxidizedVar = Control,
+      Sample_OxidizedVar = Sample,
 
-    #)
+    )
 
 
   # Return the final dataframe
   return(df_out)
 }
-sdtestunox_all<- RESSDTEST(pd_data_fasta_merged)
+sdtestunox_all<- RESSDTESTall(pd_data_fasta_merged)
 
 
 #TESTING RES SD
