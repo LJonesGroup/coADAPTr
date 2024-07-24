@@ -77,7 +77,7 @@ import_data <- function() {
   return(df)
 }
 
-pd_data<-import_data()
+raw_data<-import_data()
 
 
 # Set output directory
@@ -90,7 +90,7 @@ file_output <- output_folder()
 
 #Calculate Total Abundance (denominator)
 # Function to sum selected TMT abundance columns and calculate true abundances
-sum_and_calculate_abundances <- function(data) {
+sum_and_calculate_abundancesTMT <- function(data) {
   # Function to prompt for column selection within the main function
   select_tmt_abundance_columns <- function() {
     col_names <- colnames(data)
@@ -125,13 +125,13 @@ sum_and_calculate_abundances <- function(data) {
 
 # Usage:
 # Assume 'pd_data' is your data frame variable
-pd_data <- sum_and_calculate_abundances(pd_data)
+TMT_data <- sum_and_calculate_abundancesTMT(raw_data)
 
 
 
 
 #Extract Necessary Columns
-column_selection <- function(df) {
+column_selectionTMT <- function(df) {
   refined_data <- data.frame(matrix(ncol = 0, nrow = nrow(df)))  # Initialize an empty data frame with the same number of rows as df
   col_names <- colnames(df)
 
@@ -168,7 +168,7 @@ column_selection <- function(df) {
 
 # Usage:
 # Assume 'raw_data' is your data frame variable
-Selected_data <- column_selection(pd_data)
+selected_data <- column_selectionTMT(TMT_data)
 
 
 
@@ -186,7 +186,7 @@ rename_columns_interactively <- function(data) {
 
   # Loop through selected columns and rename them
   for (col in selected_columns) {
-    new_name <- readline(prompt = paste("Enter new name for column", col, "in the format Condition:SampleType: "))
+    new_name <- readline(prompt = paste("Enter new name for column", col, "in the format Condition:SampleType(L or NL): "))
     # Rename the column
     colnames(data)[colnames(data) == col] <- new_name
   }
@@ -195,7 +195,7 @@ rename_columns_interactively <- function(data) {
 }
 
 
-renamed_data <- rename_columns_interactively(Selected_data)
+renamed_data <- rename_columns_interactively(selected_data)
 
 # Transform the data in the column into rows
 
