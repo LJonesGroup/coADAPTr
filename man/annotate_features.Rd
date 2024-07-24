@@ -17,5 +17,5 @@ A modified data frame with appropriate modification to the raw data
 Perform Annotation of Raw Data (Step 6)
 }
 \examples{
-newdf<- annotate_features(raw_data)
+modified_data_annotated <- annotate_features(modified_data)
 }

@@ -1,14 +1,10 @@
-#' Create a Grouped Bar Graph for Peptide Level Analysis of Different Conditions
-#'(Step 18B)
+
+#' Generate and Save Grouped Bar Graphs for Each Modified Residue Per Condition
 #'
-#' @param df_in The user selected data frame containing the peptide level analysis data
-#' @param file_output The user defined directory to save the grouped bar graphs
-#' @param filename The user defined file name to use for the grouped bar graphs
-#'
-#' @return A grouped bar graph for each protein in the data frame
+#' @return Grouped bar graphs for each modified residue in the data frame per condition
 #' @export
 #'
-#' @examples generate_grouped_bar_plot_res(df_in, file_output, filename)
+#' @examples generate_grouped_bar_plot_res()
 #' @aliases generate_grouped_bar_plot_res
 generate_grouped_bar_plot_res <- function() {
   # Prompt the user to select the Excel file

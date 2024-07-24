@@ -15,7 +15,7 @@ file_output<- output_folder()
 raw_data<- import_data()
 
 ######TESTING SELECTION FUNCTION
-column_selection <- function(df) {
+column_selectionLFQ <- function(df) {
   refined_data <- data.frame(matrix(ncol = 0, nrow = nrow(df)))  # Initialize an empty data frame with the same number of rows as df
   col_names <- colnames(df)
 
@@ -53,7 +53,7 @@ column_selection <- function(df) {
 }
 
 
-Selected_data <- column_selection(raw_data)
+Selected_data <- column_selectionLFQ(raw_data)
 
 rename_and_split_spectrum_files <- function(df_in) {
   # Check if the "Spectrum File" column exists
@@ -69,7 +69,7 @@ rename_and_split_spectrum_files <- function(df_in) {
 
     # Loop through each unique file identifier
     for (file in unique_files) {
-      response <- readline(prompt = paste("Enter new name for '", file, "' in the format 'Condition:SampleType': ", sep=""))
+      response <- readline(prompt = paste("Enter new name for '", file, "' in the format 'Condition:SampleType(L or NL)': ", sep=""))
       parts <- strsplit(response, ":")[[1]]
       if (length(parts) == 2) {
         # Append the mappings
@@ -225,9 +225,6 @@ area_calculations_pep <- function(df_in) {
       Sample_UnoxidizedArea = Sample_Unoxidized
     )
 
-  # Replace NA values with 0 where applicable
-  #df_out$Control_OxidizedArea <- ifelse(df_out$Control_UnoxidizedArea > 0 & is.na(df_out$Control_OxidizedArea), 0, df_out$Control_OxidizedArea)
-  #df_out$Sample_UnoxidizedArea <- ifelse(df_out$Sample_OxidizedArea > 0 & is.na(df_out$Sample_UnoxidizedArea), 0, df_out$Sample_UnoxidizedArea)
 
   # Calculate Total Areas
   df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")], na.rm = TRUE)
@@ -333,7 +330,7 @@ quant_graph_df_pep<- filtered_graphing_df_pep(graphing_df_pep)
 #Residue Level-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #Step 13 Calculating the total peptide areas and the extent of modification at the residue level
 
-area_calculations_resss <- function(df_in) {
+area_calculations_res <- function(df_in) {
 
   # Filter for mod_count 0 or 1
   df_out <- df_in %>%
@@ -448,7 +445,7 @@ area_calculations_resss <- function(df_in) {
   return(df_out)
 }
 
-Areas_res<- area_calculations_resss(mod_data_fasta_merged)
+Areas_res<- area_calculations_res(mod_data_fasta_merged)
 
 
 

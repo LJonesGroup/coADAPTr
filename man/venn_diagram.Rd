@@ -7,7 +7,7 @@
 venn_diagram()
 }
 \value{
-A Venn diagram plot saved as a PNG file
+A Venn diagram plot of the modified protein lists per condition saved as a PNG file
 }
 \description{
 Create and Save a Venn Diagram Plot (Step 17)

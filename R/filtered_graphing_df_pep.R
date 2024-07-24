@@ -9,7 +9,7 @@
 #' @aliases filtered_graphing_df_pep
 #'
 filtered_graphing_df_pep <- function(df_in) {
-  df_out = df_in[df_in$EOM > 0 & df_in$EOM > df_in$SD & df_in$N > 4, ]
+  df_out = df_in[df_in$EOM > 0 & df_in$EOM > df_in$SD & df_in$N > 2, ]
   df_out<- df_out %>%
     arrange(start)
   df_out <- df_out[!is.na(df_out$MasterProteinAccessions), ]

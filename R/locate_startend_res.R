@@ -8,24 +8,31 @@
 #'
 #' @examples new_df <- locate_startend_res(raw_data)
 #' @aliases locate_startend_res
-locate_startend_res <- function(raw_data){
+locate_startend_res <- function(raw_data, FASTA){
 
-  uniqueMPA <- unique(raw_data[, c("Master Protein Accessions",'Sequence')])
-  uniqueMPA <- as.data.frame(uniqueMPA)
+  # Merge raw_data with FASTA by UniprotID
+  raw_data <- merge(raw_data, FASTA, by = "UniprotID", all.x = TRUE)
 
-  raw_data <- merge(raw_data, FASTA, by = "UniprotID")
-
+  # Locate the start and end of the sequence within the protein sequence
   index <- str_locate(raw_data$protein_sequence, raw_data$Sequence)
   raw_data <- cbind(raw_data, index)
 
-  raw_data$peptide<- paste(raw_data$start,"-", raw_data$end)
+  # Create peptide column
+  raw_data$peptide <- paste(raw_data$start, "-", raw_data$end, sep = "")
 
+  # Count the number of modifications
   raw_data$mod_count <- str_count(raw_data$Modifications, "\\(.*?\\)")
   raw_data$mod_count <- ifelse(raw_data$MOD == "Unoxidized", 0, raw_data$mod_count)
 
-  raw_data$mod_res <- ifelse(raw_data$ModPositionN>0, raw_data$start + raw_data$ModPositionN - 1, NA)
+  # Convert ModPositionN and start to numeric
+  raw_data$ModPositionN <- as.numeric(raw_data$ModPositionN)
+  raw_data$start <- as.numeric(raw_data$start)
 
-  raw_data$Res<- paste(raw_data$ModPositionL, raw_data$mod_res)
+  # Calculate modified residue positions
+  raw_data$mod_res <- ifelse(!is.na(raw_data$ModPositionN) & raw_data$ModPositionN > 0, raw_data$start + raw_data$ModPositionN - 1, NA)
+
+  # Create the Res column
+  raw_data$Res <- paste(raw_data$ModPositionL, raw_data$mod_res, sep = "")
 
   return(raw_data)
 }

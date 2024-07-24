@@ -4,7 +4,7 @@
 \alias{locate_startend_res}
 \title{Locate the Start and End Residue of a Peptide (Step 8)}
 \usage{
-locate_startend_res(raw_data)
+locate_startend_res(raw_data, FASTA)
 }
 \arguments{
 \item{raw_data}{Annotated data frame to map peptide locations on

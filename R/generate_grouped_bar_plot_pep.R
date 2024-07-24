@@ -1,18 +1,14 @@
-#' Create a Grouped Bar Graph for Peptide Level Analysis of Different Conditions
-#'(Step 18A)
+
+#' Generate and Save Grouped Bar Plots for Each Modified Peptide Per Condition
 #'
-#' @param df_in The user selected data frame containing the peptide level analysis data
-#' @param file_output The user defined directory to save the grouped bar graphs
-#' @param filename The user defined file name to use for the grouped bar graphs
-#'
-#' @return A grouped bar graph for each protein in the data frame
+#' @return Grouped bar graphs for each protein in the data frame per condition
 #' @export
 #'
-#' @examples generate_grouped_bar_plot_pep(df_in, file_output, filename)
+#' @examples generate_grouped_bar_plot_pep()
 #' @aliases generate_grouped_bar_plot_pep
 generate_grouped_bar_plot_pep <- function() {
   # Prompt the user to select the Excel file
-  cat("Select the Excel file containing the data: ")
+  cat("Select the Excel file containing the quantified peptide level data data: ")
   filepath <- file.choose()
 
   # Load the data from the selected Excel file
@@ -56,7 +52,9 @@ generate_grouped_bar_plot_pep <- function() {
       theme(text = element_text(size = 18, family = "sans"),
             plot.title = element_text(hjust = 0.5, size = 20, family = "sans", face = "bold"),
             legend.text = element_text(size = 16, family = "sans"),
-            legend.title = element_text(size = 18, family = "sans")) +
+            legend.title = element_text(size = 18, family = "sans"),
+            axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 1),
+            axis.title.x = element_text(margin = margin(t = 20))) +
       scale_fill_manual(values = condition_colors)
 
     # Create the output directory for bar graphs based on the file output and excel filename
@@ -71,4 +69,3 @@ generate_grouped_bar_plot_pep <- function() {
     cat("Grouped bar graph for", protein, "saved as", file_out, "\n")
   }
 }
-
