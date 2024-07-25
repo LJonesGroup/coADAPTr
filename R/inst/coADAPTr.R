@@ -1,203 +1,58 @@
+# Setting Up ----------------------------------------------------------------------------------------------------
 #Before Analyzing your data be sure to run this function to install necessary
-#Packages and resolve package conflicts.
+#Packages, resolve package conflicts, import required data, and select result
+#output folders. Follow the console prompts and anticipate a File Explorer up.
 
 setup()
 
+# Removing PD Generated Duplicates ---------------------------------------------------------------------------------------------------
+#SKIP if PD 3.0>, Frag Pipe or FOXWare was used to search the data
+#Run this if MS files were analyzed via PD <3.0
+#PD Versions before 3.0 relied on a multi-level sequence searching algorithm
+#that created duplicate identifications for the same peptide since multiple Sequest HT nodes
+#were used to search the myriad of HRPF modifications
+
+#Save the original raw data frame as a reference
+OG_raw_data<-raw_data
+
+raw_data<- remove_dup(raw_data)
+
+#Check to ensure duplicated ID represented by different Sequest Nodes picking up the same MOD
+#are removed
+
 ###########################################################################
+
+#Preparation ----------------------------------------------------------------------------------------------------
 #Prepare the input data frame by selecting the relevant data, renaming the columns
 #appropriately, and searching the FASTA file against peptide spectral matches to
 #identify the start and end residues.
 
 LFQ_Prep()
 
-######TESTING SELECTION FUNCTION
-column_selectionLFQ <- function(df) {
-  refined_data <- data.frame(matrix(ncol = 0, nrow = nrow(df)))  # Initialize an empty data frame with the same number of rows as df
-  col_names <- colnames(df)
-
-  # Function to prompt for column selection
-  select_column <- function(prompt) {
-    cat(prompt, "\n")
-    selected_col <- select.list(
-      col_names,
-      multiple = FALSE,
-      title = prompt,
-      graphics = TRUE
-    )
-    if (!is.null(selected_col) && selected_col != "") {
-      return(selected_col)
-    } else {
-      stop("No column selected, exiting the function.")
-    }
-  }
-
-  # Prompt and select columns
-  seq_col <- select_column("Please select the column containing the peptide sequences (unannotated):")
-  acc_col <- select_column("Please select the column containing the Uniprot ID or master protein accessions:")
-  mod_col <- select_column("Please select the column containing the protein modifications:")
-  pre_col <- select_column("Please select the column containing precursor abundance/intensities:")
-  spe_col <- select_column("Please select the column containing the spectrum file IDs:")
-  cond_col <- select_column("Please select the column containing the experimental conditions:")
-
-  # Add selected columns to refined_data
-  refined_data <- cbind(refined_data, df[[seq_col]], df[[acc_col]], df[[mod_col]], df[[pre_col]], df[[spe_col]], df[[cond_col]])
-
-  # Rename columns
-  colnames(refined_data) <- c("Sequence", "Master Protein Accessions", "Modifications", "Precursor Abundance", "Spectrum File", "Condition")
-
-  return(refined_data)
-}
-
-
-selected_data <- column_selectionLFQ(raw_data)
-
-rename_and_split_spectrum_files <- function(df_in) {
-  # Check if the "Spectrum File" column exists
-  if ("Spectrum File" %in% colnames(df_in)) {
-    # Extract the part before the first '.' to find unique files
-    df_in$FileIdentifier <- sapply(strsplit(as.character(df_in$`Spectrum File`), "\\."), `[`, 1)
-    unique_files <- unique(df_in$FileIdentifier)
-    cat("Unique File Identifiers detected:\n")
-    print(unique_files)
-
-    # Initialize a data frame to hold the mappings
-    mappings <- data.frame(Original = character(), NewName = character(), Condition = character(), stringsAsFactors = FALSE)
-
-    # Loop through each unique file identifier
-    for (file in unique_files) {
-      response <- readline(prompt = paste("Enter new name for '", file, "' in the format 'Condition:SampleType(L or NL)': ", sep=""))
-      parts <- strsplit(response, ":")[[1]]
-      if (length(parts) == 2) {
-        # Append the mappings
-        mappings <- rbind(mappings, data.frame(Original = file, NewName = parts[2], Condition = parts[1]))
-      } else {
-        cat("Invalid input. Skipping '", file, "'\n")
-      }
-    }
-
-    # Rename and assign based on mappings
-    if (nrow(mappings) > 0) {
-      # Map FileIdentifier to NewName and Condition
-      for (i in 1:nrow(mappings)) {
-        df_in$`Spectrum File`[df_in$FileIdentifier == mappings$Original[i]] <- mappings$NewName[i]
-        df_in$Condition[df_in$FileIdentifier == mappings$Original[i]] <- mappings$Condition[i]
-      }
-      # Optionally remove the temporary identifier column
-      df_in$FileIdentifier <- NULL
-    }
-  } else {
-    cat("'Spectrum File' column not found in the data frame.\n")
-  }
-
-  return(df_in)
-}
-
-# Usage:
-# cleaned_data should be your data frame variable
-modified_data <- rename_and_split_spectrum_files(selected_data)
-
-
-
-
-
-# Step 4 Identify which spectrum files correlate to Sample and Control
-modified_data<- SampleControl(modified_data)
-modified_data<- SampleControl(Selected_data)
-
-# Step 5 Run this if MS files were analyzed via PD
-##Skip if running Test Data Set
-##Can remove duplicates in excel before using coADAPTr if desired
-
-OG_pd_data<-pd_data
-
-
-pd_data<- remove_dup(pd_data)
-
-# Raw Data Annotations and Parsing of the FASTA File-----------------------------------------------------------
-###########################################################################
-# Step 6 Clean and parse data from PD output file
-library(dplyr)
-annotate_features <- function(raw_data) {
-  raw_data <- raw_data %>%
-    mutate(`Master Protein Accessions` = sapply(strsplit(`Master Protein Accessions`, ";"), `[`, 1),
-           UniprotID = `Master Protein Accessions`)  # Adding this line to create the UniprotID column
-
-  # Rename Modifications column to Mods
-  raw_data <- raw_data %>%
-    rename(Mods = Modifications)
-
-  # Remove specific modifications and clean up semicolons
-  raw_data <- raw_data %>%
-    mutate(Modifications = Mods) %>%
-    mutate(Modifications = gsub(";[A-Z]\\d+\\(Carbamidomethyl\\)", ";", Modifications)) %>%
-    mutate(Modifications = gsub("[A-Z]\\d+\\(Carbamidomethyl\\);", ";", Modifications)) %>%
-    mutate(Modifications = gsub("[A-Z]\\d+\\(Carbamidomethyl\\)", "", Modifications)) %>%
-    mutate(Modifications = gsub(";[A-Z]\\d+\\(TMT[^)]*\\)", ";", Modifications)) %>%
-    mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\);", ";", Modifications)) %>%
-    mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\)", "", Modifications)) %>%
-    mutate(Modifications = gsub("N-Term\\(Prot\\)\\(TMTpro\\);", "", Modifications)) %>%
-    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%
-    mutate(Modifications = gsub("^;|;$", "", Modifications))
-
-  # Cleanup: Remove leading, trailing, and multiple consecutive semicolons
-  raw_data <- raw_data %>%
-    mutate(Modifications = gsub("\\s*;\\s*", ";", Modifications)) %>%
-    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%
-    mutate(Modifications = gsub("^;|;$", "", Modifications))
-
-  # Determine if the sequence is oxidized or unoxidized
-  raw_data <- raw_data %>%
-    mutate(MOD = ifelse(is.na(Modifications) | Modifications == "" | Modifications == "NA" | Modifications == " ", "Unoxidized", "Oxidized"))
-
-  # Create ModPositionL and ModPositionN columns
-  raw_data <- raw_data %>%
-    mutate(ModPositionL = ifelse(nchar(Modifications) > 0, gsub(".*?([A-Za-z]).*", "\\1", Modifications), NA)) %>%
-    mutate(ModPositionN = ifelse(nchar(Modifications) > 0, gsub(".*?(\\d+).*", "\\1", Modifications), NA))
-
-  return(raw_data)
-}
-
-# Usage:
-# Assume 'modified_data' is your data frame variable
-modified_data_annotated <- annotate_features(modified_data)
-
-# Step 7 Parse the FASTA file for later manipulations
-FASTA<- parse_fasta(FASTA)
-
-# Step 8 Locate the residue number for the peptide termini and residues
-locate_startend_res <- function(raw_data, FASTA){
-
-  # Merge raw_data with FASTA by UniprotID
-  raw_data <- merge(raw_data, FASTA, by = "UniprotID", all.x = TRUE)
-
-  # Locate the start and end of the sequence within the protein sequence
-  index <- str_locate(raw_data$protein_sequence, raw_data$Sequence)
-  raw_data <- cbind(raw_data, index)
-
-  # Create peptide column
-  raw_data$peptide <- paste(raw_data$start, "-", raw_data$end, sep = "")
-
-  # Count the number of modifications
-  raw_data$mod_count <- str_count(raw_data$Modifications, "\\(.*?\\)")
-  raw_data$mod_count <- ifelse(raw_data$MOD == "Unoxidized", 0, raw_data$mod_count)
-
-  # Convert ModPositionN and start to numeric
-  raw_data$ModPositionN <- as.numeric(raw_data$ModPositionN)
-  raw_data$start <- as.numeric(raw_data$start)
-
-  # Calculate modified residue positions
-  raw_data$mod_res <- ifelse(!is.na(raw_data$ModPositionN) & raw_data$ModPositionN > 0, raw_data$start + raw_data$ModPositionN - 1, NA)
-
-  # Create the Res column
-  raw_data$Res <- paste(raw_data$ModPositionL, raw_data$mod_res, sep = "")
-
-  return(raw_data)
-}
-
-mod_data_fasta_merged<- locate_startend_res(modified_data_annotated, FASTA)
 
 # FPOP Calculations ---------------------------------------------------------------------------------------------
-# Step 9 Calculating the total peptide areas and the extent of modification at the peptide level
+FPOP_Calculations<- function() {
+  #Calculate the Extent of Modification (EOM) and SD (Variance) at the peptide level
+  Areas_pep<<- area_calculations_pep(mod_data_fasta_merged)
+
+  #Merge metadata with numeric graphing data
+  graphing_df_pep<<- merge_metadata_pep(Areas_pep, mod_data_fasta_merged)
+
+  #Filter Peptide Level Graphical Data to include data that is acceptable
+  quant_graph_df_pep<<- filtered_graphing_df_pep(graphing_df_pep)
+
+  #Calculate the Extent of Modification (EOM) and SD (Variance) at the residue level
+  Areas_res<<- area_calculations_res(mod_data_fasta_merged)
+
+  #Subset sequence metadata like residue start/stop for residue level data
+  graphing_df_res<<- graphing_data_res(Areas_res, mod_data_fasta_merged)
+
+  #Filter Residue Level Graphical Data to include data that is acceptable
+  quant_graph_df_res<<- filtered_graphing_df_res(graphing_df_res)
+
+}
+
+FPOP_Calculations()
 
 area_calculations_pep <- function(df_in) {
   # Group by the necessary columns including 'Condition'
