@@ -1,19 +1,14 @@
-##Before Analyzing your data be sure to run this function to install necessary Packages
-# and resolve package conflicts.
+#Before Analyzing your data be sure to run this function to install necessary
+#Packages and resolve package conflicts.
 
 setup()
 
 ###########################################################################
+#Prepare the input data frame by selecting the relevant data, renaming the columns
+#appropriately, and searching the FASTA file against peptide spectral matches to
+#identify the start and end residues.
 
-# Step 1-Read in required inputs
-
-
-# Step-2 Set output directory
-
-
-# Step-3 Read in data from Proteome Discoverer
-
-
+LFQ_Prep()
 
 ######TESTING SELECTION FUNCTION
 column_selectionLFQ <- function(df) {
@@ -54,7 +49,7 @@ column_selectionLFQ <- function(df) {
 }
 
 
-Selected_data <- column_selectionLFQ(raw_data)
+selected_data <- column_selectionLFQ(raw_data)
 
 rename_and_split_spectrum_files <- function(df_in) {
   # Check if the "Spectrum File" column exists
@@ -99,7 +94,7 @@ rename_and_split_spectrum_files <- function(df_in) {
 
 # Usage:
 # cleaned_data should be your data frame variable
-modified_data <- rename_and_split_spectrum_files(Selected_data)
+modified_data <- rename_and_split_spectrum_files(selected_data)
 
 
 
