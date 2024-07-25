@@ -1,11 +1,5 @@
 ##Before Analyzing your data be sure to run this function to install necessary Packages
 # and resolve package conflicts.
-setup <- function() {
-  before_beginning()
-  raw_data<- import_data()
-  file_output<- output_folder()
-  FASTA<- FASTA_file()
-}
 
 setup()
 
