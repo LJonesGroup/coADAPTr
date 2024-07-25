@@ -7,8 +7,10 @@
 #' @examples HumanFASTA <- FASTA_file(file.fasta)
 #' @aliases FASTA_file
 FASTA_file <- function() {
+  cat("Please select the FASTA file associated with your data: \n")
   FASTA_path <- file.choose()
   FASTA <- read.fasta(FASTA_path)
   return(FASTA)
 }
+
 

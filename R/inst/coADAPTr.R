@@ -1,18 +1,25 @@
 ##Before Analyzing your data be sure to run this function to install necessary Packages
 # and resolve package conflicts.
-before_beginning()
+setup <- function() {
+  before_beginning()
+  raw_data<- import_data()
+  file_output<- output_folder()
+  FASTA<- FASTA_file()
+}
+
+setup()
 
 ###########################################################################
 
 # Step 1-Read in required inputs
-FASTA<- FASTA_file()
+
 
 # Step-2 Set output directory
-file_output<- output_folder()
+
 
 # Step-3 Read in data from Proteome Discoverer
 
-raw_data<- import_data()
+
 
 ######TESTING SELECTION FUNCTION
 column_selectionLFQ <- function(df) {
