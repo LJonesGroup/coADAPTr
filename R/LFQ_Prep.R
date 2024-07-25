@@ -16,10 +16,10 @@ LFQ_Prep <- function() {
   #Identify Sample vs Control Files
   modified_data <<- SampleControl(modified_data)
   #Annotate Features in the Data
-  modified_data_annotated <- annotate_features(modified_data)
+  modified_data_annotated <<- annotate_features(modified_data)
   #Parse the FASTA file for later manipulations
-  FASTA<- parse_fasta(FASTA)
+  FASTA<<- parse_fasta(FASTA)
   #Locate the Start and End Residues for Each Peptide
-  mod_data_fasta_merged<- locate_startend_res(modified_data_annotated, FASTA)
+  mod_data_fasta_merged<<- locate_startend_res(modified_data_annotated, FASTA)
 }
 
