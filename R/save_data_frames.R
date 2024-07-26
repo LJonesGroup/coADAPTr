@@ -13,7 +13,7 @@
 #'
 save_data_frames <- function(output_directory, ...) {
   # Prompt the user to input the file name
-  cat("Enter the file name (without extension): ")
+  cat("Enter the file name for the resulting tables of data that were generated during analysis (without extension): ")
   file_name <- readline()
 
   # Remove any leading or trailing whitespace
