@@ -20,8 +20,6 @@ raw_data<- remove_dup(raw_data)
 #Check to ensure duplicated ID represented by different Sequest Nodes picking up the same MOD
 #are removed
 
-###########################################################################
-
 #Preparation ----------------------------------------------------------------------------------------------------
 #Prepare the input data frame by selecting the relevant data, renaming the columns
 #appropriately, and searching the FASTA file against peptide spectral matches to
