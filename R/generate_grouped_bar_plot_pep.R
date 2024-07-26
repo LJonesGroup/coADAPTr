@@ -14,10 +14,6 @@ generate_grouped_bar_plot_pep <- function() {
   # Load the data from the selected Excel file
   df_in <- readxl::read_excel(filepath)
 
-  # Arrange the dataframe by start
-  df_in <- df_in %>%
-    arrange(start)
-
   # Auto-detect unique conditions
   unique_conditions <- unique(df_in$Condition)
 
@@ -28,11 +24,15 @@ generate_grouped_bar_plot_pep <- function() {
   df_in$Condition <- factor(df_in$Condition, levels = unique_conditions)
 
   # Prompt the user to specify the filename
-  cat("Enter the filename  for the peptide level data (without extension): ")
+  cat("Enter the filename for the peptide level data (without extension): ")
   filename <- readline()
 
   # Remove any leading or trailing whitespace
   filename <- trimws(filename)
+
+  # Arrange the dataframe by start
+  df_in <- df_in %>%
+    arrange(start)
 
   # Iterate over each protein and make a grouped bar plot for it
   for (protein in unique(df_in$MasterProteinAccessions)) {
@@ -58,12 +58,12 @@ generate_grouped_bar_plot_pep <- function() {
       scale_fill_manual(values = condition_colors)
 
     # Create the output directory for bar graphs based on the file output and excel filename
-    graph_output_directory <- file.path(file_output, paste0(filename, "_PeptideLevelGroupedBarGraphs"))
+    graph_output_directory <- file.path(dirname(filepath), paste0(filename, "_PeptideLevelGroupedBarGraphs"))
     dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
 
     # Generate the full file path for this protein and save the figure
     file_out <- file.path(graph_output_directory, paste0(protein, ".png"))
-    ggsave(filename = file_out, plot = fig, device = "png")
+    ggsave(filename = file_out, plot = fig, device = "png", width = 10, height = 8, dpi = 300)
 
     # Print a message to indicate successful saving
     cat("Grouped bar graph for", protein, "saved as", file_out, "\n")
