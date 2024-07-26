@@ -9,6 +9,7 @@ count_peptides_per_protein <- function() {
   data_list <- list()
 
   repeat {
+    message("Please select the file corresponding to quantifiable peptide level data:")
     file_path <- file.choose()
     data <- read_excel(file_path)
 
@@ -35,7 +36,14 @@ count_peptides_per_protein <- function() {
   p <- ggplot(summary_data, aes(x = SequenceCount, y = ProteinCount, fill = Condition)) +
     geom_bar(stat = "identity", position = "dodge") +
     labs(title = graph_title, x = "Number of Peptides per Protein", y = "Number of Proteins") +
-    theme_minimal()
+    theme_minimal(base_size = 15) +
+    theme(panel.background = element_rect(fill = "white", colour = NA),
+          plot.background = element_rect(fill = "white", colour = NA),
+          legend.background = element_rect(fill = "white", colour = NA),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.border = element_blank(),
+          plot.title = element_text(hjust = 0.5, size = 20))
 
   print(p)
 
