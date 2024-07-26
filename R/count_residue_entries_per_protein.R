@@ -1,0 +1,55 @@
+
+#' Count the Modified Residues Per Protein
+#'
+#' @return An excel file of modified residues per protein and a bar graph of the data
+#' @export
+#'
+#' @examples count_residue_entries_per_protein()
+#' @aliases count_residue_entries_per_protein
+count_residue_entries_per_protein <- function() {
+  data_list <- list()
+
+  repeat {
+    file_path <- file.choose()
+    data <- read_excel(file_path)
+
+    # Filter data and count residues per protein
+    data <- data %>%
+      filter(!is.na(Res) & grepl("^[A-Za-z][0-9]+", Res)) %>%
+      group_by(MasterProteinAccessions, Condition) %>%
+      summarise(ResidueEntryCount = n(), .groups = 'drop')
+
+    data_list <- append(data_list, list(data))
+
+    more_files <- readline(prompt = "Do you want to input another file? (yes/no) ")
+    if (tolower(more_files) != "yes") {
+      break
+    }
+  }
+
+  combined_data <- bind_rows(data_list)
+  summary_data <- combined_data %>%
+    group_by(Condition, ResidueEntryCount) %>%
+    summarise(ProteinCount = n(), .groups = 'drop')
+
+  graph_title <- readline(prompt = "Enter the title for the Modified Residues Per Protein Bar Graph: ")
+
+  p <- ggplot(summary_data, aes(x = ResidueEntryCount, y = ProteinCount, fill = Condition)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(title = graph_title, x = "Number of Residue Entries per Protein", y = "Number of Proteins") +
+    theme_minimal()
+
+  print(p)
+
+  output_dir <- choose.dir(default = "", caption = "Select directory to save the count data and graph")
+  file_name <- readline(prompt = "Enter the base name for modified residues per protein files (without extension): ")
+
+  output_file <- file.path(output_dir, paste0(file_name, ".xlsx"))
+  graph_file <- file.path(output_dir, paste0(file_name, ".png"))
+
+  write_xlsx(summary_data, output_file)
+  ggsave(graph_file, plot = p, width = 10, height = 6)
+
+  print(paste("Data saved to", output_file))
+  print(paste("Graph saved to", graph_file))
+}

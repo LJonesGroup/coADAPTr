@@ -31,439 +31,19 @@ LFQ_Prep()
 
 
 # FPOP Calculations ---------------------------------------------------------------------------------------------
-FPOP_Calculations<- function() {
-  #Calculate the Extent of Modification (EOM) and SD (Variance) at the peptide level
-  Areas_pep<<- area_calculations_pep(mod_data_fasta_merged)
-
-  #Merge metadata with numeric graphing data
-  graphing_df_pep<<- merge_metadata_pep(Areas_pep, mod_data_fasta_merged)
-
-  #Filter Peptide Level Graphical Data to include data that is acceptable
-  quant_graph_df_pep<<- filtered_graphing_df_pep(graphing_df_pep)
-
-  #Calculate the Extent of Modification (EOM) and SD (Variance) at the residue level
-  Areas_res<<- area_calculations_res(mod_data_fasta_merged)
-
-  #Subset sequence metadata like residue start/stop for residue level data
-  graphing_df_res<<- graphing_data_res(Areas_res, mod_data_fasta_merged)
-
-  #Filter Residue Level Graphical Data to include data that is acceptable
-  quant_graph_df_res<<- filtered_graphing_df_res(graphing_df_res)
-
-}
+#Calculate the Extent of Modification (EOM) for each peptide and residue based on the LFQ data
+#quant_graph_df containing all of the data that is acceptable for graphing
+#Areas_pep and Areas_res contain the data that is used to calculate the EOM and will
+#contain all data. This includes cases where the EOM could be negative (high background oxidation)
+#or the SD is greater than the EOM (data has a high variance-likely due to experimental conditions)
 
 FPOP_Calculations()
 
-area_calculations_pep <- function(df_in) {
-  # Group by the necessary columns including 'Condition'
-  df_out <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
-    reframe(TotalArea = sum(`Precursor Abundance`, na.rm = TRUE)) %>%
-    ungroup() %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
-      names_from = c("SampleControl", "MOD"),
-      values_from = "TotalArea",
-      values_fill = NA
-    )
+#Saving Tables and Plots------------------------------------------------------------------------------------------------------------
+#Save data frames as Excel files and save grouped bar from the plots as PNG files
 
-  # Rename columns
-  df_out <- df_out %>%
-    rename(
-      Control_OxidizedArea = Control_Oxidized,
-      Control_UnoxidizedArea = Control_Unoxidized,
-      Sample_OxidizedArea = Sample_Oxidized,
-      Sample_UnoxidizedArea = Sample_Unoxidized
-    )
+Tables_and_Graphs()
 
-
-  # Calculate Total Areas
-  df_out$TotalSampleArea <- rowSums(df_out[, c("Sample_OxidizedArea", "Sample_UnoxidizedArea")], na.rm = TRUE)
-  df_out$TotalControlArea <- rowSums(df_out[, c("Control_OxidizedArea", "Control_UnoxidizedArea")], na.rm = TRUE)
-
-  # Calculate EOM values
-  df_out$EOMSample <- df_out$Sample_OxidizedArea / df_out$TotalSampleArea
-  df_out$EOMControl <- df_out$Control_OxidizedArea / df_out$TotalControlArea
-  df_out$EOM <- df_out$EOMSample - df_out$EOMControl
-
-  # Calculate count (N)
-  df_out <- df_out %>%
-    left_join(df_in %>%
-                group_by(MasterProteinAccessions, Sequence, Condition) %>%
-                summarize(N = n()),
-              by = c("MasterProteinAccessions", "Sequence", "Condition"))
-
-  #Calculate Variance and Standard Variation
-  # Group by the necessary columns including 'Condition'
-  test <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
-    reframe(TotalVar = var(`Precursor Abundance`, na.rm = TRUE)) %>%
-    ungroup() %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
-      names_from = c("SampleControl", "MOD"),
-      values_from = "TotalVar",
-      values_fill = NA
-    )
-
-  # Rename columns
-  test <- test %>%
-    rename(
-      Control_OxidizedVar = Control_Oxidized,
-      Control_UnoxidizedVar = Control_Unoxidized,
-      Sample_OxidizedVar = Sample_Oxidized,
-      Sample_UnoxidizedVar = Sample_Unoxidized
-    )
-
-  df_out$Control_OxidizedVar<- test$Control_OxidizedVar
-  df_out$Control_UnoxidizedVar<- test$Control_UnoxidizedVar
-  df_out$Sample_OxidizedVar<- test$Sample_OxidizedVar
-  df_out$Sample_UnoxidizedVar<- test$Sample_UnoxidizedVar
-  df_out$TotalSampleVar<- rowSums(test[, c("Sample_OxidizedVar", "Sample_UnoxidizedVar")], na.rm = TRUE)
-  df_out$TotalControlVar<- rowSums(test[, c("Control_OxidizedVar", "Control_UnoxidizedVar")], na.rm = TRUE)
-
-  #Calculating Total Variance
-  test2 <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, SampleControl, Condition) %>%
-    reframe(TotalArea = var(`Precursor Abundance`, na.rm = TRUE)) %>%
-    ungroup() %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
-      names_from = c("SampleControl"),
-      values_from = "TotalArea",
-      values_fill = NA
-    )
-
-  # Rename columns
-  test2 <- test2 %>%
-    rename(
-      Sample_TotalVar = Sample,
-      Control_TotalVar = Control,
-
-    )
-  df_out$Sample_TotalVar<- test2$Sample_TotalVar
-  df_out$Control_TotalVar<- test2$Control_TotalVar
-
-
-  # Corrected formulas for Variance calculations in R
-  df_out$VarianceSample <- df_out$EOMSample^2 * (((df_out$Sample_OxidizedVar) / (df_out$Sample_OxidizedArea^2)) + (df_out$TotalSampleVar) / (df_out$TotalSampleArea^2))
-  df_out$VarianceControl <- df_out$EOMControl^2 * (((df_out$Control_OxidizedVar) / (df_out$Control_OxidizedArea^2)) + (df_out$TotalControlVar) / (df_out$TotalControlArea^2))
-
-  # Sum of Variances for Total Variance
-  df_out$TotalVariance <- df_out$VarianceSample + df_out$VarianceControl
-
-  # Calculation of Standard Deviation
-  df_out$SD <- sqrt(df_out$TotalVariance)
-
-  # Return the final dataframe
-  return(df_out)
-}
-
-
-Areas_pep<- area_calculations_pep(mod_data_fasta_merged)
-
-
-
-
-# Step 10 Subset sequence metadata like residue start/stop
-##(grab_seq_metadata_pep SKIP-Used in graphing_df_pep)
-
-# Step 11 Merge metadata with numeric graphing data
-
-graphing_df_pep<- merge_metadata_pep(Areas_pep, mod_data_fasta_merged)
-
-
-# Step 12 Filter Graphical Data to include data that is acceptable.
-quant_graph_df_pep<- filtered_graphing_df_pep(graphing_df_pep)
-
-
-
-#Residue Level-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#Step 13 Calculating the total peptide areas and the extent of modification at the residue level
-
-area_calculations_res <- function(df_in) {
-
-  # Filter for mod_count 0 or 1
-  df_out <- df_in %>%
-    filter(mod_count == 0 | mod_count == 1) %>%
-    group_by(MasterProteinAccessions, Sequence, SampleControl, MOD, Condition) %>%
-    summarize(TotalArea = sum(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
-      names_from = c("SampleControl", "MOD"),
-      values_from = "TotalArea",
-      values_fill = NA
-    )
-
-  # Calculate total areas for Sample and Control
-  df_out <- df_out %>%
-    mutate(SampleTotalArea = coalesce(Sample_Oxidized, 0) + coalesce(Sample_Unoxidized, 0),
-           ControlTotalArea = coalesce(Control_Oxidized, 0) + coalesce(Control_Unoxidized, 0))
-
-  # Remove individual oxidized/unoxidized columns
-  df_out <- df_out %>%
-    select(-Sample_Oxidized, -Sample_Unoxidized, -Control_Unoxidized, -Control_Oxidized)
-
-  # Filter and summarize oxidized areas
-  df_out2 <- df_in %>%
-    filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized") %>%
-    group_by(MasterProteinAccessions, Sequence, Res, SampleControl, Condition) %>%
-    summarize(OxidizedArea = sum(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence", "Res", "Condition"),
-      names_from = c("SampleControl"),
-      values_from = "OxidizedArea",
-      values_fill = NA
-    )
-
-  # Merge the two dataframes
-  df_out <- full_join(df_out, df_out2, by = c("MasterProteinAccessions", "Sequence", "Condition"))
-
-  # Rename columns
-  df_out <- df_out %>%
-    rename(SampleOxidizedArea = Sample,
-           ControlOxidizedArea = Control)
-
-  # Calculate EOM values
-  df_out <- df_out %>%
-    mutate(EOMSample = SampleOxidizedArea / SampleTotalArea,
-           EOMControl = ControlOxidizedArea / ControlTotalArea,
-           EOM = EOMSample - EOMControl)
-
-  # Calculate count (N)
-  N_df <- df_in %>%
-    filter(mod_count == 0 | mod_count == 1, !is.na(Res)) %>%
-    group_by(MasterProteinAccessions, Sequence, Res) %>%
-    summarize(N = n(), .groups = "drop")  # Count the occurrences
-
-  df_out <- df_out %>%
-    left_join(N_df, by = c("MasterProteinAccessions", "Sequence", "Res"))
-
-  # Calculate standard deviation
-  #Calculate the oxidized variation
-  ox_var<- df_in %>%
-    filter((mod_count == 0 | mod_count == 1) & MOD == "Oxidized") %>%
-    group_by(MasterProteinAccessions, Sequence, Res, SampleControl, Condition) %>%
-    summarize(OxidizedVar = var(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence", "Res", "Condition"),
-      names_from = c("SampleControl"),
-      values_from = "OxidizedVar",
-      values_fill = NA
-    )
-  # Rename columns
-  ox_var <- ox_var %>%
-    rename(
-      Control_OxidizedVar = Control,
-      Sample_OxidizedVar = Sample,
-    )
-
-  #Calculating Total Vairance
-  total_var <- df_in %>%
-    filter((mod_count == 0 | mod_count == 1)) %>%
-    group_by(MasterProteinAccessions, Sequence, SampleControl, Condition) %>%
-    summarize(TotalVar = var(`Precursor Abundance`, na.rm = TRUE), .groups = "drop") %>%
-    pivot_wider(
-      id_cols = c("MasterProteinAccessions", "Sequence", "Condition"),
-      names_from = c("SampleControl"),
-      values_from = "TotalVar",
-      values_fill = list(TotalVar = NA)
-    ) %>%
-    rename(
-      SampleTotalVar = Sample,
-      ControlTotalVar = Control
-    )
-
-
-
-  merged<- inner_join(total_var, ox_var , by = c("MasterProteinAccessions", "Sequence", "Condition"))
-  #merge variance data with df_out
-  df_out<- inner_join(df_out, merged, by = c("MasterProteinAccessions", "Sequence", "Res", "Condition"))
-  # Corrected formulas for Variance calculations in R
-  df_out$VarianceSample <- df_out$EOMSample^2 * (((df_out$Sample_OxidizedVar) / (df_out$SampleOxidizedArea^2)) + (df_out$SampleTotalVar) / (df_out$SampleTotalArea^2))
-  df_out$VarianceControl <- df_out$EOMControl^2 * (((df_out$Control_OxidizedVar) / (df_out$ControlOxidizedArea^2)) + (df_out$ControlTotalVar) / (df_out$ControlTotalArea^2))
-
-  # Sum of Variances for Total Variance
-  df_out$TotalVariance <- df_out$VarianceSample + df_out$VarianceControl
-
-  # Calculation of Standard Deviation
-  df_out$SD <- sqrt(df_out$TotalVariance)
-  # Filter out rows with missing Res or EOM values
-  #df_out <- df_out[complete.cases(df_out[c("Res", "EOM")]), ]
-
-
-
-  return(df_out)
-}
-
-Areas_res<- area_calculations_res(mod_data_fasta_merged)
-
-
-
-# Step 14  Subset sequence metadata like residue start/stop for residue level data
-graphing_df_res<- graphing_data_res(Areas_res, mod_data_fasta_merged)
-
-#Step 15 Filters for residue level graphing.
-
-quant_graph_df_res<- filtered_graphing_df_res(graphing_df_res)
-
-
-
-########Saving Tables and Plots------------------------------------------------------------------------------------------------------------
-
-
-#Step 16A creating a table of totals
-TotalsTable<-create_totals_tablelist(graphing_df_pep, graphing_df_res)
-
-
-####Saving tables---------------------------------------------------------------------------
-
-#Step 16B Save Data Frames as Excel Files
-
-save_data_frames(file_output, TotalsTable = TotalsTable, quant_graph_df_pep = quant_graph_df_pep, quant_graph_df_res = quant_graph_df_res, graphing_df_pep = graphing_df_pep, graphing_df_res=graphing_df_res)
-
-#### Saving Plots -----------------------------------------------------------------------
-
-# Step 16C Saving Peptide Level Bar Graphs
-
-generate_grouped_bar_plot_pep <- function() {
-  # Prompt the user to select the Excel file
-  cat("Select the Excel file containing the data: ")
-  filepath <- file.choose()
-
-  # Load the data from the selected Excel file
-  df_in <- readxl::read_excel(filepath)
-
-  # Arrange the dataframe by start
-  df_in <- df_in %>%
-    arrange(start)
-
-  # Auto-detect unique conditions
-  unique_conditions <- unique(df_in$Condition)
-
-  # Manually specify blue colors for filling the bars
-  condition_colors <- c("#0570b0", "#3690c0", "#74a9cf", "#a6bddb", "#d0d1e6", "#084594", "#2171b5", "#4292c6", "#6baed6", "#9ecae1", "#c6dbef", "#08519c", "#3182bd", "#6baed6", "#9ecae1", "#c6dbef")
-
-  # Create a factor variable to represent the sorted order of conditions
-  df_in$Condition <- factor(df_in$Condition, levels = unique_conditions)
-
-  # Prompt the user to specify the filename
-  cat("Enter the filename (without extension): ")
-  filename <- readline()
-
-  # Remove any leading or trailing whitespace
-  filename <- trimws(filename)
-
-  # Iterate over each protein and make a grouped bar plot for it
-  for (protein in unique(df_in$MasterProteinAccessions)) {
-    # Subset the dataframe for this protein
-    temp <- subset(df_in, MasterProteinAccessions == protein)
-
-    # Generate a grouped bar plot of the extent of modification for each peptide
-    # that maps to this protein, with different conditions represented by color
-    fig <- ggplot(temp, aes(x = peptide, y = EOM, fill = Condition)) +
-      geom_bar(position = position_dodge(width = 0.9), stat = "identity") +
-      geom_errorbar(aes(ymin = EOM - SD, ymax = EOM + SD), position = position_dodge(width = 0.9), width = 0.25) +
-      labs(title = paste(protein, "Peptide Level Analysis"),
-           x = "Peptide",
-           y = "Extent of Modification",
-           fill = "Condition") +
-      theme_classic() +
-      theme(text = element_text(size = 18, family = "sans"),
-            plot.title = element_text(hjust = 0.5, size = 20, family = "sans", face = "bold"),
-            legend.text = element_text(size = 16, family = "sans"),
-            legend.title = element_text(size = 18, family = "sans"),
-            axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 1),
-            axis.title.x = element_text(margin = margin(t = 20))) +
-      scale_fill_manual(values = condition_colors)
-
-    # Create the output directory for bar graphs based on the file output and excel filename
-    graph_output_directory <- file.path(file_output, paste0(filename, "_PeptideLevelGroupedBarGraphs"))
-    dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
-
-    # Generate the full file path for this protein and save the figure
-    file_out <- file.path(graph_output_directory, paste0(protein, ".png"))
-    ggsave(filename = file_out, plot = fig, device = "png")
-
-    # Print a message to indicate successful saving
-    cat("Grouped bar graph for", protein, "saved as", file_out, "\n")
-  }
-}
-
-generate_grouped_bar_plot_pep()
-
-
-
-
-#Step 16D Saving Residue Level Bar Graphs
-
-
-# Generating grouped bar plot at the residue level
-generate_grouped_bar_plot_res <- function() {
-  # Prompt the user to select the Excel file
-  cat("Select the Excel file containing the data: ")
-  filepath <- file.choose()
-
-  # Load the data from the selected Excel file
-  df_in <- readxl::read_excel(filepath)
-
-  # Arrange the dataframe by start
-  df_in <- df_in %>%
-    arrange(start)
-
-  # Auto-detect unique conditions
-  unique_conditions <- unique(df_in$Condition)
-
-  # Manually specify blue colors for filling the bars
-  condition_colors <- c("#0570b0", "#3690c0", "#74a9cf", "#a6bddb", "#d0d1e6", "#084594", "#2171b5", "#4292c6", "#6baed6", "#9ecae1", "#c6dbef", "#08519c", "#3182bd", "#6baed6", "#9ecae1", "#c6dbef")
-
-  # Create a factor variable to represent the sorted order of conditions
-  df_in$Condition <- factor(df_in$Condition, levels = unique_conditions)
-
-  # Prompt the user to specify the filename
-  cat("Enter the filename (without extension): ")
-  filename <- readline()
-
-  # Remove any leading or trailing whitespace
-  filename <- trimws(filename)
-
-  # Iterate over each protein and make a grouped bar plot for it
-  for (protein in unique(df_in$MasterProteinAccessions)) {
-    # Subset the dataframe for this protein
-    temp <- subset(df_in, MasterProteinAccessions == protein)
-
-    # Generate a grouped bar plot of the extent of modification for each peptide
-    # that maps to this protein, with different conditions represented by color
-    fig <- ggplot(temp, aes(x = Res, y = EOM, fill = Condition)) +
-      geom_bar(position = position_dodge(width = 0.9), stat = "identity") +
-      geom_errorbar(aes(ymin = EOM - SD, ymax = EOM + SD), position = position_dodge(width = 0.9), width = 0.25) +
-      labs(title = paste(protein, "Residue Level Analysis"),
-           x = "Residue",
-           y = "Extent of Modification",
-           fill = "Condition") +
-      theme_classic() +
-      theme(text = element_text(size = 18, family = "sans"),
-            plot.title = element_text(hjust = 0.5, size = 20, family = "sans", face = "bold"),
-            legend.text = element_text(size = 16, family = "sans"),
-            legend.title = element_text(size = 18, family = "sans"),
-            axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 1),
-            axis.title.x = element_text(margin = margin(t = 20))) +
-      scale_fill_manual(values = condition_colors)
-
-    # Create the output directory for bar graphs based on the file output and excel filename
-    graph_output_directory <- file.path(file_output, paste0(filename, "_ResidueLevelGroupedBarGraphs"))
-    dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
-
-    # Generate the full file path for this protein and save the figure
-    file_out <- file.path(graph_output_directory, paste0(protein, ".png"))
-    ggsave(filename = file_out, plot = fig, device = "png")
-
-    # Print a message to indicate successful saving
-    cat("Grouped bar graph for", protein, "saved as", file_out, "\n")
-  }
-}
-
-generate_grouped_bar_plot_res()
 
 #Step 17 Saving Venn Diagrams
 #Generate Venn Diagrams
@@ -576,7 +156,7 @@ count_peptides_per_protein <- function() {
     }
   }
 
-  graph_title <- readline(prompt = "Enter the title for the Bar Graph: ")
+  graph_title <- readline(prompt = "Enter the title for the Modified Peptides Per Protein Bar Graph: ")
 
   combined_data <- bind_rows(data_list, .id = "Condition")
   summary_data <- combined_data %>%
@@ -598,7 +178,7 @@ count_peptides_per_protein <- function() {
   print(p)
 
   output_dir <- choose.dir(default = "", caption = "Select directory to save the count data and graph")
-  file_name <- readline(prompt = "Enter the base name for the saved files (without extension): ")
+  file_name <- readline(prompt = "Enter the base name for the modified peptides per protein files (without extension): ")
 
   output_file <- file.path(output_dir, paste0(file_name, ".xlsx"))
   graph_file <- file.path(output_dir, paste0(file_name, ".png"))
@@ -643,7 +223,7 @@ count_residue_entries_per_protein <- function() {
     }
   }
 
-  graph_title <- readline(prompt = "Enter the title for the Bar Graph: ")
+  graph_title <- readline(prompt = "Enter the title for the Modified Residues Per Protein Bar Graph: ")
 
   combined_data <- bind_rows(data_list, .id = "Condition")
   summary_data <- combined_data %>%
@@ -665,7 +245,7 @@ count_residue_entries_per_protein <- function() {
   print(p)
 
   output_dir <- choose.dir(default = "", caption = "Select directory to save the count data and graph")
-  file_name <- readline(prompt = "Enter the base name for the saved files (without extension): ")
+  file_name <- readline(prompt = "Enter the base name for modified residues per protein files (without extension): ")
 
   output_file <- file.path(output_dir, paste0(file_name, ".xlsx"))
   graph_file <- file.path(output_dir, paste0(file_name, ".png"))

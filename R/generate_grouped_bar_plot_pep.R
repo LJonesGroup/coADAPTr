@@ -8,7 +8,7 @@
 #' @aliases generate_grouped_bar_plot_pep
 generate_grouped_bar_plot_pep <- function() {
   # Prompt the user to select the Excel file
-  cat("Select the Excel file containing the quantified peptide level data data: ")
+  cat("Select the Excel file containing the quantifiable peptide level data data: ")
   filepath <- file.choose()
 
   # Load the data from the selected Excel file
@@ -28,7 +28,7 @@ generate_grouped_bar_plot_pep <- function() {
   df_in$Condition <- factor(df_in$Condition, levels = unique_conditions)
 
   # Prompt the user to specify the filename
-  cat("Enter the filename (without extension): ")
+  cat("Enter the filename  for the peptide level data (without extension): ")
   filename <- readline()
 
   # Remove any leading or trailing whitespace
