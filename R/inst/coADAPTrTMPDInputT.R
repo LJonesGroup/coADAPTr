@@ -3,7 +3,7 @@
 #Packages, resolve package conflicts, import required data, and select result
 #output folders. Follow the console prompts and anticipate a File Explorer up.
 
-setupTMT()
+setup()
 
 #Calculate Total Abundance (denominator)
 # Function to sum selected TMT abundance columns and calculate true abundances
@@ -134,13 +134,16 @@ SampleControl <- function(pd_data) {
 transformed_data <- SampleControl(transformed_data)
 
 # Normalize TMT Data and Select Required Columns --------------------------------------------------------------------
-#Before Analyzing your data be sure to run this function to install necessary
-#Packages, resolve package conflicts, import required data, and select result
-#output folders. Follow the console prompts and anticipate a File Explorer up.
+#This function wil normalize the TMT abundances and allow you to rename the
+#required columns accordingly
 
-setupTMT()
+TMT_Quant()
 
+# Normalize TMT Data and Select Required Columns --------------------------------------------------------------------
+#This function wil normalize the TMT abundances and allow you to rename the
+#required columns accordingly
 
+TMT_Prep()
 
 
 #Annotate features in transformed data
