@@ -1,92 +1,9 @@
-before_beginning <- function() {
-  options(stringsAsFactors = FALSE)
+# Setting Up ----------------------------------------------------------------------------------------------------
+#Before Analyzing your data be sure to run this function to install necessary
+#Packages, resolve package conflicts, import required data, and select result
+#output folders. Follow the console prompts and anticipate a File Explorer up.
 
-  required_packages <- c("ExcelFunctionsR", "remotes", "data.table", "stringr", "protr",
-                         "plyr", "extrafont", "readxl", "ggplot2", "eulerr",
-                         "tidyverse", "EnvStats", "dplyr", "writexl", "conflicted",
-                         "phylotools", "parallel", "rlist","argparser", "Cairo", "VennDiagram")
-
-
-  package.check <- lapply(
-    required_packages,
-    FUN = function(x) {
-      if (!require(x, character.only = TRUE)) {
-        install.packages(x, dependencies = TRUE)
-        library(x, character.only = TRUE)
-      }
-    }
-  )
-
-
-  setwd(getwd())
-
-
-  conflict_prefer("arrange", winner = "dplyr")
-  conflict_prefer("filter", winner = "dplyr")
-  conflict_prefer("between", winner = "dplyr")
-  conflict_prefer("compact", winner = "purrr")
-  conflict_prefer("count", winner = "dplyr")
-  conflict_prefer("desc", winner = "dplyr")
-  conflict_prefer("failwith", winner = "dplyr")
-  conflict_prefer("filter", winner = "dplyr")
-  conflict_prefer("first", winner = "dplyr")
-  conflict_prefer("hour", winner = "lubridate")
-  conflict_prefer("id", winner = "dplyr")
-  conflict_prefer("isoweek", winner = "lubridate")
-  conflict_prefer("lag", winner = "dplyr")
-  conflict_prefer("last", winner = "dplyr")
-  conflict_prefer("mday", winner = "lubridate")
-  conflict_prefer("minute", winner = "lubridate")
-  conflict_prefer("month", winner = "lubridate")
-  conflict_prefer("mutate", winner = "dplyr")
-  conflict_prefer("quarter", winner = "lubridate")
-  conflict_prefer("rename", winner = "dplyr")
-  conflict_prefer("second", winner = "lubridate")
-  conflict_prefer("summarise", winner = "dplyr")
-  conflict_prefer("summarize", winner = "dplyr")
-  conflict_prefer("transpose", winner = "purrr")
-  conflict_prefer("wday", winner = "lubridate")
-  conflict_prefer("week", winner = "lubridate")
-  conflict_prefer("yday", winner = "lubridate")
-  conflict_prefer("year", winner = "lubridate")
-  conflict_prefer("read.fasta", winner = "phylotools")
-  conflict_prefer("rename", winner = "dplyr")
-}
-
-before_beginning()
-###########################################################################
-#Homo sapien Reviewed 12062021
-# Read in required inputs
-FASTA_file <- function() {
-  FASTA_path <- file.choose()
-  FASTA <- read.fasta(FASTA_path)
-  return(FASTA)
-}
-
-FASTA<-FASTA_file()
-
-#USER INDICATES FILE PATH
-import_data <- function() {
-  library(openxlsx)
-
-  file_path <- file.choose()
-  df <- read.xlsx(file_path, check.names = FALSE)
-
-  colnames(df) <- gsub("\\.", " ", colnames(df))
-
-  return(df)
-}
-
-raw_data<-import_data()
-
-
-# Set output directory
-output_folder <- function() {
-  file_output <- choose.dir()
-  return(file_output)
-}
-
-file_output <- output_folder()
+setupTMT()
 
 #Calculate Total Abundance (denominator)
 # Function to sum selected TMT abundance columns and calculate true abundances
@@ -215,6 +132,16 @@ SampleControl <- function(pd_data) {
   return(pd_data)
 }
 transformed_data <- SampleControl(transformed_data)
+
+# Normalize TMT Data and Select Required Columns --------------------------------------------------------------------
+#Before Analyzing your data be sure to run this function to install necessary
+#Packages, resolve package conflicts, import required data, and select result
+#output folders. Follow the console prompts and anticipate a File Explorer up.
+
+setupTMT()
+
+
+
 
 #Annotate features in transformed data
 library(dplyr)
