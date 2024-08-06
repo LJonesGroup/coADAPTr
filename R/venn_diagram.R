@@ -41,6 +41,9 @@ venn_diagram <- function() {
   custom_palette <- c("#0570b0", "#3690c0", "#74a9cf", "#a6bddb", "#d0d1e6", "#084594", "#2171b5", "#4292c6", "#6baed6", "#9ecae1", "#c6dbef", "#08519c", "#3182bd", "#6baed6", "#9ecae1", "#c6dbef")
   custom_palette <- custom_palette[1:num_conditions] # ensuring the palette has the desired number of colors
 
+  # Calculate an appropriate cat.dist value
+  cat.dist.value <- 0.1 # Adjust this value if necessary for proper distance
+
   # Create Venn diagram plot
   venn_plot <- venn.diagram(
     x = condition_lists,
@@ -56,7 +59,8 @@ venn_diagram <- function() {
     cex = 2.5,           # Adjust overall font size
     cat.cex = 2.5,         # Set category title font size to 24
     cat.fontfamily = "sans", # Set category title font family
-    cat.fontface = "bold"  # Set category title font face to bold
+    cat.fontface = "bold",  # Set category title font face to bold
+    cat.dist = rep(cat.dist.value, num_conditions) # Set consistent distance for category titles
   )
 
   # Prompt user to specify the name of the output PNG file
