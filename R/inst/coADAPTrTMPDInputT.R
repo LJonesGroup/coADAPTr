@@ -134,16 +134,59 @@ SampleControl <- function(pd_data) {
 transformed_data <- SampleControl(transformed_data)
 
 # Normalize TMT Data and Select Required Columns --------------------------------------------------------------------
-#This function wil normalize the TMT abundances and allow you to rename the
-#required columns accordingly
+#This function will normalize the TMT abundances and allow you to rename the
+#required columns accordingly to prapre for annotation
 
 TMT_Quant()
 
-# Normalize TMT Data and Select Required Columns --------------------------------------------------------------------
-#This function wil normalize the TMT abundances and allow you to rename the
-#required columns accordingly
+# Annotate the TMT data --------------------------------------------------------------------
+#This function will locate the start and end residues to the TMT data.
 
 TMT_Prep()
+
+split_spectrum_filesTMT <- function(df_in) {
+  # Check if the "Spectrum File" column exists
+  if ("Spectrum File" %in% colnames(df_in)) {
+    # Initialize the "Condition" column
+    df_in$Condition <- NA
+
+    # Loop through each row and split the "Spectrum File" contents
+    for (i in 1:nrow(df_in)) {
+      parts <- strsplit(as.character(df_in$`Spectrum File`[i]), ":")[[1]]
+      if (length(parts) == 2) {
+        df_in$Condition[i] <- parts[1]
+        df_in$`Spectrum File`[i] <- parts[2]
+      } else {
+        cat("Invalid format in row ", i, ": ", df_in$`Spectrum File`[i], "\n")
+      }
+    }
+  } else {
+    cat("'Spectrum File' column not found in the data frame.\n")
+  }
+
+  return(df_in)
+}
+
+mod_data_fasta_merged <- split_spectrum_filesTMT(mod_data_fasta_merged)
+
+# FPOP Calculations ---------------------------------------------------------------------------------------------
+#Calculate the Extent of Modification (EOM) for each peptide and residue based on the LFQ data
+#quant_graph_df containing all of the data that is acceptable for graphing
+#Areas_pep and Areas_res contain the data that is used to calculate the EOM and will
+#contain all data. This includes cases where the EOM could be negative (high background oxidation)
+#or the SD is greater than the EOM (data has a high variance-likely due to experimental conditions)
+
+FPOP_Calculations()
+
+#Saving Tables and Plots------------------------------------------------------------------------------------------------------------
+#Save data frames as Excel files and save grouped bar from the plots as PNG files
+
+Tables_and_Graphs()
+
+#Creating Venn Diagrams ------------------------------------------------------------------------------------------------------------
+#For the data you want in a Venn Diagram, create an excel file with headers of the Master Protein
+#accessions that were modified in your data set. Save it as an excel file and run this function
+venn_diagram()
 
 
 #Annotate features in transformed data

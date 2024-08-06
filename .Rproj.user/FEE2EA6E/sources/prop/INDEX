@@ -41,6 +41,7 @@
 ~%2FGitHub%2FcoADAPTr%2FR%2Fparse_fasta.R="8BBE33E3"
 ~%2FGitHub%2FcoADAPTr%2FR%2Fremove_dup.R="DDD31592"
 ~%2FGitHub%2FcoADAPTr%2FR%2Frename_and_split_spectrum_files.R="2252C14A"
+~%2FGitHub%2FcoADAPTr%2FR%2Frename_and_split_spectrum_filesTMT.R="AF1A9878"
 ~%2FGitHub%2FcoADAPTr%2FR%2Frename_columns_interactively.R="F284AF10"
 ~%2FGitHub%2FcoADAPTr%2FR%2Fsave_data_frames.R="2E0A899F"
 ~%2FGitHub%2FcoADAPTr%2FR%2Fsave_graphs_pep.R="A130FD4C"

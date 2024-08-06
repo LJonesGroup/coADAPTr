@@ -15,5 +15,7 @@ TMT_Quant <- function() {
   renamed_data <<- rename_columns_interactively(selected_data)
   #Transform the data to a format that can be used for further analysis
   transformed_data <<- transform_data(renamed_data)
+  #Identify Sample vs Control Files
+  transformed_data <<- SampleControl(transformed_data)
 }
 
