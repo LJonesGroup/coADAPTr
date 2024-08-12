@@ -49,7 +49,7 @@ count_residue_entries_per_protein <- function() {
 
   print(p)
 
-  output_dir <- choose.dir(default = "", caption = "Select directory to save the count data and graph")
+  output_dir <- choose.dir(default = "", caption = "Select directory/folder to save the count data and graph")
   file_name <- readline(prompt = "Enter the base name for modified residues per protein files (without extension): ")
 
   output_file <- file.path(output_dir, paste0(file_name, ".xlsx"))

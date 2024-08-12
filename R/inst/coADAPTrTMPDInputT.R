@@ -8,7 +8,7 @@ setup()
 
 # Normalize TMT Data and Select Required Columns --------------------------------------------------------------------
 #This function will normalize the TMT abundances and allow you to rename the
-#required columns accordingly to prapre for annotation
+#required columns accordingly to preprae for annotation
 
 TMT_Quant()
 
