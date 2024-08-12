@@ -72,6 +72,8 @@ anticipate File Explorer pop ups.***
 
 **setup()**
 
+![Implementation of setup() Function](images/setup.gif){width="454"}
+
 [To elaborate, the following functions are wrapped into one sequence
 which is called setup().]{.underline}
 
@@ -198,166 +200,14 @@ a condition that is indicated in the header.
 
 ### 
 
-Annotate the features in the data from the PD output file like
-extracting the modification position using the annotate_features()
-function:
-
-pd_data_annotated \<- annotate_features(pd_data)
-
-Input your raw data containing the SampleControl column into this
-function
-
-![](images/annotated.PNG)
-
-### Step 7: Parse the FASTA File
-
-Parse the FASTA file to extract relevant information and rename the
-column headers using the parse_fasta() function:
-
-FASTA \<- parse_fasta(FASTA)
-
-![](images/FASTA.PNG)
-
-Input your FASTA file into this function
-
-### Step 8: Locate Residue Numbers
-
-Locate the residue numbers in the FASTA file using the
-locate_startend_res() function:
-
-pd_data_fasta_merged \<- locate_startend_res(pd_data_annotated)
-
-![](images/locate.PNG)
-
-Input your annotated raw data into this function.
-
-**Step 9: Calculate Peptide Level Areas and Extent of Modification**
-
-Calculate the peptide level areas and extent of modification using the
-area_calculations_pep() function:
-
-Areas_pep \<- area_calculations_pep(pd_data_fasta_merged)
-
-Input your annotated data merged with your FASTA file into this
-function.
-
-### Step 10: Grab Sequence Meta Data (SKIP)
-
-YOU DO NOT NEED TO MANUALLY DO THIS STEP AS IT USED IN THE NEXT FUNCTION
-
-### Step 11: Merge Metada with Graphing Data
-
-Merge the metadata (ie. the peptide and modification location) with the
-graphing data using the merge_metadata() function:
-
-graphing_df_pep \<- merge_metadata_pep(Areas_pep, pd_data_fasta_merged)
-
-Input your data containing the peptide level EOM and the raw data that
-was merged with the FASTA file into this function.
-
-### Step 12: Filter Graphical Data
-
-Filter the graphical data to include only acceptable data using the
-filtered_graphing_df_pep() function:
-
-quant_graph_df_pep \<- filtered_graphing_df_pep(graphing_df_pep)
-
-Input your peptide level graphing data into this function.
-
-### Step 13: Calculate Residue Level Areas and Extent of Modification
-
-Calculate the residue level areas and extent of modification using the
-area_calculations_res() function:
-
-Areas_res \<- area_calculations_res(pd_data_fasta_merged)
-
-Input your raw data merged with your FASTA file into this function.
-
-### Step 14: Prepare Residue Level Graphing Data
-
-Prepare the residue level graphing data by annotating the peptide and
-residue location using the graphing_data_res() function:
-
-graphing_df_res \<- graphing_data_res(Areas_res, pd_data_fasta_merged)
-
-Input your containing the residue EOM and the raw data that was merged
-with the FASTA file into this function.
-
-### Step 15: Filter Residue Level Graphing Data
-
-Filter the residue level graphing data for quantifiable modifications
-using the filtered_graphing_df_res() function:
-
-quant_graph_df_res \<- filtered_graphing_df_res(graphing_df_res)
-
-Input your graphing residue level data into this function.
-
-### Step 16: Save Tables and Plots
-
-#### 16A: Create and Save the Tables and Plots Generated During the Analysis
-
-TotalsTable\<- create_totals_tablelist (quant_graph_df_pep,
-quant_graph_df_res)
-
 ![](images/totals%20table.PNG){width="579"}
 
-#### 16B: Save the Data Frames Generated During Analysis
+#### 
 
-save_data_frames(file_output, TotalsTable = TotalsTable,
-quant_graph_df_pep = quant_graph_df_pep, quant_graph_df_res =
-quant_graph_df_res, graphing_df_pep = graphing_df_pep, graphing_df_res =
-graphing_df_res)
+#### 
 
-To save a data frame that is not listed simply add (dataframe =
-dataframe) to the end of the comma separated list.
-
-![](images/saved%20data%20frames.PNG){width="396"}
-
-#### 16C: Generate Peptide Level Bar Graphs
-
-To generate the peptide level bar graphs use this function:
-
-generate_eom_plot_pep(df_in = quant_graph_df_pep, file_output =
-file_output)
-
-![](images/P10809.png){width="475"}
-
-#### 16D: Generate Residue Level Bar Graphs
-
-To generate the residue level bar graphs use generate_eom_plot_res():
-
-generate_eom_plot_res(df_in = quant_graph_df_res, file_output =
-file_output)
+)
 
 ![](images/P10809-01.png){width="528"}
 
-### Step 18: Creating and Saving Grouped Bar Graphs.
-
-Once you have analyzed data of different conditions, combine the
-quantifiable graphing data into one data frame. In the last column
-indicate which row corresponds to which condition. Then use this
-function to create your grouped bar plot.
-
-#### 18A Generate Peptide Level Grouped Bar Plot
-
-grouped_bar_plot_pep()
-
-The excel workbook containing the extent of modification for varying
-conditions should look like this.
-
-Once you analyzed data o difference conditions simply add a column
-"Condition" as a column in excel sheet containing quantifiable
-modifications. Then you can combine the two data frames together for
-graphing.
-
 ![](images/grouped%20bar%20graph%20data.PNG){width="572"}
-
-#### 18B Generate Residue Level Grouped Bar Plot
-
-For residue level EOM grouped bar graphs use the following function:
-
-grouped_bar_plot_res()
-
-This vignette includes explanations and documentation for each step in
-the data analysis workflow. It should serve as a comprehensive guide for
-users of the `coADAPTr` package.
