@@ -17,14 +17,14 @@ TMT_Quant()
 
 TMT_Prep()
 
-# FPOP Calculations ---------------------------------------------------------------------------------------------
+# EOM Calculations ---------------------------------------------------------------------------------------------
 #Calculate the Extent of Modification (EOM) for each peptide and residue based on the LFQ data
 #quant_graph_df containing all of the data that is acceptable for graphing
 #Areas_pep and Areas_res contain the data that is used to calculate the EOM and will
 #contain all data. This includes cases where the EOM could be negative (high background oxidation)
 #or the SD is greater than the EOM (data has a high variance-likely due to experimental conditions)
 
-FPOP_Calculations()
+EOM_Calculations()
 
 #Saving Tables and Plots------------------------------------------------------------------------------------------------------------
 #Save data frames as Excel files and save grouped bar from the plots as PNG files

@@ -7,7 +7,7 @@ platform like Proteome Discoverer (v2.3+). The package provides
 functions for quality control, data normalization, visualization, and
 statistical analysis of covalent labeling-mass spectrometry data.
 
-Features Quality control: check the quality of your data and remove
+Features Quality Control: Check the quality of your data and remove
 duplicates.
 
 Visualization: Create informative plots to visualize the data and the

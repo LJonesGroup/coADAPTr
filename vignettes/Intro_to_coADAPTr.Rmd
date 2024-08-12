@@ -37,107 +37,166 @@ workflow, from importing raw data to generating visualizations and
 saving results.
 
 The initial input is an excel sheet (.xlsx or .xls) that contains the
-minimum columns: - Master Protein Accessions - Protein Accessions -
-Modifications (Modification Type; Modification Position) - Sequence (If
+minimum columns: - Master Protein Accessions - Modifications
+(Modification Type; Modification Position - Sequence or Peptide (If
 using Proteome Discoverer 2.5\> be sure to change "Annotated Sequence'
-to "Sequence") - Precursor Abundance - Spectrum File (Indicate Laser-L
-vs No Laser-NL Samples in the Spectrum File Names) - Retention Time.
+to "Sequence") - Precursor Abundance/Intensity - Spectrum File (Or any
+columns that can be used to separate sample types such as Experimental
+Condition and Laser vs No Laser).
+
+If using PD 2.0-3.0 please import all data and run the remove_dup()
+function to get ride of duplicates created by the multilevel sequence
+searching method described in [Rinas et al.
+2016](https://link.springer.com/article/10.1007/s00216-016-9369-3 "An efficient quantitation strategy for hydroxyl radical-mediated protein footprinting using Proteome Discoverer").
 
 *Do not use the function remove_dup if your data comes from another
-source or the duplicates have already been removed.*
+source or the duplicates have already been removed in excel.*
 
 ## Analyzing Sequence Searched Data with coADAPTr
 
-Before diving into the analysis, it's essential to ensure that all
-necessary packages are installed and any potential conflicts are
-resolved. The before_beginning() function handles this initialization
-step:
+*Before diving into the analysis, it's essential to ensure that your
+sequence searched data is in an excel.This package only supports excel
+inputs not csv.*
 
-before_beginning()
+## Step-by-Step Guide for LFQ Data Analysis
 
-## Step-by-Step Guide
+Please see this video where coADAPTR was used to analyze LFQ data to
+compliment this step-by-step guide
 
-### Step 1: Read in Required Inputs
+### Step 1: Load Necessary Packages and Data
 
-Start by reading in the necessary inputs for the analysis. This
-typically includes a FASTA file containing protein sequences
+Before Analyzing your data be sure to run this function to install
+necessary packages, resolve package conflicts, import required data, and
+select result output folders. ***Follow the console prompts and
+anticipate File Explorer pop ups.***
 
-FASTA \<- FASTA_file()
+**setup()**
 
-Select the appropriate FASTA file from the File Explorer prompt that
-loads from your computer
+[To elaborate, the following functions are wrapped into one sequence
+which is called setup().]{.underline}
 
-### Step 2: Set Output Directory
+1.  before_beginning()--Installs required packages and resolved
+    conflicts.
+2.  raw_data \<\<- import_data()--Allows the user to select (via file
+    explorer) and import the excel file containing their data.
+3.  file_output \<\<- output_folder()--Allows the user to select (via
+    file explorer) the folder they want the data stored in.
+4.  FASTA \<\<- FASTA_file()--Allows the user to select (via file
+    explorer) and import the FASTA file in .fasta format of which the
+    data was searched.
 
-Define the output directory where the results will be saved:
+### Step 2: Prepare the LFQ Data for Analysis
 
-file_output \<- output_folder()
+Prepare your LFQ data for analysis by selecting the relevant data,
+renaming the columns appropriately, and searching the FASTA file against
+peptide spectral matches to identify the start and end residues.
+***Follow the console prompts and anticipate File Explorer pop ups.***
 
-Select the appropriatefolder from the File Explorer prompt that loads
-from your computer
+**LFQ_Prep()**
 
-### Step 3: Read in Data from Proteome Discoverer
+[To elaborate, the following functions are wrapped into one sequence
+which is called LFQ Prep().]{.underline}
 
-Import the data from Proteome Discoverer using the import_data()
-function:
+1.  selected_data \<\<- column_selectionLFQ(raw_data)--Prompts the user
+    to select the columns corresponding to the request.
+2.  modified_data \<\<- rename_and_split_spectrum_files(selected_data)
+    --Prompts the user to select and rename the column containing
+    Spectrum File or a similar identifier in the format of
+    **Condition:Sample Type & \#**. (*ex. Drug Treated:NL1, Drug
+    Free:L3, or Outer Region:L2*). Then the Spectrum file column is
+    split so Condition is in one column leaving sample type information
+    in the Spectrum File column.
+3.  modified_data \<\<- SampleControl(modified_data)--Detects sample vs
+    control files based on the Spectrum File Column.
+4.  modified_data_annotated \<\<-
+    annotate_features(modified_data)--Identifies the modification
+    position on the peptide based off of input in modification column.
+5.  FASTA\<\<- parse_fasta(FASTA)--Parses the FASTA file for relevant
+    information to map the modification on the protein sequence.
+6.  mod_data_fasta_merged\<\<-
+    locate_startend_res(modified_data_annotated, FASTA)--Maps the
+    modification to the protein sequence after merging the FASTA file
+    with the data.
 
-The Excel file should contain the minimum columns:
+### Step 3: Calculate the Extent of Modification
 
--   MasterProteinAccessions
+Calculate the Extent of Modification (EOM) for each peptide and residue
+based on the LFQ data.
 
--   UniprotID
+**EOM_Calculations()**
 
--   Modifications (Modification Type; Modification Position)
+*The data frame **quant_graph_df** contains all of the data that is
+acceptable for graphing.*
 
--   Sequence (If using Proteome Discoverer 2.5\> be sure to change
-    "Annotated Sequence' to "Sequence")
+*The data frame **Areas_pep** and **Areas_res** contain the data that is
+used to calculate the EOM and will contain all data. This includes cases
+where the EOM could be negative (high background oxidation) or the SD is
+greater than the EOM (data has a high variance-likely due to
+experimental conditions)*
 
--   Precursor Abundance
+[To elaborate, the following functions are wrapped into one sequence
+which is called EOM_Calculations().]{.underline}
 
--   Spectrum File (Indicate Laser-L vs No Laser-NL Samples in the
-    Spectrum File Names)
+Areas_pep\<\<- area_calculations_pep(mod_data_fasta_merged)--Calculates
+the Extent of Modification (EOM) and SD (Variance) at the peptide level
 
--   Retention Time
+graphing_df_pep\<\<- merge_metadata_pep(Areas_pep,
+mod_data_fasta_merged)-- Merges the metadata with numeric graphing data
 
--   Identifying Node
+quant_graph_df_pep\<\<-
+filtered_graphing_df_pep(graphing_df_pep)--Filters peptide level
+graphical data to include data that is acceptable
 
-*Note: If you only have the minimum required columns you may not be able
-to use remove_dup()*
+Areas_res\<\<- area_calculations_res(mod_data_fasta_merged)--Calculates
+the Extent of Modification (EOM) and SD (Variance) at the residue level
 
-pd_data \<- import_data()
+graphing_df_res\<\<- graphing_data_res(Areas_res,
+mod_data_fasta_merged)--Subsets sequence metadata like residue
+start/stop for residue level data
 
-Select the appropriate excel file from the File Explorer prompt that
-loads from your computer
+quant_graph_df_res\<\<-
+filtered_graphing_df_res(graphing_df_res)--Filter residue level
+graphical data to include data that is acceptable
 
-![](images/PD%20Data-04.PNG){width="25in"}
+### Step 4: Save ALL Tables and Graphs 
 
-### Step 4: Identify Sample and Control Spectrum Files
+Save data frames as Excel files and save grouped bar from the plots as
+PNG files. ***Follow the console prompts and anticipate File Explorer
+pop ups.***
 
-Determine which spectrum files correspond to the sample and control
-groups based on the presence of L and NL in the spectrum file name using
-the SampleControl() function:
-
-pd_data \<- SampleControl(pd_data)
-
-Input your original data frame into this function.
-
-![](images/SampleControl.PNG){width="533"}
+Tables_and_Graphs()
 
 ### Step 5: Remove Duplicate Entries
 
-If the MS files were analyzed via Proteome Discoverer, you can remove
-duplicate entries using the remove_dup() function:
+## Step-by-Step Guide for TMT Data Analysis
 
-*Only run this if you have not removed the duplicates in Excel and your
-data is from Proteome Discoverer 2.3-3.0 Specifically if you used
-multilevel sequence searching algorithm.*
+### Step 1: Read in Required Inputs
 
-pd_data \<- remove_dup(pd_data)
+### Step 2: Set Output Directory
 
-Alternatively, you can select all of the data in excel and remove
-duplicate in excels Data tab before importing the data into R.
+### Step 3: Read in Data from Proteome Discoverer
+
+### Step 4: Identify Sample and Control Spectrum Files
+
+### Step 5: Remove Duplicate Entries
 
 ### Step 6: Clean and Parse Data
+
+### Extra: Create and Save Venn Diagrams
+
+Create and save venn diagrams using this function:
+
+venn_diagram()
+
+The excel workbook containing the information to place in the venn
+diagram have a a column list of master protein accessions correlation to
+a condition that is indicated in the header.
+
+![](images/venn%20data.PNG){width="462"}
+
+### 
+
+### 
 
 Annotate the features in the data from the PD output file like
 extracting the modification position using the annotate_features()
@@ -271,18 +330,6 @@ generate_eom_plot_res(df_in = quant_graph_df_res, file_output =
 file_output)
 
 ![](images/P10809-01.png){width="528"}
-
-### Step 17: Create and Save Venn Diagrams
-
-Create and save venn diagrams using this function:
-
-venn_diagram()
-
-The excel workbook containing the information to place in the venn
-diagram have a a column list of master protein accessions correlation to
-a condition that is indicated in the header.
-
-![](images/venn%20data.PNG){width="462"}
 
 ### Step 18: Creating and Saving Grouped Bar Graphs.
 

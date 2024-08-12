@@ -10,7 +10,7 @@ split_spectrum_filesTMT(df_in)
 \item{df_in}{}
 }
 \value{
-A data frame with the split spectrum files.
+A data frame containing the split spectrum files.
 }
 \description{
 Extract Spectrum File Identifiers for TMT Data

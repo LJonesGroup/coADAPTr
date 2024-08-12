@@ -3,9 +3,9 @@
 #' @return A list of dataframes that contain the Extent of Modification (EOM) and SD (Variance) at the peptide and residue level
 #' @export
 #'
-#' @examples FPOP_Calculations()
-#' @aliases FPOP_Calculations
-FPOP_Calculations<- function() {
+#' @examples EOM_Calculations()
+#' @aliases EOM_Calculations
+EOM_Calculations<- function() {
   #Calculate the Extent of Modification (EOM) and SD (Variance) at the peptide level
   Areas_pep<<- area_calculations_pep(mod_data_fasta_merged)
 
