@@ -168,7 +168,33 @@ pop ups.***
 
 Tables_and_Graphs()
 
-### Step 5: Remove Duplicate Entries
+[To elaborate, the following functions are wrapped into one sequence
+which is called Tables_and_Graphs().]{.underline}
+
+TotalsTable\<\<-create_totals_tablelist(graphing_df_pep,
+graphing_df_res)--Creates a table of totals for general and quantifiable
+modifications
+
+save_data_frames(file_output, TotalsTable = TotalsTable, Areas_pep =
+Areas_pep, quant_graph_df_pep = quant_graph_df_pep, Areas_res =
+Areas_res, quant_graph_df_res = quant_graph_df_res, graphing_df_pep =
+graphing_df_pep, graphing_df_res = graphing_df_res)--Saves Data Frames
+as Excel Files
+
+generate_grouped_bar_plot_pep()--Generates the grouped bar plots for
+peptide level data and allows user to define folder name and location of
+graphs
+
+generate_grouped_bar_plot_res()--Generates the grouped bar plots for
+residue level data and allows user to define folder name and location of
+graphs
+
+count_peptides_per_protein() &
+count_residue_entries_per_protein()--Counts the modified peptides and
+residues per protein and allows the user to define the file and
+graphical headers.
+
+### Step 5: If Desired Create Venn Diagrams
 
 ## Step-by-Step Guide for TMT Data Analysis
 
