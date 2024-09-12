@@ -58,9 +58,9 @@ venn_diagram <- function() {
     margin = 0.1, # Increase margin for better plot appearance
     fontfamily = "sans", # Set font family to Helvetica (or similar font)
     fontface = "bold",   # Set font face to bold
-    cat.fontsize = 30,   # Set category font size to 20
-    cex = 3,           # Adjust overall font size
-    cat.cex = 3,         # Set category title font size to 24
+    cat.fontsize = 40,   # Set category font size to 20
+    cex = 4,           # Adjust overall font size
+    cat.cex = 5,         # Set category title font size to 24
     cat.fontfamily = "sans", # Set category title font family
     cat.fontface = "bold",  # Set category title font face to bold
     cat.dist = rep(cat.dist.value, num_conditions) # Set consistent distance for category titles
