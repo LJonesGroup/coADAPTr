@@ -26,7 +26,7 @@ venn_diagram <- function() {
     # Define the palette preview frame
     for (i in seq_along(palettes)) {
       palette_name <- names(palettes)[i]
-      palette_colors <- palettesview with 5 colors
+      palette_colors <- palettes   # Preview with 5 colors
 
       # Create a row with the palette name and a color preview
       color_row <- tkframe(win)

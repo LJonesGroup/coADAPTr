@@ -9,7 +9,7 @@ before_beginning <- function() {
   options(stringsAsFactors = FALSE)
 
   required_packages <- c("ExcelFunctionsR", "remotes", "data.table", "stringr", "protr",
-                         "plyr", "extrafont", "readxl", "ggplot2", "eulerr", "grid",
+                         "plyr","viridis", "extrafont", "readxl", "ggplot2", "eulerr", "grid",
                          "tidyverse", "EnvStats", "dplyr", "writexl", "conflicted", "tcltk",
                          "phylotools", "parallel", "rlist","argparser", "Cairo", "VennDiagram")
 
