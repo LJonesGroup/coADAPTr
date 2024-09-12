@@ -1,9 +1,66 @@
 venn_diagram <- function() {
-  # Load necessary libraries
-  library(VennDiagram)
-  library(readxl)
-  library(openxlsx)
-  library(grid)
+
+  # List of 10 available color palettes, including grayscale and blue-hued palette
+  palettes <- list(
+    "rainbow" = rainbow,
+    "heat.colors" = heat.colors,
+    "terrain.colors" = terrain.colors,
+    "topo.colors" = topo.colors,
+    "cm.colors" = cm.colors,
+    "grayscale" = gray.colors,  # Grayscale palette
+    "blue_hues" = function(n) colorRampPalette(c("#084594", "#2171b5", "#6baed6", "#c6dbef"))(n),  # Blue hues
+    "viridis" = viridis::viridis,  # Viridis color palette
+    "plasma" = viridis::plasma,    # Plasma color palette
+    "inferno" = viridis::inferno   # Inferno color palette
+  )
+
+  # Define the function to display the color palettes in a pop-up
+  show_palette_popup <- function() {
+    # Create a window
+    win <- tktoplevel()
+    tkwm.title(win, "Select a Color Palette")
+
+    # Add instructions
+    tkgrid(tklabel(win, text = "Select a Color Palette for your Venn Diagram:"))
+
+    # Define the palette preview frame
+    for (i in seq_along(palettes)) {
+      palette_name <- names(palettes)[i]
+      palette_colors <- palettesview with 5 colors
+
+      # Create a row with the palette name and a color preview
+      color_row <- tkframe(win)
+      tkgrid(tklabel(color_row, text = palette_name))
+
+      # Display color swatches
+      for (color in palette_colors) {
+        color_box <- tklabel(color_row, bg = color, width = 3, relief = "raised")
+        tkgrid(color_box, padx = 1)
+      }
+
+      # Place the row in the window
+      tkgrid(color_row)
+
+      # Add a button to select this palette
+      select_button <- tkbutton(win, text = "Select", command = function() {
+        assign("selected_palette", palettes[[i]], envir = .GlobalEnv)
+        assign("palette_name", palette_name, envir = .GlobalEnv)
+        tkdestroy(win)  # Close the window
+      })
+      tkgrid(select_button)
+    }
+
+    # Wait for user to select
+    tkwait.window(win)
+  }
+
+  # Display the pop-up for palette selection
+  show_palette_popup()
+
+  # If the user did not select a palette, stop the function
+  if (!exists("selected_palette", envir = .GlobalEnv)) {
+    stop("No color palette selected. Please run the function again.")
+  }
 
   # Prompt user to select Excel file
   cat("Please select the file containing the lists of modified proteins per condition (one condition per column):\n")
@@ -38,29 +95,6 @@ venn_diagram <- function() {
       return(column_data)
     }
   })
-
-  # List of available base R color palettes
-  palettes <- list(
-    "rainbow" = rainbow,
-    "heat.colors" = heat.colors,
-    "terrain.colors" = terrain.colors,
-    "topo.colors" = topo.colors,
-    "cm.colors" = cm.colors
-  )
-
-  # Prompt user to select a color palette
-  cat("Available color palettes:\n")
-  cat(paste0(seq_along(palettes), ": ", names(palettes), "\n"))
-  choice <- as.numeric(readline(prompt = "Select a color palette by number: "))
-
-  # Validate user choice
-  if (choice < 1 || choice > length(palettes)) {
-    stop("Invalid choice. Please run the script again and select a valid option.")
-  }
-
-  # Selected palette
-  selected_palette <- palettes[[choice]]
-  palette_name <- names(palettes)[choice]
 
   # Generate a custom color palette based on the user's selection
   custom_palette <- selected_palette(num_conditions)
@@ -106,6 +140,9 @@ venn_diagram <- function() {
   write.xlsx(overlap, overlap_file)
 
   cat("Overlap information saved at:", overlap_file, "\n")
+
+  # Clean up the global environment
+  rm(selected_palette, palette_name, envir = .GlobalEnv)
 
   if (FALSE) {
     venn_diagram()
