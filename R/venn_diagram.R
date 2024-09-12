@@ -7,12 +7,15 @@
 #' @aliases venn_diagram
 venn_diagram <- function() {
   # Prompt user to select Excel file
+  readline(prompt = "Please select the file containing the lists of modified proteins per condition (one condition per column):")
   excel_file <- file.choose()
 
   # Read data from Excel file
+  readline(prompt = "Reading data from Excel file...")
   data <- read_excel(excel_file, col_names = TRUE)
 
   # Prompt user to select output folder
+  readline(prompt = "Please select the output folder for the Venn diagram plot and overlap information to be saved:")
   output_folder <- choose.dir()
 
   # Get the number of conditions
@@ -55,9 +58,9 @@ venn_diagram <- function() {
     margin = 0.1, # Increase margin for better plot appearance
     fontfamily = "sans", # Set font family to Helvetica (or similar font)
     fontface = "bold",   # Set font face to bold
-    cat.fontsize = 20,   # Set category font size to 20
-    cex = 2.5,           # Adjust overall font size
-    cat.cex = 2.5,         # Set category title font size to 24
+    cat.fontsize = 30,   # Set category font size to 20
+    cex = 3,           # Adjust overall font size
+    cat.cex = 3,         # Set category title font size to 24
     cat.fontfamily = "sans", # Set category title font family
     cat.fontface = "bold",  # Set category title font face to bold
     cat.dist = rep(cat.dist.value, num_conditions) # Set consistent distance for category titles
@@ -68,7 +71,7 @@ venn_diagram <- function() {
   png_file <- file.path(output_folder, paste0(png_file_name, ".png"))
 
   # Save plot as PNG
-  png(filename = png_file, width = 1000, height = 1000) # Adjust width and height as needed
+  png(filename = png_file, width = 1500, height = 1500) # Adjust width and height as needed
   grid.draw(venn_plot)
   dev.off()
 

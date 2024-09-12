@@ -72,8 +72,6 @@ anticipate File Explorer pop ups.***
 
 **setup()**
 
-![Implementation of setup() Function](images/setup.gif){width="454"}
-
 [To elaborate, the following functions are wrapped into one sequence
 which is called setup().]{.underline}
 
@@ -160,7 +158,7 @@ quant_graph_df_res\<\<-
 filtered_graphing_df_res(graphing_df_res)--Filter residue level
 graphical data to include data that is acceptable
 
-### Step 4: Save ALL Tables and Graphs 
+### Step 4: Save ALL Tables and Graphs
 
 Save data frames as Excel files and save grouped bar from the plots as
 PNG files. ***Follow the console prompts and anticipate File Explorer
@@ -214,10 +212,6 @@ select result output folders. ***Follow the console prompts and
 anticipate File Explorer pop ups.***
 
 **setup()**
-
-![Implementation of setup()
-Function](images/setup.gif){alt="Implementation of setup() Function"
-width="454"}
 
 [To elaborate, the following functions are wrapped into one sequence
 which is called setup().]{.underline}
@@ -322,7 +316,7 @@ quant_graph_df_res\<\<-
 filtered_graphing_df_res(graphing_df_res)--Filter residue level
 graphical data to include data that is acceptable
 
-### Step 5: Save ALL Tables and Graphs 
+### Step 5: Save ALL Tables and Graphs
 
 Save data frames as Excel files and save grouped bar from the plots as
 PNG files. ***Follow the console prompts and anticipate File Explorer
@@ -366,4 +360,17 @@ a condition that is indicated in the header.
 
 ![](images/venn%20data.PNG){width="462"}
 
-### 
+## Troubleshooting
+
+coADAPTr only accepts excel files in the form of .xlsx or .xl. Please
+convert .csv files before loading into R.
+
+Errors will present in the console of required information is not
+present. BE sure to follow the console instructions closely as once
+certain workflows are started they can't be stopped unless you start
+over.
+
+If you see NA's present in your extent of modification graphs, this
+likely indicates cases where peptides were in the raw data but not
+matched to an entry in your FASTA file. To avoid this be sure no decoy
+entries are present in your final data set.
