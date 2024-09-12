@@ -82,6 +82,9 @@ generate_grouped_bar_plot_res <- function() {
   df_in <- df_in %>%
     arrange(start)
 
+  # Ensure that the 'Res' column follows the order of the sorted dataframe
+  df_in$Res <- factor(df_in$Res, levels = df_in$Res)
+
   # Iterate over each protein and make a grouped bar plot for it
   for (protein in unique(df_in$MasterProteinAccessions)) {
     # Subset the dataframe for this protein

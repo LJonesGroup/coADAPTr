@@ -82,6 +82,9 @@ generate_grouped_bar_plot_pep <- function() {
   df_in <- df_in %>%
     arrange(start)
 
+  # Convert the 'peptide' column to a factor based on the sorted order
+  df_in$peptide <- factor(df_in$peptide, levels = df_in$peptide)
+
   # Iterate over each protein and make a grouped bar plot for it
   for (protein in unique(df_in$MasterProteinAccessions)) {
     # Subset the dataframe for this protein
