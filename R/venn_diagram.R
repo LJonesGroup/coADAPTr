@@ -7,15 +7,15 @@
 #' @aliases venn_diagram
 venn_diagram <- function() {
   # Prompt user to select Excel file
-  readline(prompt = "Please select the file containing the lists of modified proteins per condition (one condition per column):")
+  cat(prompt = "Please select the file containing the lists of modified proteins per condition (one condition per column):")
   excel_file <- file.choose()
 
   # Read data from Excel file
-  readline(prompt = "Reading data from Excel file...")
+  cat(prompt = "Reading data from Excel file...")
   data <- read_excel(excel_file, col_names = TRUE)
 
   # Prompt user to select output folder
-  readline(prompt = "Please select the output folder for the Venn diagram plot and overlap information to be saved:")
+  cat(prompt = "Please select the output folder for the Venn diagram plot and overlap information to be saved:")
   output_folder <- choose.dir()
 
   # Get the number of conditions

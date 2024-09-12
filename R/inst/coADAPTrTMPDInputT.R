@@ -33,7 +33,7 @@ Tables_and_Graphs()
 
 
 #Creating Venn Diagrams ------------------------------------------------------------------------------------------------------------
-#For the data you want in a Venn Diagram, create an excel file with headers of the Master Protein
+#For the data you want in a Venn Diagram, create an excel file, with headers, containing lists of the Master Protein
 #accessions that were modified in your data set. Save it as an excel file and run this function
 venn_diagram()
 
