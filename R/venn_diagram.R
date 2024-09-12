@@ -1,21 +1,20 @@
-#' Create and Save a Venn Diagram Plot (Step 17)
-#'
-#' @return A Venn diagram plot of the modified protein lists per condition saved as a PNG file
-#' @export
-#'
-#' @examples venn_diagram()
-#' @aliases venn_diagram
 venn_diagram <- function() {
+  # Load necessary libraries
+  library(VennDiagram)
+  library(readxl)
+  library(openxlsx)
+  library(grid)
+
   # Prompt user to select Excel file
-  cat(prompt = "Please select the file containing the lists of modified proteins per condition (one condition per column):")
+  cat("Please select the file containing the lists of modified proteins per condition (one condition per column):\n")
   excel_file <- file.choose()
 
   # Read data from Excel file
-  cat(prompt = "Reading data from Excel file...")
+  cat("Reading data from Excel file...\n")
   data <- read_excel(excel_file, col_names = TRUE)
 
   # Prompt user to select output folder
-  cat(prompt = "Please select the output folder for the Venn diagram plot and overlap information to be saved:")
+  cat("Please select the output folder for the Venn diagram plot and overlap information to be saved:\n")
   output_folder <- choose.dir()
 
   # Get the number of conditions
@@ -40,9 +39,31 @@ venn_diagram <- function() {
     }
   })
 
-  # Generate a custom color palette (using shades of blue or gray)
-  custom_palette <- c("#0570b0", "#3690c0", "#74a9cf", "#a6bddb", "#d0d1e6", "#084594", "#2171b5", "#4292c6", "#6baed6", "#9ecae1", "#c6dbef", "#08519c", "#3182bd", "#6baed6", "#9ecae1", "#c6dbef")
-  custom_palette <- custom_palette[1:num_conditions] # ensuring the palette has the desired number of colors
+  # List of available base R color palettes
+  palettes <- list(
+    "rainbow" = rainbow,
+    "heat.colors" = heat.colors,
+    "terrain.colors" = terrain.colors,
+    "topo.colors" = topo.colors,
+    "cm.colors" = cm.colors
+  )
+
+  # Prompt user to select a color palette
+  cat("Available color palettes:\n")
+  cat(paste0(seq_along(palettes), ": ", names(palettes), "\n"))
+  choice <- as.numeric(readline(prompt = "Select a color palette by number: "))
+
+  # Validate user choice
+  if (choice < 1 || choice > length(palettes)) {
+    stop("Invalid choice. Please run the script again and select a valid option.")
+  }
+
+  # Selected palette
+  selected_palette <- palettes[[choice]]
+  palette_name <- names(palettes)[choice]
+
+  # Generate a custom color palette based on the user's selection
+  custom_palette <- selected_palette(num_conditions)
 
   # Calculate an appropriate cat.dist value
   cat.dist.value <- 0.1 # Adjust this value if necessary for proper distance
@@ -59,7 +80,7 @@ venn_diagram <- function() {
     fontfamily = "sans", # Set font family to Helvetica (or similar font)
     fontface = "bold",   # Set font face to bold
     cat.fontsize = 40,   # Set category font size to 20
-    cex = 4,           # Adjust overall font size
+    cex = 4,             # Adjust overall font size
     cat.cex = 5,         # Set category title font size to 24
     cat.fontfamily = "sans", # Set category title font family
     cat.fontface = "bold",  # Set category title font face to bold
