@@ -23,34 +23,34 @@ venn_diagram <- function() {
     # Add instructions
     tkgrid(tklabel(win, text = "Select a Color Palette for your Venn Diagram:"))
 
-    # Define the palette preview frame
+    # Loop over each palette and display a preview of the colors
     for (i in seq_along(palettes)) {
       palette_name <- names(palettes)[i]
-      palette_colors <- palettes   # Preview with 5 colors
+      palette_colors <- palettes   # Generate 5 colors for preview
 
-      # Create a row with the palette name and a color preview
+      # Create a row with the palette name
       color_row <- tkframe(win)
       tkgrid(tklabel(color_row, text = palette_name))
 
-      # Display color swatches
+      # Display color swatches as individual labels with colored background
       for (color in palette_colors) {
-        color_box <- tklabel(color_row, bg = color, width = 3, relief = "raised")
-        tkgrid(color_box, padx = 1)
+        color_box <- tklabel(color_row, width = 2, relief = "raised", background = color)
+        tkgrid(color_box, padx = 2)
       }
 
-      # Place the row in the window
+      # Add the row to the window
       tkgrid(color_row)
 
       # Add a button to select this palette
       select_button <- tkbutton(win, text = "Select", command = function() {
         assign("selected_palette", palettes[[i]], envir = .GlobalEnv)
         assign("palette_name", palette_name, envir = .GlobalEnv)
-        tkdestroy(win)  # Close the window
+        tkdestroy(win)  # Close the window when selected
       })
       tkgrid(select_button)
     }
 
-    # Wait for user to select
+    # Wait for the user to select a palette
     tkwait.window(win)
   }
 
