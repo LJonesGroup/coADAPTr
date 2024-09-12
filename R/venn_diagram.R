@@ -14,53 +14,23 @@ venn_diagram <- function() {
     "inferno" = viridis::inferno   # Inferno color palette
   )
 
-  # Define the function to display the color palettes in a pop-up
-  show_palette_popup <- function() {
-    # Create a window
-    win <- tktoplevel()
-    tkwm.title(win, "Select a Color Palette")
-
-    # Add instructions
-    tkgrid(tklabel(win, text = "Select a Color Palette for your Venn Diagram:"))
-
-    # Loop over each palette and display a preview of the colors
-    for (i in seq_along(palettes)) {
-      palette_name <- names(palettes)[i]
-      palette_colors <- palettes   # Generate 5 colors for preview
-
-      # Create a row with the palette name
-      color_row <- tkframe(win)
-      tkgrid(tklabel(color_row, text = palette_name))
-
-      # Display color swatches as individual labels with colored background
-      for (color in palette_colors) {
-        color_box <- tklabel(color_row, width = 2, relief = "raised", background = color)
-        tkgrid(color_box, padx = 2)
-      }
-
-      # Add the row to the window
-      tkgrid(color_row)
-
-      # Add a button to select this palette
-      select_button <- tkbutton(win, text = "Select", command = function() {
-        assign("selected_palette", palettes[[i]], envir = .GlobalEnv)
-        assign("palette_name", palette_name, envir = .GlobalEnv)
-        tkdestroy(win)  # Close the window when selected
-      })
-      tkgrid(select_button)
-    }
-
-    # Wait for the user to select a palette
-    tkwait.window(win)
+  # Display available palettes and ask for user selection
+  cat("Available color palettes:\n")
+  for (i in seq_along(palettes)) {
+    cat(paste0(i, ": ", names(palettes)[i], "\n"))
   }
 
-  # Display the pop-up for palette selection
-  show_palette_popup()
+  # Prompt user to select a palette by number
+  choice <- as.numeric(readline(prompt = "Select a color palette by number: "))
 
-  # If the user did not select a palette, stop the function
-  if (!exists("selected_palette", envir = .GlobalEnv)) {
-    stop("No color palette selected. Please run the function again.")
+  # Check if the choice is valid
+  if (is.na(choice) || choice < 1 || choice > length(palettes)) {
+    stop("Invalid selection. Please run the function again and select a valid option.")
   }
+
+  # Selected palette
+  selected_palette <- palettes[[choice]]
+  palette_name <- names(palettes)[choice]
 
   # Prompt user to select Excel file
   cat("Please select the file containing the lists of modified proteins per condition (one condition per column):\n")
