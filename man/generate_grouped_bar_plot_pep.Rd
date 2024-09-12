@@ -2,15 +2,15 @@
 % Please edit documentation in R/generate_grouped_bar_plot_pep.R
 \name{generate_grouped_bar_plot_pep}
 \alias{generate_grouped_bar_plot_pep}
-\title{Generate and Save Grouped Bar Plots for Each Modified Peptide Per Condition}
+\title{Generate and Save Grouped Bar Graphs for Each Modified Peptide Per Condition}
 \usage{
 generate_grouped_bar_plot_pep()
 }
 \value{
-Grouped bar graphs for each protein in the data frame per condition
+Grouped bar graphs for each modified peptide in the data frame per condition
 }
 \description{
-Generate and Save Grouped Bar Plots for Each Modified Peptide Per Condition
+Generate and Save Grouped Bar Graphs for Each Modified Peptide Per Condition
 }
 \examples{
 generate_grouped_bar_plot_pep()

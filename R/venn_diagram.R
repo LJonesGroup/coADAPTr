@@ -1,3 +1,10 @@
+#' Create and Save Venn Diagram Plot with Overlap Information
+#'
+#' @return Venn diagram plot with overlap information saved as a PNG file and Excel file
+#' @export
+#'
+#' @examples venn_diagram()
+#' @aliases venn_diagram
 venn_diagram <- function() {
 
   # List of 10 available color palettes, including grayscale and blue-hued palette

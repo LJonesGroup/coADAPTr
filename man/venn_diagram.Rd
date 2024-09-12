@@ -2,15 +2,15 @@
 % Please edit documentation in R/venn_diagram.R
 \name{venn_diagram}
 \alias{venn_diagram}
-\title{Create and Save a Venn Diagram Plot (Step 17)}
+\title{Create and Save Venn Diagram Plot with Overlap Information}
 \usage{
 venn_diagram()
 }
 \value{
-A Venn diagram plot of the modified protein lists per condition saved as a PNG file
+Venn diagram plot with overlap information saved as a PNG file and Excel file
 }
 \description{
-Create and Save a Venn Diagram Plot (Step 17)
+Create and Save Venn Diagram Plot with Overlap Information
 }
 \examples{
 venn_diagram()
