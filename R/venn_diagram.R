@@ -16,17 +16,19 @@ venn_diagram <- function() {
 
   # Function to display a preview of color palettes
   show_palette_preview <- function(palettes, num_colors = 5) {
-    par(mfrow = c(length(palettes), 1))  # Arrange plots
+    num_palettes <- length(palettes)
+    # Adjust layout to have 2 palettes per row (to make better use of space)
+    par(mfrow = c(ceiling(num_palettes / 2), 2), mar = c(1, 1, 2, 1))  # Adjust margins
     for (i in seq_along(palettes)) {
       colors <- palettes[[i]](num_colors)
-      plot(1:num_colors, pch = 15, cex = 3, col = colors, xlab = names(palettes)[i], ylab = "",
+      plot(1:num_colors, pch = 15, cex = 3, col = colors, xlab = "", ylab = "",
            xaxt = 'n', yaxt = 'n', bty = 'n', main = paste("Palette:", names(palettes)[i]))
     }
     par(mfrow = c(1, 1))  # Reset to default
   }
 
   # Ask the user if they want to see a preview of the palettes
-  cat("Would you like to see a preview of the color palettes? (yes/no): ")
+  cat("Would you like to see a preview of the color palettes before building your plot? (yes/no): ")
   show_preview <- tolower(readline())
 
   if (show_preview == "yes") {
@@ -131,7 +133,13 @@ venn_diagram <- function() {
   cat("Overlap information saved at:", overlap_file, "\n")
 
   # Clean up the global environment
-  rm(selected_palette, palette_name, envir = .GlobalEnv)
+  if (exists("selected_palette", envir = .GlobalEnv)) {
+    rm(selected_palette, envir = .GlobalEnv)
+  }
+  if (exists("palette_name", envir = .GlobalEnv)) {
+    rm(palette_name, envir = .GlobalEnv)
+  }
+
 
   if (FALSE) {
     venn_diagram()
