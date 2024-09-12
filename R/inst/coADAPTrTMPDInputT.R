@@ -5,7 +5,6 @@
 
 setup()
 
-
 # Normalize TMT Data and Select Required Columns --------------------------------------------------------------------
 #This function will normalize the TMT abundances and allow you to rename the
 #required columns accordingly to preprae for annotation
