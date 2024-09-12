@@ -14,6 +14,25 @@ venn_diagram <- function() {
     "inferno" = viridis::inferno   # Inferno color palette
   )
 
+  # Function to display a preview of color palettes
+  show_palette_preview <- function(palettes, num_colors = 5) {
+    par(mfrow = c(length(palettes), 1))  # Arrange plots
+    for (i in seq_along(palettes)) {
+      colors <- palettes[[i]](num_colors)
+      plot(1:num_colors, pch = 15, cex = 3, col = colors, xlab = names(palettes)[i], ylab = "",
+           xaxt = 'n', yaxt = 'n', bty = 'n', main = paste("Palette:", names(palettes)[i]))
+    }
+    par(mfrow = c(1, 1))  # Reset to default
+  }
+
+  # Ask the user if they want to see a preview of the palettes
+  cat("Would you like to see a preview of the color palettes? (yes/no): ")
+  show_preview <- tolower(readline())
+
+  if (show_preview == "yes") {
+    show_palette_preview(palettes)
+  }
+
   # Display available palettes and ask for user selection
   cat("Available color palettes:\n")
   for (i in seq_along(palettes)) {
