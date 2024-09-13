@@ -13,12 +13,6 @@ generate_grouped_bar_plot_res <- function() {
   # Load the data from the selected Excel file
   df_in <- readxl::read_excel(filepath)
 
-  # Auto-detect unique conditions
-  unique_conditions <- unique(df_in$Condition)
-
-  # Create a factor variable to represent the sorted order of conditions
-  df_in$Condition <- factor(df_in$Condition, levels = unique_conditions)
-
   # List of 10 available color palettes, including grayscale and blue-hued palette
   palettes <- list(
     "rainbow" = rainbow,

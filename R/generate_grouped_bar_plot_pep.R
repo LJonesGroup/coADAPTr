@@ -13,12 +13,6 @@ generate_grouped_bar_plot_pep <- function() {
   # Load the data from the selected Excel file
   df_in <- readxl::read_excel(filepath)
 
-  # Auto-detect unique conditions
-  unique_conditions <- unique(df_in$Condition)
-
-  # Create a factor variable to represent the sorted order of conditions
-  df_in$Condition <- factor(df_in$Condition, levels = unique_conditions)
-
   # List of 10 available color palettes, including grayscale and blue-hued palette
   palettes <- list(
     "rainbow" = rainbow,
@@ -82,8 +76,11 @@ generate_grouped_bar_plot_pep <- function() {
   df_in <- df_in %>%
     arrange(start)
 
-  # Convert the 'peptide' column to a factor based on the sorted order
-  df_in$peptide <- factor(df_in$peptide, levels = df_in$peptide)
+  # Create a temporary column for plotting purposes
+  df_in$peptide_plot <- make.unique(as.character(df_in$peptide))
+
+  # Convert the 'peptide_plot' column to a factor based on the sorted order
+  df_in$peptide_plot <- factor(df_in$peptide_plot, levels = df_in$peptide_plot)
 
   # Iterate over each protein and make a grouped bar plot for it
   for (protein in unique(df_in$MasterProteinAccessions)) {
@@ -92,7 +89,7 @@ generate_grouped_bar_plot_pep <- function() {
 
     # Generate a grouped bar plot of the extent of modification for each peptide
     # that maps to this protein, with different conditions represented by color
-    fig <- ggplot(temp, aes(x = peptide, y = EOM, fill = Condition)) +
+    fig <- ggplot(temp, aes(x = peptide_plot, y = EOM, fill = Condition)) +
       geom_bar(position = position_dodge(width = 1), stat = "identity") +
       geom_errorbar(aes(ymin = EOM - SD, ymax = EOM + SD), position = position_dodge(width = 1), width = 0.4) +
       labs(title = paste(protein, "Peptide Level Analysis"),
