@@ -25,7 +25,7 @@ sum_and_calculate_abundancesTMT <- function(data) {
   }
 
   # Prompt user to select TMT abundance columns
-  cat("Please select the columns containing TMT abundances. You can select multiple columns.\n")
+  cat("Please select the columns containing TMT abundances. (Hold Ctrl to select multiple columns).\n")
   abundance_cols <- select_tmt_abundance_columns()
 
   # Sum numerical content of selected abundance columns for each row
