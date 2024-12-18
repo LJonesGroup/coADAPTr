@@ -24,7 +24,7 @@ LFQ_Prep <- function() {
     print("Extracting columns from psm.tsv file")
     selected_data <<- column_selectionLFQ(raw_data, "psm")
     #Rename Certain Columns and Split the Spectrum Files
-    modified_data <<- rename_and_split_spectrum_files(selected_data)
+    modified_data <<- rename_and_split_spectrum_files(selected_data, TRUE)
     #Identify Sample vs Control Files
     modified_data <<- SampleControl(modified_data)
     #Annotate Features in the Data
@@ -40,7 +40,7 @@ LFQ_Prep <- function() {
     #Select Relevant Data
     selected_data <<- column_selectionLFQ(raw_data, "report")
     #Rename Certain Columns and Split the Spectrum Files
-    modified_data <<- rename_and_split_spectrum_files(selected_data)
+    modified_data <<- rename_and_split_spectrum_files(selected_data, TRUE)
     #Identify Sample vs Control Files
     modified_data <<- SampleControl(modified_data)
     #Annotate Features in the Data
