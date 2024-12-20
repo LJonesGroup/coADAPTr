@@ -23,7 +23,7 @@ import_data <- function() {
     if(filename == "psm"){
       print("Analysing psm.tsv file (FragPipe-DDA)")
       df <- read.csv(file_path, sep = "\t",check.names = FALSE)
-    }else if(filename == "report"){
+    }else if(grepl("report", filename, fixed = TRUE)){
       print("Analysing psm.tsv file (FragPipe-DIA)")
       df <- read.csv(file_path, sep = "\t",check.names = FALSE)
     }
