@@ -33,8 +33,8 @@ rename_and_split_spectrum_files <- function(df_in, batch = FALSE) {
     for(i in 1:nrow(df_sampletype )) {
       # Extract experiment, condiiton and sample type from file
       row_exp <- df_sampletype [i,"Experiment"]
-      row_condition <- df_sampletype [i,"Condition (e.g. Sample or Control, Vehiclevs Treatment)"]
-      row_sampletype <- df_sampletype [i,"SampleType plus replicate (L# or NL#) - only one control, must be assigned as NL"]
+      row_condition <- df_sampletype [i,"Condition (e.g. Sample or Control, Vehicle vs Treatment)"]
+      row_sampletype <- df_sampletype [i,"SampleType plus replicate (L# or NL#)"]
 
       # Append the mappings
       mappings <- rbind(mappings, data.frame(Original = row_exp, NewName = row_sampletype, Condition = row_condition))
