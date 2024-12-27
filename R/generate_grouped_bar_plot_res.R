@@ -72,30 +72,21 @@ generate_grouped_bar_plot_res <- function() {
   # Remove any leading or trailing whitespace
   filename <- trimws(filename)
 
-  print(filename)
-
   # Arrange the dataframe by start
   df_in <- df_in %>%
     arrange(start)
 
-  print(df_in)
-
-  # Ensure that the 'Res' column follows the order of the sorted dataframe
-  # df_in$Res <- factor(df_in$Res, levels = df_in$Res)
-
   # Create a temporary column for plotting purposes - from pep
-  df_in$residue_plot <- make.unique(as.character(df_in$start))
+  df_in$residue_plot <- make.unique(as.character(df_in$mod_res))
 
   # Convert the 'peptide_plot' column to a factor based on the sorted order
   df_in$residue_plot <- factor(df_in$residue_plot, levels = df_in$residue_plot)
 
-
-  print("We arrive")
-
   # Iterate over each protein and make a grouped bar plot for it
-  for (protein in unique(df_in$MasterProteinAccessions)) {
+  for (protein in unique(df_in$Sequence)) {
     # Subset the dataframe for this protein
-    temp <- subset(df_in, MasterProteinAccessions == protein)
+    temp <- subset(df_in, Sequence == protein)
+
 
     # Generate a grouped bar plot of the extent of modification for each residue
     # that maps to this protein, with different conditions represented by color

@@ -7,7 +7,7 @@
 #' @examples new_df<-grab_seq_metadata_res(raw_data)
 #' @aliases grab_seq_metadata_res
 grab_seq_metadata_res <- function(df_in){
-  df_out <- subset(df_in, select = c("MasterProteinAccessions", "Sequence", "Res", "start"))
+  df_out <- subset(df_in, select = c("MasterProteinAccessions", "Sequence", "Res", "start", "mod_res"))
   df_out <- df_out[!duplicated(df_out), ]
   return(df_out)
 }

@@ -31,8 +31,7 @@ locate_startend_res <- function(raw_data, FASTA){
   # Calculate modified residue positions
   raw_data$mod_res <- ifelse(!is.na(raw_data$ModPositionN) & raw_data$ModPositionN > 0, raw_data$start + raw_data$ModPositionN - 1, NA)
 
-  # Create the Res column
-  raw_data$Res <- paste(raw_data$ModPositionL, raw_data$mod_res, sep = "")
+  raw_data$Res <- paste(raw_data$mod_res,raw_data$ModPositionL, sep = "")
 
   return(raw_data)
 }
