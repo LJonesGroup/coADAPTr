@@ -35,12 +35,14 @@ column_selectionTMT <- function(df) {
   rt_col <- select_column("Please select the column containing the sequence Retention Time:")
   prec_cols <- select_column("Please select the column(s) containing the adjusted precursor abundances/intensities (Hold Ctrl to select multiple):", allow_multiple = TRUE)
 
-
   # Add selected columns to refined_data
-  refined_data <- cbind(refined_data, df[[seq_col]], df[[acc_col]], df[[mod_col]], df[[rt_col]], [, prec_cols])
+  refined_data <- cbind(refined_data, df[[seq_col]], df[[acc_col]], df[[mod_col]], df[[rt_col]], df[, prec_cols])
 
   # Rename columns for clarity if needed
-  colnames(refined_data) <- c("Sequence", "Master Protein Accessions", "Modifications", "Precursor Abundance", "RT")
+  # Adjust this part to dynamically handle multiple precursor columns
+  new_col_names <- c("Sequence", "Master Protein Accessions", "Modifications", "RT")
+  new_col_names <- c(new_col_names, prec_cols)  # Append precursor column names directly
+  colnames(refined_data) <- new_col_names
 
   return(refined_data)
 }
