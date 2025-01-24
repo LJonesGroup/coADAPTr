@@ -32,11 +32,12 @@ column_selectionTMT <- function(df) {
   seq_col <- select_column("Please select the column containing the peptide sequences (unannotated):")
   acc_col <- select_column("Please select the column containing the Uniprot ID or master protein accessions:")
   mod_col <- select_column("Please select the column containing the protein modifications:")
-  prec_cols <- select_column("Please select the column(s) containing the adjusted precursor abundances/intensities (Hold Ctrl to select multiple):", allow_multiple = TRUE)
   rt_col <- select_column("Please select the column containing the sequence Retention Time:")
+  prec_cols <- select_column("Please select the column(s) containing the adjusted precursor abundances/intensities (Hold Ctrl to select multiple):", allow_multiple = TRUE)
+
 
   # Add selected columns to refined_data
-  refined_data <- cbind(refined_data, df[[seq_col]], df[[acc_col]], df[[mod_col]], df[, prec_cols], df[[rt_col]])
+  refined_data <- cbind(refined_data, df[[seq_col]], df[[acc_col]], df[[mod_col]], df[[rt_col]], [, prec_cols])
 
   # Rename columns for clarity if needed
   colnames(refined_data) <- c("Sequence", "Master Protein Accessions", "Modifications", "Precursor Abundance", "RT")
