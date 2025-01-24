@@ -11,7 +11,7 @@ before_beginning <- function() {
   required_packages <- c("ExcelFunctionsR", "remotes", "data.table", "stringr", "protr",
                          "plyr","viridis", "extrafont", "readxl", "ggplot2", "eulerr", "grid",
                          "tidyverse", "EnvStats", "dplyr", "writexl", "conflicted", "tcltk",
-                         "phylotools", "parallel", "rlist","argparser", "Cairo", "VennDiagram")
+                         "phylotools", "parallel", "rlist","argparser", "Cairo", "renv", "VennDiagram")
 
 
   package.check <- lapply(
