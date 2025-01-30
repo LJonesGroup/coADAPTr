@@ -6,8 +6,13 @@
 #'
 #' @examples output_folder()
 #' @aliases output_folder
+library(tcltk)
+
 output_folder <- function() {
   cat("Please select the folder you would like your data/results to be stored in: \n")
-  file_output <- choose.dir()
+  # There are times choose.dir() return NA values
+  # file_output <- choose.dir()
+  file_output <- tclvalue(tkchooseDirectory())
+  print(file_output)
   return(file_output)
 }
