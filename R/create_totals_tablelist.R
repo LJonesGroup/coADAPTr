@@ -18,35 +18,36 @@ create_totals_tablelist <- function(df_in, df_res) {
     QuantifiableModRes = NA
   )
 
-
+  # Count unique proteins
   unique_protein_det <- unique(df_in$MasterProteinAccessions)
   df_out$UniqueProteinDet <- length(unique_protein_det)
 
-
-  unique_seq_det <- unique(df_in$Sequence)
+  # Create a unique identifier for each combination of protein and sequence
+  unique_seq_det <- unique(paste(df_in$MasterProteinAccessions, df_in$Sequence, sep = "_"))
   df_out$UniqueSeqDet <- length(unique_seq_det)
 
-
-  unique_res_det <- unique(df_res$Res)
+  # Create a unique identifier for each combination of protein, sequence, and residue
+  unique_res_det <- unique(paste(df_res$MasterProteinAccessions, df_res$Sequence, df_res$Res, sep = "_"))
   df_out$UniqueResDet <- length(unique_res_det)
 
-
+  # Filtering and quantifying modifications
   df_filtered <- df_in %>%
-    filter(EOM > 0 & EOM > SD & !is.na(SD))
+    dplyr::filter(EOM > 0, EOM > SD, !is.na(SD))
   df_filteredres <- df_res %>%
-    filter(EOM > 0 & EOM > SD & SD > 0)
+    dplyr::filter(EOM > 0, EOM > SD, SD > 0)
 
+  # Quantify modifications based on unique proteins
   quantifiable_protein_mod <- unique(df_filtered$MasterProteinAccessions)
   df_out$QuantifiableModProtein <- length(quantifiable_protein_mod)
 
-
-  quantifiable_seq_mod <- unique(df_filtered$Sequence)
+  # Quantify modifications based on unique sequences (considering the protein)
+  quantifiable_seq_mod <- unique(paste(df_filtered$MasterProteinAccessions, df_filtered$Sequence, sep = "_"))
   df_out$QuantifiableModSeq <- length(quantifiable_seq_mod)
 
-
-  quantifiable_res_mod <- unique(df_filteredres$Res)
+  # Quantify modifications based on unique residues (considering both protein and sequence)
+  quantifiable_res_mod <- unique(paste(df_filteredres$MasterProteinAccessions, df_filteredres$Sequence, df_filteredres$Res, sep = "_"))
   df_out$QuantifiableModRes <- length(quantifiable_res_mod)
-
 
   return(df_out)
 }
+
