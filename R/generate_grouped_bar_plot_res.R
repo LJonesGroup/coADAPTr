@@ -79,23 +79,29 @@ generate_grouped_bar_plot_res <- function() {
   # Ensure that the 'Res' column follows the order of the sorted dataframe
   df_in$Res <- factor(df_in$Res, levels = df_in$Res)
 
-  # Iterate over each protein and make a grouped bar plot for it
-  for (protein in unique(df_in$MasterProteinAccessions)) {
-    # Subset the dataframe for this protein
-    temp <- subset(df_in, MasterProteinAccessions == protein)
+  # Iterate over each unique combination of protein and sequence
+  for (protein_seq in unique(paste(df_in$MasterProteinAccessions, df_in$Sequence))) {
+    # Split combined identifier back into components
+    components <- strsplit(protein_seq, " ")[[1]]
+    protein <- components[1]
+    sequence <- components[2]
 
-    # Generate a grouped bar plot of the extent of modification for each residue
-    # that maps to this protein, with different conditions represented by color
+    # Subset the dataframe for this combination
+    temp <- subset(df_in, MasterProteinAccessions == protein & Sequence == sequence)
+
+    # Generate a grouped bar plot for each residue
     fig <- ggplot(temp, aes(x = Res, y = EOM, fill = Condition)) +
       geom_bar(position = position_dodge(width = 1), stat = "identity") +
       geom_errorbar(aes(ymin = EOM - SD, ymax = EOM + SD), position = position_dodge(width = 1), width = 0.4) +
       labs(title = paste(protein, "Residue Level Analysis"),
+           subtitle = paste("Sequence:", sequence),
            x = "Residue",
            y = "Extent of Modification",
            fill = "Condition") +
       theme_classic() +
       theme(text = element_text(size = 20, family = "sans"),
             plot.title = element_text(hjust = 0.5, size = 24, family = "sans", face = "bold"),
+            plot.subtitle = element_text(hjust = 0.5, size = 22, family = "sans", face = "bold"),
             legend.text = element_text(size = 18, family = "sans"),
             legend.title = element_text(size = 20, family = "sans"),
             axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 1),
@@ -106,11 +112,11 @@ generate_grouped_bar_plot_res <- function() {
     graph_output_directory <- file.path(dirname(filepath), paste0(filename, "_ResidueLevelGroupedBarGraphs"))
     dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
 
-    # Generate the full file path for this protein and save the figure
-    file_out <- file.path(graph_output_directory, paste0(protein, ".png"))
+    # Generate the full file path for this protein and sequence and save the figure
+    file_out <- file.path(graph_output_directory, paste0(protein, "_", sequence, ".png"))
     ggsave(filename = file_out, plot = fig, device = "png", width = 12, height = 10, dpi = 1200)
 
     # Print a message to indicate successful saving
-    cat("Grouped bar graph for", protein, "saved as", file_out, "\n")
+    cat("Grouped bar graph for", protein, "with sequence", sequence, "saved as", file_out, "\n")
   }
 }
