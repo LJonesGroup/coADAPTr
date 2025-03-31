@@ -1,20 +1,32 @@
 # Setting Up ----------------------------------------------------------------------------------------------------
 #Before Analyzing your data be sure to run this function to install necessary
 #Packages, resolve package conflicts, import required data, and select result
-#output folders. Follow the console prompts and anticipate a File Explorer up.
+#output folders. Follow the console prompts and anticipate a File Explorer pop up.
 
 setup()
 
-# Normalize TMT Data and Select Required Columns --------------------------------------------------------------------
-#This function will normalize the TMT abundances and allow you to rename the
-#required columns accordingly to prepare for annotation
+# Removing PD Generated Duplicates ---------------------------------------------------------------------------------------------------
+#SKIP if PD 3.0>, Frag Pipe or FOXWare was used to search the data
+#Run this if MS files were analyzed via PD <3.0
+#PD Versions before 3.0 relied on a multi-level sequence searching algorithm
+#that created duplicate identifications for the same peptide since multiple Sequest HT nodes
+#were used to search the myriad of HRPF modifications
 
-TMT_Quant()
+#Save the original raw data frame as a reference
+OG_raw_data<-raw_data
 
-# Annotate the TMT data --------------------------------------------------------------------
-#This function will locate the start and end residues to the TMT data.
+raw_data<- remove_dup(raw_data)
 
-TMT_Prep()
+#Check to ensure duplicated ID represented by different Sequest Nodes picking up the same MOD
+#are removed
+
+#Preparation ----------------------------------------------------------------------------------------------------
+#Prepare the input data frame by selecting the relevant data, renaming the columns
+#appropriately, and searching the FASTA file against peptide spectral matches to
+#identify the start and end residues.
+
+LFQ_Prep()
+
 
 # EOM Calculations ---------------------------------------------------------------------------------------------
 #Calculate the Extent of Modification (EOM) for each peptide and residue based on the LFQ data
@@ -31,7 +43,8 @@ EOM_Calculations()
 Tables_and_Graphs()
 
 #Creating Venn Diagrams ------------------------------------------------------------------------------------------------------------
-#For the data you want in a Venn Diagram, create an excel file, with headers, containing lists of the Master Protein
+#For the data you want in a Venn Diagram, create an excel file with headers of the Master Protein
 #accessions that were modified in your data set. Save it as an excel file and run this function
 venn_diagram()
 
+dev.off()
