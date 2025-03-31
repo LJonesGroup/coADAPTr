@@ -22,7 +22,8 @@ rename_and_split_spectrum_files <- function(df_in) {
 
     # Loop through each unique file identifier
     for (file in unique_files) {
-      response <- readline(prompt = paste("Enter new name for '", file, "' in the format 'Condition:SampleType(L or NL)': ", sep=""))
+      response <- readline(prompt = paste("Enter new name for '", file, "'in the format Condition:SampleType(Laser/Irradiated # or No Laser/Non Irradiated #)(ex Drug:NL1 or Drug Free:L3).
+      For multiplexed experiments Non Irradiated (NL) samples include the baseline control (no reagents AND no irradiation) and no laser samples with reagents: ', sep=""))
       parts <- strsplit(response, ":")[[1]]
       if (length(parts) == 2) {
         # Append the mappings

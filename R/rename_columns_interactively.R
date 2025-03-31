@@ -20,7 +20,8 @@ rename_columns_interactively <- function(data) {
 
   # Loop through selected columns and rename them
   for (col in selected_columns) {
-    new_name <- readline(prompt = paste("Enter new name for column", col, "in the format Condition:SampleType(Laser/Irradiated # or No Laser/Non Irradiated #)(ex Drug:NL1 or Drug Free:L3): "))
+    new_name <- readline(prompt = paste("Enter new name for column", col, "in the format Condition:SampleType(Laser/Irradiated # or No Laser/Non Irradiated #)(ex Drug:NL1 or Drug Free:L3).
+                                        For multiplexed experiments Non Irradiated (NL) samples include the baseline control (no reagents AND no irradiation) and no laser samples with reagents: "))
     # Rename the column
     colnames(data)[colnames(data) == col] <- new_name
   }
