@@ -8,43 +8,42 @@
 #' @examples modified_data_annotated <- annotate_features(modified_data)
 #' @aliases annotate_features
 annotate_features <- function(raw_data) {
+  library(dplyr)
+  library(stringr)
+
+  # Clean up Uniprot ID
   raw_data <- raw_data %>%
     mutate(`Master Protein Accessions` = sapply(strsplit(`Master Protein Accessions`, ";"), `[`, 1),
-           UniprotID = `Master Protein Accessions`)  # Adding this line to create the UniprotID column
+           UniprotID = `Master Protein Accessions`)
 
-  # Rename Modifications column to Mods
+  # Rename and normalize the modifications column
   raw_data <- raw_data %>%
-    rename(Mods = Modifications)
-
-  # Remove specific modifications and clean up semicolons
-  raw_data <- raw_data %>%
+    rename(Mods = Modifications) %>%
     mutate(Modifications = Mods) %>%
-    mutate(Modifications = gsub(";[A-Z]\\d+\\(Carbamidomethyl\\)", ";", Modifications)) %>%
-    mutate(Modifications = gsub("[A-Z]\\d+\\(Carbamidomethyl\\);", ";", Modifications)) %>%
-    mutate(Modifications = gsub("[A-Z]\\d+\\(Carbamidomethyl\\)", "", Modifications)) %>%
-    mutate(Modifications = gsub(";[A-Z]\\d+\\(TMT[^)]*\\)", ";", Modifications)) %>%
-    mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\);", ";", Modifications)) %>%
-    mutate(Modifications = gsub("[A-Z]\\d+\\(TMT[^)]*\\)", "", Modifications)) %>%
-    mutate(Modifications = gsub("N-Term\\(Prot\\)\\(TMTpro\\);", "", Modifications)) %>%
-    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%
-    mutate(Modifications = gsub("^;|;$", "", Modifications))
+    # Replace commas with semicolons for uniform parsing
+    mutate(Modifications = str_replace_all(Modifications, ",", ";")) %>%
+    # Remove common unwanted tags (Carbamidomethyl, TMT tags, etc.)
+    mutate(Modifications = str_remove_all(Modifications, "[A-Z]\\d+\\((Carbamidomethyl|TMT[^)]*)\\)")) %>%
+    mutate(Modifications = str_remove_all(Modifications, "N-Term\\(Prot\\)\\(TMTpro\\)")) %>%
+    # Remove extra semicolons and whitespace
+    mutate(Modifications = str_replace_all(Modifications, "\\s*;\\s*", ";")) %>%
+    mutate(Modifications = str_replace_all(Modifications, ";{2,}", ";")) %>%
+    mutate(Modifications = str_remove_all(Modifications, "^;|;$"))
 
-  # Cleanup: Remove leading, trailing, and multiple consecutive semicolons
+  # Flag rows as oxidized or unoxidized
   raw_data <- raw_data %>%
-    mutate(Modifications = gsub("\\s*;\\s*", ";", Modifications)) %>%
-    mutate(Modifications = gsub(";{2,}", ";", Modifications)) %>%
-    mutate(Modifications = gsub("^;|;$", "", Modifications))
+    mutate(MOD = ifelse(Modifications == "" | is.na(Modifications) | Modifications == "NA",
+                        "Unoxidized", "Oxidized"))
 
-  # Determine if the sequence is oxidized or unoxidized
+  # Extract the first modified residue and its position (if multiple mods, just get the first)
   raw_data <- raw_data %>%
-    mutate(MOD = ifelse(is.na(Modifications) | Modifications == "" | Modifications == "NA" | Modifications == " ", "Unoxidized", "Oxidized"))
+    mutate(first_mod = str_extract(Modifications, "[A-Z](?=\\d+\\()"),  # extract residue
+           first_pos = str_extract(Modifications, "(?<=\\D)\\d+(?=\\()"))  # extract position
 
-  # Create ModPositionL and ModPositionN columns
+  # Assign to new columns
   raw_data <- raw_data %>%
-    mutate(ModPositionL = ifelse(nchar(Modifications) > 0, gsub(".*?([A-Za-z]).*", "\\1", Modifications), NA)) %>%
-    mutate(ModPositionN = ifelse(nchar(Modifications) > 0, gsub(".*?(\\d+).*", "\\1", Modifications), NA))
+    mutate(ModPositionL = first_mod,
+           ModPositionN = as.numeric(first_pos))
 
   return(raw_data)
 }
-
-
