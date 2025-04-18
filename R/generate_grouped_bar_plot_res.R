@@ -6,12 +6,10 @@
 #' @examples generate_grouped_bar_plot_res()
 #' @aliases generate_grouped_bar_plot_res
 generate_grouped_bar_plot_res <- function() {
-  # Select the Excel file
   cat("Select the Excel file containing the quantifiable residue level data: ")
   filepath <- file.choose()
   df_in <- readxl::read_excel(filepath)
 
-  # Ask for color palette
   palettes <- list(
     "rainbow" = rainbow, "heat.colors" = heat.colors,
     "terrain.colors" = terrain.colors, "topo.colors" = topo.colors,
@@ -26,11 +24,9 @@ generate_grouped_bar_plot_res <- function() {
   if (is.na(choice) || choice < 1 || choice > length(palettes)) stop("Invalid palette choice.")
   condition_colors <- palettes[[choice]](length(unique(df_in$Condition)))
 
-  # Ask for output filename
   cat("Enter the new filename for the residue level data that will be saved (without extension): ")
   filename <- trimws(readline())
 
-  # --- AGGREGATE data by Protein, Condition, and Residue ---
   df_agg <- df_in %>%
     group_by(MasterProteinAccessions, Res, Condition) %>%
     summarise(
@@ -40,15 +36,11 @@ generate_grouped_bar_plot_res <- function() {
     ) %>%
     arrange(MasterProteinAccessions, Res)
 
-  # Create output dir
   graph_output_directory <- file.path(dirname(filepath), paste0(filename, "_ProteinResidueBarGraphs"))
   dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
 
-  # --- PLOT each protein ---
   for (protein in unique(df_agg$MasterProteinAccessions)) {
     temp <- subset(df_agg, MasterProteinAccessions == protein)
-
-    # Apply the fix here: make Res a factor per protein
     temp$Res <- factor(temp$Res, levels = unique(temp$Res))
 
     fig <- ggplot(temp, aes(x = Res, y = EOM, fill = Condition)) +
@@ -61,7 +53,8 @@ generate_grouped_bar_plot_res <- function() {
       theme(
         text = element_text(size = 18),
         axis.text.x = element_text(angle = 45, hjust = 0.5),
-        plot.title = element_text(size = 22, face = "bold")
+        axis.title.x = element_text(margin = margin(t = 22)),
+        plot.title = element_text(size = 22, face = "bold", hjust = 0.5)
       ) +
       scale_fill_manual(values = condition_colors)
 
@@ -71,4 +64,5 @@ generate_grouped_bar_plot_res <- function() {
     cat("Saved plot for", protein, "at", file_out, "\n")
   }
 }
+
 
