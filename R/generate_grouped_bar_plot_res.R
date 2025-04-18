@@ -30,7 +30,7 @@ generate_grouped_bar_plot_res <- function() {
   cat("Enter the new filename for the residue level data that will be saved (without extension): ")
   filename <- trimws(readline())
 
-  # --- 🧠 AGGREGATE data by Protein, Condition, and Residue ---
+  # --- AGGREGATE data by Protein, Condition, and Residue ---
   df_agg <- df_in %>%
     group_by(MasterProteinAccessions, Res, Condition) %>%
     summarise(
@@ -47,7 +47,7 @@ generate_grouped_bar_plot_res <- function() {
   graph_output_directory <- file.path(dirname(filepath), paste0(filename, "_ProteinResidueBarGraphs"))
   dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
 
-  # --- 📊 PLOT each protein ---
+  # --- PLOT each protein ---
   for (protein in unique(df_agg$MasterProteinAccessions)) {
     temp <- subset(df_agg, MasterProteinAccessions == protein)
 
@@ -60,7 +60,7 @@ generate_grouped_bar_plot_res <- function() {
       theme_classic() +
       theme(
         text = element_text(size = 18),
-        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.x = element_text(angle = 45, hjust = 0.5),
         plot.title = element_text(size = 22, face = "bold")
       ) +
       scale_fill_manual(values = condition_colors)
