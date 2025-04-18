@@ -118,13 +118,5 @@ area_calculations_res <- function(df_in) {
   # Filter out rows with missing Res or EOM values
   #df_out <- df_out[complete.cases(df_out[c("Res", "EOM")]), ]
 
-  #Extract RT
-  rt_lookup <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, Condition, Res) %>%
-    summarize(RT = mean(RT, na.rm = TRUE), .groups = "drop")
-
-  df_out <- left_join(df_out, rt_lookup, by = c("MasterProteinAccessions", "Sequence", "Condition", "Res"))
-
-
   return(df_out)
 }

@@ -14,14 +14,6 @@ filtered_graphing_df_pep <- function(df_in) {
     arrange(start) %>%
     filter(!is.na(MasterProteinAccessions))
 
-  # Summarize RT to one value per group
-  rt_lookup <- mod_data_fasta_merged %>%
-    group_by(MasterProteinAccessions, Sequence, Condition) %>%
-    summarize(RT = mean(RT, na.rm = TRUE), .groups = "drop")
-
-  # Join summarized RT
-  df_out <- left_join(df_out, rt_lookup, by = c("MasterProteinAccessions", "Sequence", "Condition"))
-
   return(df_out)
 }
 
