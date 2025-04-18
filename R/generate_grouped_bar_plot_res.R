@@ -27,11 +27,12 @@ generate_grouped_bar_plot_res <- function() {
   cat("Enter the new filename for the residue level data that will be saved (without extension): ")
   filename <- trimws(readline())
 
+  # Properly aggregate across multiple peptides per residue
   df_agg <- df_in %>%
     group_by(MasterProteinAccessions, Res, Condition) %>%
     summarise(
       EOM = mean(EOM, na.rm = TRUE),
-      SD = sd(EOM, na.rm = TRUE),
+      SD = sqrt(mean(SD^2, na.rm = TRUE)),  # pooled standard deviation
       .groups = "drop"
     ) %>%
     arrange(MasterProteinAccessions, Res)
@@ -64,3 +65,4 @@ generate_grouped_bar_plot_res <- function() {
     cat("Saved plot for", protein, "at", file_out, "\n")
   }
 }
+
