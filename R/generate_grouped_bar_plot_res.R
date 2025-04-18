@@ -40,9 +40,6 @@ generate_grouped_bar_plot_res <- function() {
     ) %>%
     arrange(MasterProteinAccessions, Res)
 
-  # Make Res a factor so ggplot keeps order
-  df_agg$Res <- factor(df_agg$Res, levels = unique(df_agg$Res))
-
   # Create output dir
   graph_output_directory <- file.path(dirname(filepath), paste0(filename, "_ProteinResidueBarGraphs"))
   dir.create(graph_output_directory, showWarnings = FALSE, recursive = TRUE)
@@ -50,6 +47,9 @@ generate_grouped_bar_plot_res <- function() {
   # --- PLOT each protein ---
   for (protein in unique(df_agg$MasterProteinAccessions)) {
     temp <- subset(df_agg, MasterProteinAccessions == protein)
+
+    # Apply the fix here: make Res a factor per protein
+    temp$Res <- factor(temp$Res, levels = unique(temp$Res))
 
     fig <- ggplot(temp, aes(x = Res, y = EOM, fill = Condition)) +
       geom_bar(stat = "identity", position = position_dodge(width = 1)) +
