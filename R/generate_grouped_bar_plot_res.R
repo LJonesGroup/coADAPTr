@@ -65,4 +65,3 @@ generate_grouped_bar_plot_res <- function() {
     cat("Saved plot for", protein, "at", file_out, "\n")
   }
 }
-
