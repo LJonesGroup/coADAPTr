@@ -876,6 +876,23 @@
       ],
       "Hash": "39e1144fd75428983dc3f63aa53dfa91"
     },
+    "stringr": {
+      "Package": "stringr",
+      "Version": "1.5.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "cli",
+        "glue",
+        "lifecycle",
+        "magrittr",
+        "rlang",
+        "stringi",
+        "vctrs"
+      ],
+      "Hash": "960e2ae9e09656611e0b8214ad543207"
+    },
     "testthat": {
       "Package": "testthat",
       "Version": "3.2.3",
