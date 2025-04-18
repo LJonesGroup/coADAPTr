@@ -18,34 +18,58 @@ rename_and_split_spectrum_files <- function(df_in) {
     print(unique_files)
 
     # Initialize a data frame to hold the mappings
-    mappings <- data.frame(Original = character(), NewName = character(), Condition = character(), stringsAsFactors = FALSE)
+    mappings <- data.frame(
+      Original = character(),
+      NewName = character(),
+      Condition = character(),
+      stringsAsFactors = FALSE
+    )
 
     # Loop through each unique file identifier
     for (file in unique_files) {
-      response <- readline(prompt = paste("Enter new name for '", file, "'in the format Condition:SampleType(Laser/Irradiated # or No Laser/Non Irradiated #)(ex Drug:NL1 or Drug Free:L3).
-      For multiplexed experiments Non Irradiated (NL) samples include the baseline control (no reagents AND no irradiation) and no laser samples with reagents: ', sep=""))
-      parts <- strsplit(response, ":")[[1]]
+      response <- readline(
+        prompt = paste0(
+          "Enter new name for '", file, "'\n",
+          "Format: Condition:SampleType (e.g., Drug:NL1 or Drug Free:L3)\n",
+          "For multiplexed experiments:\n",
+          "- 'NL' (Non Irradiated) includes:\n",
+          "  • Baseline control (no reagents AND no irradiation)\n",
+          "  • No-laser samples with reagents\n",
+          "Your input: "
+        )
+      )
+
+      parts <- strsplit(trimws(response), ":")[[1]]
       if (length(parts) == 2) {
         # Append the mappings
-        mappings <- rbind(mappings, data.frame(Original = file, NewName = parts[2], Condition = parts[1]))
+        mappings <- rbind(mappings, data.frame(
+          Original = file,
+          NewName = trimws(parts[2]),
+          Condition = trimws(parts[1]),
+          stringsAsFactors = FALSE
+        ))
       } else {
         cat("Invalid input. Skipping '", file, "'\n")
       }
     }
 
-    # Rename and assign based on mappings
-    if (nrow(mappings) > 0) {
-      # Map FileIdentifier to NewName and Condition
-      for (i in 1:nrow(mappings)) {
-        df_in$`Spectrum File`[df_in$FileIdentifier == mappings$Original[i]] <- mappings$NewName[i]
-        df_in$Condition[df_in$FileIdentifier == mappings$Original[i]] <- mappings$Condition[i]
-      }
-      # Optionally remove the temporary identifier column
-      df_in$FileIdentifier <- NULL
+    # Make sure 'Condition' column exists
+    if (!"Condition" %in% colnames(df_in)) {
+      df_in$Condition <- NA
     }
+
+    # Rename and assign based on mappings
+    for (i in seq_len(nrow(mappings))) {
+      df_in$`Spectrum File`[df_in$FileIdentifier == mappings$Original[i]] <- mappings$NewName[i]
+      df_in$Condition[df_in$FileIdentifier == mappings$Original[i]] <- mappings$Condition[i]
+    }
+
+    # Remove the temporary identifier column
+    df_in$FileIdentifier <- NULL
   } else {
     cat("'Spectrum File' column not found in the data frame.\n")
   }
 
   return(df_in)
 }
+
