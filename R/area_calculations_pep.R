@@ -109,13 +109,6 @@ area_calculations_pep <- function(df_in) {
   # Calculation of Standard Deviation
   df_out$SD <- sqrt(df_out$TotalVariance)
 
-  #Extract RT
-  rt_lookup <- df_in %>%
-    group_by(MasterProteinAccessions, Sequence, Condition) %>%
-    summarize(RT = mean(RT, na.rm = TRUE), .groups = "drop")
-
-  df_out <- left_join(df_out, rt_lookup, by = c("MasterProteinAccessions", "Sequence", "Condition"))
-
   # Return the final dataframe
   return(df_out)
 }
