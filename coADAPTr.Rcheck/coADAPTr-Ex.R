@@ -156,12 +156,12 @@ flush(stderr()); flush(stdout())
 
 ### ** Examples
 
-  graphing_df_pep <- Areas_pep 
+  graphing_df_pep <- Areas_pep
   left_join(grab_seq_metadata_pep(pd_data_fasta_merged))
 
 
-graphing_df_pep <- graphing_df_pep[order(graphing_df_pep$start), ]
-graphing_df_pep$MasterProteinAccessions <- gsub(".*\|(.*?)\|.*", "\1", graphing_df_pep$MasterProteinAccessions)
+  graphing_df_pep <- graphing_df_pep[order(graphing_df_pep$start), ]
+  graphing_df_pep$MasterProteinAccessions <- gsub(".*\\|(.*?)\\|.*", "\\1", graphing_df_pep$MasterProteinAccessions)
 
 
 
@@ -177,13 +177,12 @@ flush(stderr()); flush(stdout())
 
 ### ** Examples
 
-  graphing_df_pep <- Areas_pep 
+  graphing_df_pep <- Areas_pep
   left_join(grab_seq_metadata_pep(pd_data_fasta_merged))
 
 
-graphing_df_pep <- graphing_df_pep[order(graphing_df_pep$start), ]
-graphing_df_pep$MasterProteinAccessions <- gsub(".*\|(.*?)\|.*", "\1",
-graphing_df_pep$MasterProteinAccessions)
+  graphing_df_pep <- graphing_df_pep[order(graphing_df_pep$start), ]
+  graphing_df_pep$MasterProteinAccessions <- gsub(".*\\|(.*?)\\|.*", "\\1", graphing_df_pep$MasterProteinAccessions)
 
 
 
@@ -326,10 +325,10 @@ flush(stderr()); flush(stdout())
 
 ### ** Examples
 
-  ## Not run: 
+  ## Not run:
 ##D     # Example usage
 ##D     save_graphs_res(my_data, "plots/", "protein_data.xlsx")
-##D   
+##D
 ## End(Not run)
 
 
