@@ -22,26 +22,29 @@ annotate_features <- function(raw_data) {
     mutate(Modifications = Mods) %>%
     # Replace commas with semicolons for uniform parsing
     mutate(Modifications = str_replace_all(Modifications, ",", ";")) %>%
-    # Remove common unwanted tags (Carbamidomethyl, TMT tags, etc.)
-    mutate(Modifications = str_remove_all(Modifications, "[A-Z]\\d+\\((Carbamidomethyl|TMT[^)]*)\\)")) %>%
-    mutate(Modifications = str_remove_all(Modifications, "\\d*C\\(57(\\.\\d+)?\\)"))
-    mutate(Modifications = str_remove_all(Modifications, "N-Term\\(Prot\\)\\(TMTpro\\)")) %>%
-    # Remove extra semicolons and whitespace
+    # Remove Carbamidomethyl on C based on mass (57.*)
+    mutate(Modifications = str_remove_all(Modifications, "\\d*C\\(57(?:\\.\\d+)?\\)")) %>%
+    # Remove TMT-related modifications
+    mutate(Modifications = str_remove_all(Modifications, "[A-Z]\\d+\\(TMT[^)]*\\)")) %>%
+    # Remove N-Term(TMT) or N-term modifications
+    mutate(Modifications = str_remove_all(Modifications, "N[-|_]term\\([^)]*\\)")) %>%
+    # Clean extra separators
     mutate(Modifications = str_replace_all(Modifications, "\\s*;\\s*", ";")) %>%
     mutate(Modifications = str_replace_all(Modifications, ";{2,}", ";")) %>%
     mutate(Modifications = str_remove_all(Modifications, "^;|;$"))
 
-  # Flag rows as oxidized or unoxidized
+  # Flag as oxidized/unoxidized
   raw_data <- raw_data %>%
     mutate(MOD = ifelse(Modifications == "" | is.na(Modifications) | Modifications == "NA",
                         "Unoxidized", "Oxidized"))
 
-  # Extract the first modified residue and its position (if multiple mods, just get the first)
+  # Extract first biologically meaningful mod (e.g., 9H, 8E)
   raw_data <- raw_data %>%
-    mutate(first_mod = str_extract(Modifications, "[A-Z](?=\\d+\\()"),  # extract residue
-           first_pos = str_extract(Modifications, "(?<=\\D)\\d+(?=\\()"))  # extract position
+    mutate(first_mod_entry = str_extract(Modifications, "\\d+[A-Z]\\([^)]*\\)"),
+           first_mod = str_extract(first_mod_entry, "[A-Z]"),
+           first_pos = str_extract(first_mod_entry, "\\d+"))
 
-  # Assign to new columns
+  # Final columns
   raw_data <- raw_data %>%
     mutate(ModPositionL = first_mod,
            ModPositionN = as.numeric(first_pos))
