@@ -24,6 +24,7 @@ annotate_features <- function(raw_data) {
     mutate(Modifications = str_replace_all(Modifications, ",", ";")) %>%
     # Remove common unwanted tags (Carbamidomethyl, TMT tags, etc.)
     mutate(Modifications = str_remove_all(Modifications, "[A-Z]\\d+\\((Carbamidomethyl|TMT[^)]*)\\)")) %>%
+    mutate(Modifications = str_remove_all(Modifications, "\\d*C\\(57(\\.\\d+)?\\)"))
     mutate(Modifications = str_remove_all(Modifications, "N-Term\\(Prot\\)\\(TMTpro\\)")) %>%
     # Remove extra semicolons and whitespace
     mutate(Modifications = str_replace_all(Modifications, "\\s*;\\s*", ";")) %>%
