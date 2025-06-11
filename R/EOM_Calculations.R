@@ -14,7 +14,7 @@ EOM_Calculations<- function(EOMbustraction) {
   }else{
     #Calculate the Extent of Modification (EOM) and SD (Variance) at the peptide level (no background substraction - not recommended)
     Areas_pep<<- area_calculations_pep(mod_data_fasta_merged, "no")
-    write.csv(Areas_pep, file.path(file_output,"Areas_pep.csv"))
+    write.csv(Areas_pep, file.path(file_output,"Areas_pep_no.csv"))
   }
 
   #Merge metadata with numeric graphing data
@@ -31,6 +31,7 @@ EOM_Calculations<- function(EOMbustraction) {
   }else{
     #Calculate the Extent of Modification (EOM) and SD (Variance) at the res level (no background substraction - not recommended)
     Areas_res<<- area_calculations_res(mod_data_fasta_merged, "no")
+    write.csv(Areas_res, file.path(file_output,"Areas_res_no.csv"))
   }
 
 

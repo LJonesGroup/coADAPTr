@@ -20,11 +20,11 @@ import_data <- function() {
 
   if(extension == "tsv"){
     print("Input file is tab-delim type")
-    if(filename == "psm"){
+    if(grepl("psm", filename, fixed = TRUE)){
       print("Analysing psm.tsv file (FragPipe-DDA)")
       df <- read.csv(file_path, sep = "\t",check.names = FALSE)
     }else if(grepl("report", filename, fixed = TRUE)){
-      print("Analysing psm.tsv file (FragPipe-DIA)")
+      print("Analysing a filtered report.tsv file (FragPipe-DIA)")
       df <- read.csv(file_path, sep = "\t",check.names = FALSE)
     }
 

@@ -139,9 +139,13 @@ area_calculations_res <- function(df_in, EOMbackgroundsubstraction) {
         values_fill = NA
       )
 
+    df_outzero <<- df_out
+
     # Calculate total areas for Sample and Control
     df_out <- df_out %>%
       mutate(SampleTotalArea = coalesce(Sample_Oxidized, 0) + coalesce(Sample_Unoxidized, 0))
+
+    df_outone <<- df_out
 
     # Remove individual oxidized/unoxidized columns
     df_out <- df_out %>%
@@ -159,6 +163,7 @@ area_calculations_res <- function(df_in, EOMbackgroundsubstraction) {
         values_fill = NA
       )
 
+    df_outwo <<- df_out2
     # Merge the two dataframes
     df_out <- full_join(df_out, df_out2, by = c("MasterProteinAccessions", "Sequence", "Condition"))
 
@@ -193,6 +198,8 @@ area_calculations_res <- function(df_in, EOMbackgroundsubstraction) {
         values_from = "OxidizedVar",
         values_fill = NA
       )
+
+
     # Rename columns
     ox_var <- ox_var %>%
       rename(

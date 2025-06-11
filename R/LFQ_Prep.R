@@ -33,6 +33,7 @@ LFQ_Prep <- function() {
     FASTA<<- parse_fasta(FASTA)
     #Locate the Start and End Residues for Each Peptide
     mod_data_fasta_merged<<- locate_startend_res(modified_data_annotated, FASTA)
+    write.csv(mod_data_fasta_merged, file.path(file_output,"mod_data_fasta_merged.csv"))
 
   }else if("Q Value" %in% columns_rawdata & "Modified Sequence" %in% columns_rawdata){
     # FragPipe DIA
@@ -49,6 +50,7 @@ LFQ_Prep <- function() {
     FASTA<<- parse_fasta(FASTA)
     #Locate the Start and End Residues for Each Peptide
     mod_data_fasta_merged<<- locate_startend_res(modified_data_annotated, FASTA)
+    write.csv(mod_data_fasta_merged, file.path(file_output,"mod_data_fasta_merged.csv"))
 
 
   }else{
