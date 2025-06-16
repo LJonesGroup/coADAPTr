@@ -40,7 +40,7 @@ column_selectionLFQ <- function(df) {
   refined_data <- cbind(refined_data, df[[seq_col]], df[[acc_col]], df[[mod_col]], df[[pre_col]], df[[spe_col]], df[[RT]])
 
   # Rename columns
-  colnames(refined_data) <- c("Sequence", "Master Protein Accessions", "Modifications", "Precursor Abundance", "Spectrum File")
+  colnames(refined_data) <- c("Sequence", "Master Protein Accessions", "Modifications", "Precursor Abundance", "Spectrum File", "RT")
 
   return(refined_data)
 }

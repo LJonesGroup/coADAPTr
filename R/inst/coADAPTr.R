@@ -37,12 +37,24 @@ LFQ_Prep()
 #contain all data. This includes cases where the EOM could be negative (high background oxidation)
 #or the SD is greater than the EOM (data has a high variance-likely due to experimental conditions)
 
+
 EOM_Calculations()
 
 #Saving Tables and Plots------------------------------------------------------------------------------------------------------------
 #Save data frames as Excel files and save grouped bar from the plots as PNG files
 
 Tables_and_Graphs()
+
+
+#If the graphs are not being saved only run these two to generate the
+#tabular data
+
+#Create a table of totals
+TotalsTable<<-create_totals_tablelist(graphing_df_pep, graphing_df_res)
+
+#Save Data Frames as Excel Files
+save_data_frames(file_output, TotalsTable = TotalsTable, Areas_pep = Areas_pep, quant_graph_df_pep = quant_graph_df_pep, Areas_res = Areas_res, quant_graph_df_res = quant_graph_df_res, graphing_df_pep = graphing_df_pep, graphing_df_res = graphing_df_res)
+
 
 #Creating Venn Diagrams ------------------------------------------------------------------------------------------------------------
 #For the data you want in a Venn Diagram, create an excel file with headers of the Master Protein
